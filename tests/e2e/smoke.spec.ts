@@ -98,3 +98,15 @@ test("mobile: import the control sheet with a preview and flagged problems", asy
   await page.getByRole("button", { name: "אישור וייבוא" }).click();
   await expect(page.getByRole("status")).toContainText("הייבוא הסתיים");
 });
+
+test("mobile: a 3 MB phone photo uploads to a ticket", async ({ page }) => {
+  await signIn(page);
+  await page.goto("/tickets/new");
+  await page.getByRole("button", { name: "ויצמן 9" }).click();
+  await page.getByRole("textbox").first().fill(`תמונה גדולה ${Date.now()}`);
+  await page.getByRole("button", { name: "שמירה" }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("תמונה גדולה");
+  await page.locator('input[type="file"][name="file"]').first().setInputFiles({ name: "big.png", mimeType: "image/png", buffer: Buffer.alloc(3 * 1024 * 1024, 1) });
+  await page.getByRole("button", { name: "הוספת תמונה" }).click();
+  await expect(page.getByRole("main").locator("a > img")).toHaveCount(1, { timeout: 15000 });
+});
