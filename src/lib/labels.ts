@@ -63,5 +63,13 @@ export const t = {
     createTask: "יצירת משימה", taskCreated: "המשימה נוצרה", needsFrequency: "נשמר. הגדירו תדירות כדי שהתאריך הבא יחושב.", saveSettings: "שמירת הגדרות", none: "ללא",
     noBuildings: "אין בניינים", legend: "מקרא",
   },
+  people: {
+    suppliers: "ספקים", employees: "עובדים", add: "הוספה", edit: "עריכה", name: "שם", phone: "טלפון", category: "תחום", tier: "דרג", availability: "זמינות", area: "אזור",
+    sla: "יש SLA", notes: "הערות", role: "תפקיד", archive: "הסרה", emptySuppliers: "אין ספקים עדיין", emptyEmployees: "אין עובדים עדיין", call: "חיוג",
+  },
+  settings: {
+    title: "הגדרות", founders: "המשתמשים", emailReminders: "תזכורות במייל", emailHelp: "תזכורת 14 יום לפני ובמועד היעד. השליחה תופעל כשכתובת השולח תוגדר.",
+    saved: "נשמר", signOut: "יציאה",
+  },
   common: { save: "שמירה", cancel: "ביטול", close: "סגירה" },
 } as const;

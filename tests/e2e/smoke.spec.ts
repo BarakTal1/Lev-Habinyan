@@ -52,3 +52,15 @@ test("mobile: mark a maintenance item done and get asked for a frequency", async
   await page.getByRole("dialog").getByRole("button", { name: "סימון כבוצע" }).click();
   await expect(page.getByRole("status")).toContainText("הגדירו תדירות");
 });
+
+test("mobile: add a supplier and see it grouped by category", async ({ page }) => {
+  await signIn(page);
+  await page.goto("/suppliers");
+  await page.getByRole("button", { name: "הוספה" }).click();
+  const name = `ספק בדיקה ${Date.now()}`;
+  await page.getByRole("dialog").locator('input[name="name"]').fill(name);
+  await page.getByRole("dialog").locator('select[name="category"]').selectOption("הדברה");
+  await page.getByRole("dialog").getByRole("button", { name: "שמירה" }).click();
+  await expect(page.getByRole("heading", { name: "הדברה" })).toBeVisible();
+  await expect(page.getByText(name)).toBeVisible();
+});
