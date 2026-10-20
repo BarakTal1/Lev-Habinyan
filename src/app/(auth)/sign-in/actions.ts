@@ -1,11 +1,12 @@
 "use server";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { devLoginEnabled } from "@/lib/devLogin";
 import { createClient } from "@/lib/supabase/server";
 
 /** Local development only: password sign-in, enabled by NEXT_PUBLIC_DEV_LOGIN=1. Google is the real sign-in. */
 export async function devSignIn(formData: FormData) {
-  if (process.env.NEXT_PUBLIC_DEV_LOGIN !== "1") redirect("/sign-in");
+  if (!devLoginEnabled()) redirect("/sign-in");
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({
     email: String(formData.get("email") ?? ""),

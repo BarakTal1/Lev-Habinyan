@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# לב הבניין: Track A back-office app
 
-## Getting Started
+Hebrew, right-to-left, phone-first web app for the two founders. Next.js 16, Supabase, Vercel.
+Design: `../docs/superpowers/specs/2026-10-20-track-a-design.md`. Plan: `../docs/superpowers/plans/2026-10-20-track-a.md`.
 
-First, run the development server:
+## Run locally
 
 ```bash
+npm install
+npx supabase start -x studio,imgproxy,vector,edge-runtime,realtime,supavisor,logflare
+cp .env.example .env.local        # fill NEXT_PUBLIC_SUPABASE_ANON_KEY from `npx supabase status`
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Local sign-in: the password form at `/sign-in` (user `dev@lev.local`, password in `supabase/seed.sql`). It exists only when `NEXT_PUBLIC_DEV_LOGIN=1` and the app does not run on Vercel.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Test
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm test                 # unit and database tests (needs the local Supabase)
+npx supabase test db     # row-level security tests
+npx playwright test      # phone and desktop smoke tests (uses the installed Chrome)
+npm run typecheck
+```
 
-## Learn More
+## Deploy checklist (hosted Supabase and Vercel)
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Create the Supabase project in an account the client owns. Use a paid plan (daily backups) before any real resident data goes in.
+2. Apply the migrations: `npx supabase link --project-ref <ref>` then `npx supabase db push`. Do not run `seed.sql` on a hosted project.
+3. **Auth settings (important).** In the Supabase dashboard, Authentication:
+   - Turn **off** the Email provider, or turn off email sign-ups. Access control trusts the email claim in the token, so open email sign-up would let anyone claim a founder's email.
+   - Turn **on** the Google provider (client id and secret from Google Cloud).
+   - Add the site URL and redirect URLs: `https://<production-domain>/auth/callback` and the preview domain.
+4. Add the founders to the allowlist (replace the emails). Run in the SQL editor:
+   ```sql
+   insert into person (name, role) values ('רועי במבג׳י', 'founder') returning id;   -- note the id
+   insert into profile (email, person_id) values ('<roi email>', '<id>');
+   -- repeat for עומר שטיגליץ
+   ```
+5. Vercel environment variables: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `CRON_SECRET`. Do **not** set `NEXT_PUBLIC_DEV_LOGIN`.
+6. Email reminders: set `RESEND_API_KEY` and `EMAIL_FROM`, then switch on "תזכורות במייל" in the app settings. The job runs daily (`vercel.json`).
+7. Open the site on a phone, sign in with Google, and add it to the home screen.

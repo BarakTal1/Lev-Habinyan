@@ -1,9 +1,10 @@
 import Image from "next/image";
 import { t } from "@/lib/labels";
+import { devLoginEnabled } from "@/lib/devLogin";
 import { devSignIn, googleSignIn } from "./actions";
 
 export default function SignInPage() {
-  const dev = process.env.NEXT_PUBLIC_DEV_LOGIN === "1";
+  const dev = devLoginEnabled();
   return (
     <main className="mx-auto flex min-h-dvh max-w-sm flex-col items-center justify-center gap-6 px-4">
       <Image src="/logo.png" alt={t.appName} width={140} height={140} priority />
