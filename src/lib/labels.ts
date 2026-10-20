@@ -12,6 +12,7 @@ export const SYSTEMS = [
 ] as const;
 export const MAINT_STATES = ["תקין", "מתקרב", "באיחור", "אין נתונים", "לא רלוונטי"] as const;
 export const TIERS = ["קבוע", "דחוף", "חירום"] as const;
+export const MAINT_LABEL = { ok: "תקין", soon: "מתקרב", overdue: "באיחור", nodata: "אין נתונים", na: "לא רלוונטי" } as const;
 export const KINDS = { fault: "תקלה", task: "משימה", maintenance: "תחזוקה" } as const;
 
 export type Status = (typeof STATUSES)[number];
@@ -42,6 +43,13 @@ export const t = {
     status: "סטטוס", nextStatus: "העברה ל", notes: "הערות", addNote: "הוספת הערה", timeline: "היסטוריה", photos: "תמונות", addPhoto: "הוספת תמונה",
     cost: "עלות (₪)", invoice: "חשבונית", addInvoice: "הוספת חשבונית", saved: "נשמר", number: "מס׳",
     ev: { created: "נוצר", status: "סטטוס", assignment: "שיוך", note: "הערה", edit: "עריכה", photo: "קובץ" },
+  },
+  buildings: {
+    title: "בניינים", add: "הוספת בניין", name: "שם הבניין", city: "עיר", address: "כתובת", units: "דירות", openTickets: "תקלות ומשימות פתוחות",
+    tabs: { overview: "סקירה", residents: "דיירים", suppliers: "ספקים", maintenance: "תחזוקה", documents: "מסמכים" },
+    addResident: "הוספת דייר", resName: "שם", phone: "טלפון", unit: "דירה", owner: "בעלים", tenant: "שוכר", committee: "ועד", noResidents: "אין דיירים עדיין",
+    noSuppliers: "אין ספקים משויכים. שייכו ספק לפריט תחזוקה.", noDocs: "אין מסמכים", addDoc: "הוספת מסמך", openMaintenance: "ליומן התחזוקה", openList: "לכרטיסים של הבניין",
+    archive: "הסרה", call: "חיוג", chat: "וואטסאפ", allFine: "הכל תקין",
   },
   common: { save: "שמירה", cancel: "ביטול", close: "סגירה" },
 } as const;

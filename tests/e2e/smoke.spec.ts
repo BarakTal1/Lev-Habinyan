@@ -26,3 +26,19 @@ test("a signed-out visitor is sent to sign-in", async ({ page }) => {
   await page.goto("/tickets");
   await expect(page).toHaveURL(/sign-in/);
 });
+
+test("mobile: open a building and add a resident", async ({ page }) => {
+  await signIn(page);
+  await page.goto("/buildings");
+  await page.getByRole("link", { name: /הירקון 112/ }).click();
+  await page.getByRole("link", { name: "דיירים" }).click();
+  await expect(page).toHaveURL(/tab=residents/);
+  await page.getByText("הוספת דייר").click();
+  const name = `דייר בדיקה ${Date.now()}`;
+  await page.locator('input[name="name"]').fill(name);
+  await page.locator('input[name="phone"]').fill("052-0000555");
+  await page.locator('input[name="unit"]').fill("99");
+  await page.getByRole("button", { name: "שמירה" }).click();
+  await expect(page.getByText(name)).toBeVisible();
+  await expect(page.getByRole("link", { name: "וואטסאפ" }).first()).toHaveAttribute("href", /wa\.me\/972/);
+});

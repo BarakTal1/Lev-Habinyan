@@ -1,7 +1,7 @@
 import { badge, type BadgeList } from "@/lib/tokens";
 import { Icon } from "./Icon";
 
-export function Badge({ list, value, pill }: { list: BadgeList; value: string; pill?: boolean }) {
+export function Badge({ list, value, pill, label }: { list: BadgeList; value: string; pill?: boolean; label?: string }) {
   const b = badge(list, value);
   const round = pill ?? list === "urgency";
   return (
@@ -10,7 +10,7 @@ export function Badge({ list, value, pill }: { list: BadgeList; value: string; p
       style={{ backgroundColor: b.bg, color: b.fg, borderRadius: round ? 999 : 8 }}
     >
       <Icon name={b.icon} size={16} />
-      {b.label}
+      {label ?? b.label}
     </span>
   );
 }
