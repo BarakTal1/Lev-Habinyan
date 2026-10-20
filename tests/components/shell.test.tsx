@@ -1,0 +1,57 @@
+import { render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("next/navigation", () => ({ usePathname: () => "/tickets" }));
+
+import { Badge } from "@/components/Badge";
+import { BottomNav } from "@/components/BottomNav";
+import { LtrText } from "@/components/LtrText";
+import { Row } from "@/components/Row";
+
+describe("Badge", () => {
+  it("shows the Hebrew label and the token background for danger", () => {
+    const { container } = render(<Badge list="urgency" value="סכנה" />);
+    expect(screen.getByText("סכנה")).toBeInTheDocument();
+    expect((container.firstChild as HTMLElement).style.backgroundColor).toBe("rgb(198, 40, 40)");
+    expect(container.querySelector("svg")).not.toBeNull();
+  });
+});
+
+describe("Row", () => {
+  it("renders without a building and without a stray separator", () => {
+    render(<Row kind="task" title="חידוש ביטוח מבנה" building={null} meta="בעוד 11 ימים" />);
+    expect(screen.queryByText("·")).toBeNull();
+    expect(screen.getByText("בעוד 11 ימים")).toBeInTheDocument();
+  });
+  it("shows building, separator and meta when a building exists", () => {
+    render(<Row kind="fault" title="נזילה" building="ויצמן 9" meta="לפני 3 ימים" />);
+    expect(screen.getByText("ויצמן 9")).toBeInTheDocument();
+    expect(screen.getByText("·")).toBeInTheDocument();
+  });
+  it("keeps a Hebrew title with Latin text as one text node with dir=auto", () => {
+    render(<Row kind="fault" title="ראוטר TP-Link בלובי" building="דיזנגוף 78" />);
+    const title = screen.getByText("ראוטר TP-Link בלובי");
+    expect(title).toHaveAttribute("dir", "auto");
+    expect(title.childNodes).toHaveLength(1);
+  });
+  it("links to href when given", () => {
+    render(<Row kind="fault" title="x" building={null} href="/tickets/1" />);
+    expect(screen.getByRole("link")).toHaveAttribute("href", "/tickets/1");
+  });
+});
+
+describe("LtrText", () => {
+  it("renders left to right", () => {
+    render(<LtrText>052-0000101</LtrText>);
+    expect(screen.getByText("052-0000101")).toHaveAttribute("dir", "ltr");
+  });
+});
+
+describe("BottomNav", () => {
+  it("has four links and marks the current route", () => {
+    render(<BottomNav />);
+    expect(screen.getAllByRole("link")).toHaveLength(4);
+    expect(screen.getByRole("link", { name: /כרטיסים/ })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("link", { name: /היום/ })).not.toHaveAttribute("aria-current");
+  });
+});
