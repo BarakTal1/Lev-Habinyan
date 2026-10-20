@@ -42,3 +42,13 @@ test("mobile: open a building and add a resident", async ({ page }) => {
   await expect(page.getByText(name)).toBeVisible();
   await expect(page.getByRole("link", { name: "וואטסאפ" }).first()).toHaveAttribute("href", /wa\.me\/972/);
 });
+
+test("mobile: mark a maintenance item done and get asked for a frequency", async ({ page }) => {
+  await signIn(page);
+  await page.goto("/maintenance");
+  await expect(page.getByRole("heading", { name: "יומן תחזוקה" })).toBeVisible();
+  await page.getByRole("link", { name: /ויצמן 9/ }).first().click();
+  await page.getByRole("button", { name: /בדיקת גג/ }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "סימון כבוצע" }).click();
+  await expect(page.getByRole("status")).toContainText("הגדירו תדירות");
+});

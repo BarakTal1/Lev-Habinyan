@@ -12,6 +12,12 @@ export const SYSTEMS = [
 ] as const;
 export const MAINT_STATES = ["תקין", "מתקרב", "באיחור", "אין נתונים", "לא רלוונטי"] as const;
 export const TIERS = ["קבוע", "דחוף", "חירום"] as const;
+/** The ticket category that fits each maintenance system, used when a task is created from an item. */
+export const SYSTEM_CATEGORY: Record<(typeof SYSTEMS)[number], (typeof CATEGORIES)[number]> = {
+  "ניקיון": "ניקיון", "גינון": "גינון", "בדיקת מעלית": "מעלית", "בדיקת כיבוי אש": "כיבוי אש", "הדברה": "הדברה", "שעוני חשמל": "חשמל",
+  "בדיקת אינסטלציה": "אינסטלציה", "ניקוי פיר ביוב": "אינסטלציה", "בדיקת גג": "תחזוקה כללית", "משאבות": "תחזוקה כללית",
+  "חיטוי מאגר מים": "תחזוקה כללית", "שער חניון": "דלתות ושערים",
+};
 export const MAINT_LABEL = { ok: "תקין", soon: "מתקרב", overdue: "באיחור", nodata: "אין נתונים", na: "לא רלוונטי" } as const;
 export const KINDS = { fault: "תקלה", task: "משימה", maintenance: "תחזוקה" } as const;
 
@@ -50,6 +56,12 @@ export const t = {
     addResident: "הוספת דייר", resName: "שם", phone: "טלפון", unit: "דירה", owner: "בעלים", tenant: "שוכר", committee: "ועד", noResidents: "אין דיירים עדיין",
     noSuppliers: "אין ספקים משויכים. שייכו ספק לפריט תחזוקה.", noDocs: "אין מסמכים", addDoc: "הוספת מסמך", openMaintenance: "ליומן התחזוקה", openList: "לכרטיסים של הבניין",
     archive: "הסרה", call: "חיוג", chat: "וואטסאפ", allFine: "הכל תקין",
+  },
+  maint: {
+    title: "יומן תחזוקה", portfolio: "כל הבניינים", last: "אחרון", next: "הבא", markDone: "סימון כבוצע", doneDate: "תאריך ביצוע", note: "הערה", file: "מסמך או תמונה",
+    frequency: "תדירות", every: "כל", units: { day: "ימים", week: "שבועות", month: "חודשים", year: "שנים" }, nextDue: "תאריך הבא", supplier: "ספק", applicable: "רלוונטי לבניין",
+    createTask: "יצירת משימה", taskCreated: "המשימה נוצרה", needsFrequency: "נשמר. הגדירו תדירות כדי שהתאריך הבא יחושב.", saveSettings: "שמירת הגדרות", none: "ללא",
+    noBuildings: "אין בניינים", legend: "מקרא",
   },
   common: { save: "שמירה", cancel: "ביטול", close: "סגירה" },
 } as const;
