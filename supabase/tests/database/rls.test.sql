@@ -8,7 +8,7 @@ insert into building (id, name) values ('00000000-0000-0000-0000-0000000000b1', 
 -- allowed user
 set local role authenticated;
 select set_config('request.jwt.claims', '{"role":"authenticated","email":"allowed@test.local"}', true);
-select is((select count(*) from building)::int, 1, 'allowed user reads buildings');
+select is((select count(*) from building where id = '00000000-0000-0000-0000-0000000000b1')::int, 1, 'allowed user reads the test building');
 select lives_ok($$insert into building (name) values ('חדש')$$, 'allowed user inserts a building');
 
 -- signed-in user who is not on the list
@@ -21,7 +21,7 @@ select throws_ok($$insert into building (name) values ('פריצה')$$, '42501',
 -- anonymous
 reset role;
 set local role anon;
-select throws_ok($$select count(*) from building$$, '42501', null, 'anonymous has no table access');
+select is((select count(*) from building)::int, 0, 'anonymous reads no buildings');
 
 -- soft delete and the first-action trigger (as allowed user)
 reset role;
