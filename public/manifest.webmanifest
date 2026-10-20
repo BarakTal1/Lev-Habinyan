@@ -1,0 +1,11 @@
+{
+  "name": "לב הבניין",
+  "short_name": "לב הבניין",
+  "lang": "he",
+  "dir": "rtl",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F7F5F0",
+  "theme_color": "#1B2A4A",
+  "icons": [{ "src": "/logo.png", "sizes": "480x480", "type": "image/png" }]
+}
