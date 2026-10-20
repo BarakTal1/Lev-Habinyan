@@ -1,4 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { addUnit } from "@/lib/db/buildings";
+import { CATEGORIES, URGENCIES } from "@/lib/labels";
 
 export type TicketKind = "fault" | "task";
 
@@ -9,6 +11,8 @@ export type CreateTicketInput = {
   urgency?: string;
   building_id?: string | null;
   unit_id?: string | null;
+  /** A unit number typed by the founder. The unit is created when it does not exist yet. Needs building_id. */
+  unit_number?: string | null;
   reporter_id?: string | null;
   assignee_id?: string | null;
   description?: string | null;
@@ -25,6 +29,8 @@ export type TicketFilters = {
   assignee?: string;
   mine?: boolean;
   q?: string;
+  /** Include closed tickets (done or cancelled). Closed tickets are hidden by default unless a status filter is set. */
+  closed?: boolean;
 };
 
 export type TicketListRow = {
@@ -45,7 +51,9 @@ const event = (db: SupabaseClient, ticketId: string, type: string, actor: string
   });
 
 export async function createTicket(db: SupabaseClient, profileId: string, input: CreateTicketInput): Promise<{ id: string; number: number }> {
-  const row = { urgency: "חשוב", ...input, created_by: profileId };
+  const { unit_number, ...rest } = input;
+  const unitId = rest.unit_id ?? (unit_number?.trim() && rest.building_id ? await addUnit(db, rest.building_id, unit_number.trim()) : null);
+  const row = { urgency: "חשוב", ...rest, unit_id: unitId, created_by: profileId };
   const data = must(await db.from("ticket").insert(row).select("id, number").single());
   await event(db, data.id, "created", profileId, { kind: input.kind });
   return { id: data.id, number: Number(data.number) };
@@ -73,6 +81,15 @@ export async function addNote(db: SupabaseClient, profileId: string, id: string,
   await event(db, id, "note", profileId, { text });
 }
 
+/** Throws when an edit would break a fixed list or a date format. */
+export function validatePatch(patch: TicketPatch): void {
+  if ("title" in patch && !String(patch.title ?? "").trim()) throw new Error("title required");
+  if (patch.urgency != null && !(URGENCIES as readonly string[]).includes(String(patch.urgency))) throw new Error("bad urgency");
+  if (patch.category != null && !(CATEGORIES as readonly string[]).includes(String(patch.category))) throw new Error("bad category");
+  if (patch.due_at != null && !(/^\d{4}-\d{2}-\d{2}$/.test(String(patch.due_at)) && !Number.isNaN(Date.parse(String(patch.due_at))))) throw new Error("bad due date");
+  if (patch.scheduled_at != null && Number.isNaN(Date.parse(String(patch.scheduled_at)))) throw new Error("bad visit time");
+}
+
 const EDITABLE = ["title", "description", "category", "urgency", "due_at", "scheduled_at", "cost_amount", "building_id", "unit_id", "original_message"] as const;
 export type TicketPatch = Partial<Record<(typeof EDITABLE)[number], string | number | null>>;
 
@@ -80,6 +97,7 @@ export async function updateTicket(db: SupabaseClient, profileId: string, id: st
   const clean: TicketPatch = {};
   for (const k of EDITABLE) if (k in patch) clean[k] = patch[k];
   if (Object.keys(clean).length === 0) return;
+  validatePatch(clean);
   must(await db.from("ticket").update(clean).eq("id", id).select("id").single());
   await event(db, id, "edit", profileId, clean);
 }
@@ -103,6 +121,7 @@ export async function listTickets(db: SupabaseClient, f: TicketFilters, myPerson
   if (f.building) q = q.eq("building_id", f.building);
   if (f.kind) q = q.eq("kind", f.kind);
   if (f.status) q = q.eq("status", f.status);
+  else if (!f.closed) q = q.not("status", "in", "(בוצע,בוטל)");
   if (f.urgency) q = q.eq("urgency", f.urgency);
   if (f.assignee) q = q.eq("assignee_id", f.assignee);
   if (f.mine) q = myPersonId ? q.eq("assignee_id", myPersonId) : q.eq("assignee_id", "00000000-0000-0000-0000-000000000000");

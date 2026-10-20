@@ -25,7 +25,7 @@ export default async function BuildingMaintenancePage({ params }: { params: Prom
       <Link href="/maintenance" className="flex h-12 items-center text-navy"><Icon name="arrow_forward" size={22} /></Link>
       <header>
         <h1 className="text-2xl font-bold">{t.maint.title}</h1>
-        <p dir="auto" className="text-muted">{b.data.name}</p>
+        <p dir="rtl" className="text-muted">{b.data.name}</p>
       </header>
       <MaintBuilding buildingId={buildingId} rows={rows} suppliers={suppliers} today={todayIL(new Date())} />
     </main>

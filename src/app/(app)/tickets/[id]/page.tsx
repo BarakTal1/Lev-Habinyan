@@ -5,9 +5,10 @@ import { Badge } from "@/components/Badge";
 import { Icon } from "@/components/Icon";
 import { StatusControl } from "@/components/StatusControl";
 import { Timeline } from "@/components/Timeline";
-import { listAssignees } from "@/lib/db/people";
+import { EditTicketSheet } from "@/components/EditTicketSheet";
+import { listAssignees, listBuildings } from "@/lib/db/people";
 import { getTicket } from "@/lib/db/tickets";
-import { formatDate } from "@/lib/israel";
+import { formatDate, isoToIsraelLocal } from "@/lib/israel";
 import { KINDS, t } from "@/lib/labels";
 import { createClient } from "@/lib/supabase/server";
 import { addNoteAction, saveCostAction, saveOriginalMessageAction, uploadAttachmentAction } from "../actions";
@@ -19,7 +20,7 @@ const input = "w-full rounded-xl bg-[#F7F5F0] px-3 text-base";
 export default async function TicketPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const db = await createClient();
-  const [ticket, assignees] = await Promise.all([getTicket(db, id), listAssignees(db)]);
+  const [ticket, assignees, buildings] = await Promise.all([getTicket(db, id), listAssignees(db), listBuildings(db)]);
   if (!ticket) notFound();
   const photos = ticket.attachments.filter((a) => a.kind === "photo");
   const invoices = ticket.attachments.filter((a) => a.kind === "invoice");
@@ -34,9 +35,13 @@ export default async function TicketPage({ params }: { params: Promise<{ id: str
           {ticket.building_name && <span>· {ticket.building_name}</span>}
           <Badge list="urgency" value={ticket.urgency} />
         </div>
-        <h1 dir="auto" className="text-2xl font-bold leading-snug">{ticket.title}</h1>
+        <h1 dir="rtl" className="text-2xl font-bold leading-snug">{ticket.title}</h1>
         <div className="text-sm text-muted">{ticket.category}{ticket.due_at && <> · {t.tickets.dueAt} <span dir="ltr">{formatDate(ticket.due_at)}</span></>}</div>
-        {ticket.description && <p dir="auto" className="text-base">{ticket.description}</p>}
+        {ticket.scheduled_at && <div className="text-sm text-muted">{t.tickets.visit} <span dir="ltr">{isoToIsraelLocal(ticket.scheduled_at).replace("T", " ")}</span></div>}
+        {ticket.description && <p dir="rtl" className="text-base">{ticket.description}</p>}
+        <div className="pt-1">
+          <EditTicketSheet ticket={{ id: ticket.id, title: ticket.title, category: ticket.category, urgency: ticket.urgency, building_id: ticket.building_id, due_at: ticket.due_at, scheduled_local: ticket.scheduled_at ? isoToIsraelLocal(ticket.scheduled_at) : "", description: ticket.description }} buildings={buildings} />
+        </div>
       </header>
 
       <section className={card}><StatusControl id={ticket.id} status={ticket.status} /></section>
@@ -49,7 +54,7 @@ export default async function TicketPage({ params }: { params: Promise<{ id: str
       <section className={card}>
         <h2 className={h}>{t.tickets.originalMessage}</h2>
         <form action={saveOriginalMessageAction.bind(null, ticket.id)} className="flex flex-col gap-2">
-          <textarea name="text" dir="auto" rows={3} defaultValue={ticket.original_message ?? ""} placeholder={t.tickets.pasteMessage} className={`${input} py-2`} />
+          <textarea name="text" dir="rtl" rows={3} defaultValue={ticket.original_message ?? ""} placeholder={t.tickets.pasteMessage} className={`${input} py-2`} />
           <button className="h-12 rounded-xl border border-navy font-semibold text-navy">{t.tickets.saveMessage}</button>
         </form>
       </section>
@@ -86,7 +91,7 @@ export default async function TicketPage({ params }: { params: Promise<{ id: str
       <section className={card}>
         <h2 className={h}>{t.tickets.notes}</h2>
         <form action={addNoteAction.bind(null, ticket.id)} className="flex gap-2">
-          <input name="text" dir="auto" required className={`${input} h-12`} />
+          <input name="text" dir="rtl" required className={`${input} h-12`} />
           <button className="h-12 rounded-xl bg-navy px-4 font-semibold text-white">{t.tickets.addNote}</button>
         </form>
       </section>

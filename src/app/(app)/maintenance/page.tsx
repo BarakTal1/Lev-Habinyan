@@ -32,7 +32,7 @@ export default async function PortfolioPage() {
             <tbody>
               {rows.map((r) => (
                 <tr key={r.id} className="border-t border-[#F3F0EA]">
-                  <th className="sticky start-0 bg-white p-3 text-start"><Link href={`/maintenance/${r.id}`} dir="auto" className="font-semibold text-navy">{r.name}</Link></th>
+                  <th className="sticky start-0 bg-white p-3 text-start"><Link href={`/maintenance/${r.id}`} dir="rtl" className="font-semibold text-navy">{r.name}</Link></th>
                   {r.cells.map((c) => {
                     const b = badge("maint", MAINT_LABEL[c.state]);
                     return (

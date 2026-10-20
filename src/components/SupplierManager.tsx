@@ -24,7 +24,7 @@ export function SupplierManager({ groups }: { groups: SupplierGroup[] }) {
               {g.items.map((r) => (
                 <div key={r.id} className="flex min-h-[72px] items-center gap-2 bg-white py-2 pe-3 ps-2">
                   <button type="button" onClick={() => setEditing(r)} className="min-w-0 flex-1 ps-2 text-start">
-                    <div dir="auto" className="text-base font-semibold">{r.name}</div>
+                    <div dir="rtl" className="text-base font-semibold">{r.name}</div>
                     <div className="flex flex-wrap items-center gap-2 text-sm text-muted">
                       <Badge list="tier" value={r.tier} />
                       {r.has_sla && <span className="inline-flex items-center gap-0.5 font-semibold text-[#1F7A47]"><Icon name="verified" size={18} filled />SLA</span>}
@@ -44,14 +44,14 @@ export function SupplierManager({ groups }: { groups: SupplierGroup[] }) {
         {editing && (
           <form key={s?.id ?? "new"} action={(fd) => start(async () => { await saveSupplierAction(fd); setEditing(null); })} className="flex flex-col gap-3 pb-4">
             {s && <input type="hidden" name="id" value={s.id} />}
-            <Field label={t.people.name}><input name="name" required defaultValue={s?.name} dir="auto" className={inputCls} /></Field>
+            <Field label={t.people.name}><input name="name" required defaultValue={s?.name} dir="rtl" className={inputCls} /></Field>
             <Field label={t.people.phone}><input name="phone" type="tel" defaultValue={s?.phone ?? ""} dir="ltr" className={inputCls} /></Field>
             <Field label={t.people.category}><select name="category" defaultValue={s?.category ?? CATEGORIES[0]} className={inputCls}>{CATEGORIES.map((c) => <option key={c}>{c}</option>)}</select></Field>
             <Field label={t.people.tier}><select name="tier" defaultValue={s?.tier ?? "קבוע"} className={inputCls}>{TIERS.map((x) => <option key={x}>{x}</option>)}</select></Field>
-            <Field label={t.people.availability}><input name="availability" defaultValue={s?.availability ?? ""} dir="auto" className={inputCls} /></Field>
-            <Field label={t.people.area}><input name="area" defaultValue={s?.area ?? ""} dir="auto" className={inputCls} /></Field>
+            <Field label={t.people.availability}><input name="availability" defaultValue={s?.availability ?? ""} dir="rtl" className={inputCls} /></Field>
+            <Field label={t.people.area}><input name="area" defaultValue={s?.area ?? ""} dir="rtl" className={inputCls} /></Field>
             <label className="flex h-12 items-center gap-2"><input type="checkbox" name="has_sla" defaultChecked={s?.has_sla} className="h-5 w-5" />{t.people.sla}</label>
-            <Field label={t.people.notes}><textarea name="notes" defaultValue={s?.notes ?? ""} dir="auto" rows={2} className={`${inputCls} h-auto py-2`} /></Field>
+            <Field label={t.people.notes}><textarea name="notes" defaultValue={s?.notes ?? ""} dir="rtl" rows={2} className={`${inputCls} h-auto py-2`} /></Field>
             <button disabled={pending} className="h-12 rounded-xl bg-navy font-semibold text-white disabled:opacity-50">{t.common.save}</button>
             {s && <button type="button" disabled={pending} onClick={() => start(async () => { await archivePersonAction("/suppliers", s.id); setEditing(null); })} className="h-12 rounded-xl border border-[#B3261E] font-semibold text-[#B3261E]">{t.people.archive}</button>}
           </form>

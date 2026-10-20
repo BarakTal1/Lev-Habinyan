@@ -33,7 +33,7 @@ export function ImportWizard() {
           <ul className="flex flex-col gap-1">
             {preview.buildings.map((b) => (
               <li key={b.name} className="flex items-center justify-between">
-                <span dir="auto">{b.name}</span>
+                <span dir="rtl">{b.name}</span>
                 <span className={`rounded-md px-2 text-sm font-semibold ${b.isNew ? "bg-[#E3F4EA] text-[#1F7A47]" : "bg-[#EEF0F3] text-[#4A5468]"}`}>{b.isNew ? t.import.newBuilding : t.import.existing}</span>
               </li>
             ))}

@@ -19,6 +19,7 @@ export function NewTicketForm({ buildings, assignees }: { buildings: BuildingOpt
   const [assignee, setAssignee] = useState("");
   const [more, setMore] = useState(false);
   const [dueAt, setDueAt] = useState("");
+  const [unit, setUnit] = useState("");
   const [description, setDescription] = useState("");
   const [original, setOriginal] = useState("");
   const [error, setError] = useState("");
@@ -30,7 +31,7 @@ export function NewTicketForm({ buildings, assignees }: { buildings: BuildingOpt
       try {
         const r = await createTicketAction({
           kind, title, category, urgency, building_id: building, assignee_id: assignee || null,
-          due_at: dueAt || null, description: description || null, original_message: original || null,
+          due_at: dueAt || null, unit_number: kind === "fault" && building ? unit.trim() || null : null, description: description || null, original_message: original || null,
         });
         router.push(`/tickets/${r.id}`);
       } catch {
@@ -60,7 +61,7 @@ export function NewTicketForm({ buildings, assignees }: { buildings: BuildingOpt
       </Field>
 
       <Field label={t.tickets.titleField}>
-        <input value={title} onChange={(e) => setTitle(e.target.value)} dir="auto" className={inputCls} autoFocus />
+        <input value={title} onChange={(e) => setTitle(e.target.value)} dir="rtl" className={inputCls} autoFocus />
       </Field>
 
       <Field label={t.tickets.category} group>
@@ -85,9 +86,10 @@ export function NewTicketForm({ buildings, assignees }: { buildings: BuildingOpt
       <button type="button" onClick={() => setMore((m) => !m)} className="self-start text-[15px] font-semibold text-navy underline">{t.tickets.more}</button>
       {more && (
         <div className="flex flex-col gap-4">
+          {kind === "fault" && building && <Field label={t.tickets.unit}><input value={unit} onChange={(e) => setUnit(e.target.value)} inputMode="numeric" dir="ltr" className={inputCls} /></Field>}
           <Field label={t.tickets.dueAt}><input type="date" value={dueAt} onChange={(e) => setDueAt(e.target.value)} dir="ltr" className={inputCls} /></Field>
-          <Field label={t.tickets.description}><textarea value={description} onChange={(e) => setDescription(e.target.value)} dir="auto" rows={3} className={`${inputCls} h-auto py-2`} /></Field>
-          <Field label={t.tickets.originalMessage}><textarea value={original} onChange={(e) => setOriginal(e.target.value)} dir="auto" rows={3} placeholder={t.tickets.pasteMessage} className={`${inputCls} h-auto py-2`} /></Field>
+          <Field label={t.tickets.description}><textarea value={description} onChange={(e) => setDescription(e.target.value)} dir="rtl" rows={3} className={`${inputCls} h-auto py-2`} /></Field>
+          <Field label={t.tickets.originalMessage}><textarea value={original} onChange={(e) => setOriginal(e.target.value)} dir="rtl" rows={3} placeholder={t.tickets.pasteMessage} className={`${inputCls} h-auto py-2`} /></Field>
         </div>
       )}
 

@@ -110,3 +110,20 @@ test("mobile: a 3 MB phone photo uploads to a ticket", async ({ page }) => {
   await page.getByRole("button", { name: "הוספת תמונה" }).click();
   await expect(page.getByRole("main").locator("a > img")).toHaveCount(1, { timeout: 15000 });
 });
+
+test("mobile: edit a ticket and set a visit time", async ({ page }) => {
+  await signIn(page);
+  await page.goto("/tickets/new");
+  await page.getByRole("button", { name: "ויצמן 9" }).click();
+  await page.getByRole("textbox").first().fill(`לעריכה ${Date.now()}`);
+  await page.getByRole("button", { name: "שמירה" }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("לעריכה");
+  await page.getByRole("button", { name: "עריכה" }).click();
+  const dialog = page.getByRole("dialog");
+  const newTitle = `נערך ${Date.now()}`;
+  await dialog.locator('input[name="title"]').fill(newTitle);
+  await dialog.locator('input[name="scheduled_at"]').fill("2026-12-02T09:30");
+  await dialog.getByRole("button", { name: "שמירה" }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(newTitle);
+  await expect(page.getByText("2026-12-02 09:30")).toBeVisible();
+});

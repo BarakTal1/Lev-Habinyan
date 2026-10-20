@@ -47,6 +47,7 @@ describe("applyImport", () => {
     expect(r).toEqual({ buildings: 1, created: 0, items: 12 });
     const a = await items(names[0]);
     expect(a.get("בדיקת כיבוי אש")).toMatchObject({ frequency_unit: "month", frequency_count: 6, last_done_at: "2026-04-08" });
+    expect(a.get("גינון")!.applicable).toBe(false); // still not applicable: an empty cell does not reset it
     const { data } = await admin.from("building").select("id").eq("name", names[0]);
     expect(data).toHaveLength(1);
   });

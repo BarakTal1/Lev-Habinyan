@@ -27,7 +27,7 @@ export function Row({ kind, title, building, meta, late, badge, flag, trailing, 
         <Icon name={KIND_ICON[kind]} size={22} />
       </div>
       <div className="flex min-w-0 flex-1 flex-col gap-[3px]">
-        <div dir="auto" className="text-base font-semibold leading-snug">{title}</div>
+        <div dir="rtl" className="text-base font-semibold leading-snug">{title}</div>
         <div className="flex flex-wrap items-center gap-x-1.5 text-sm text-muted">
           {building && <span>{building}</span>}
           {building && meta && <span>·</span>}

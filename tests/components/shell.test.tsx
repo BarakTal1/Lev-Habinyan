@@ -28,11 +28,15 @@ describe("Row", () => {
     expect(screen.getByText("ויצמן 9")).toBeInTheDocument();
     expect(screen.getByText("·")).toBeInTheDocument();
   });
-  it("keeps a Hebrew title with Latin text as one text node with dir=auto", () => {
+  it("keeps a Hebrew title with Latin text as one text node, laid out right to left", () => {
     render(<Row kind="fault" title="ראוטר TP-Link בלובי" building="דיזנגוף 78" />);
     const title = screen.getByText("ראוטר TP-Link בלובי");
-    expect(title).toHaveAttribute("dir", "auto");
+    expect(title).toHaveAttribute("dir", "rtl");
     expect(title.childNodes).toHaveLength(1);
+  });
+  it("lays a title that starts with a Latin word out right to left too", () => {
+    render(<Row kind="fault" title="Wi-Fi לא עובד בלובי" building={null} />);
+    expect(screen.getByText("Wi-Fi לא עובד בלובי")).toHaveAttribute("dir", "rtl");
   });
   it("links to href when given", () => {
     render(<Row kind="fault" title="x" building={null} href="/tickets/1" />);

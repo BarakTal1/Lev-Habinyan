@@ -49,7 +49,7 @@ export function MaintBuilding({ buildingId, rows, suppliers, today }: { building
             >
               <h3 className="font-bold">{t.maint.markDone}</h3>
               <Field label={t.maint.doneDate}><input type="date" name="done_at" defaultValue={today} dir="ltr" className={inputCls} /></Field>
-              <Field label={t.maint.note}><input name="note" dir="auto" className={inputCls} /></Field>
+              <Field label={t.maint.note}><input name="note" dir="rtl" className={inputCls} /></Field>
               <Field label={t.maint.file}><input type="file" name="file" className="text-sm" /></Field>
               {message && <p className="rounded-xl bg-[#FDF0DC] p-3 text-[#7A4A00]" role="status">{message}</p>}
               <button disabled={pending} className="h-12 rounded-xl bg-navy font-semibold text-white disabled:opacity-50">{t.maint.markDone}</button>

@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth";
 import * as tickets from "@/lib/db/tickets";
 import { CATEGORIES, STATUSES, URGENCIES } from "@/lib/labels";
+import { israelLocalToIso } from "@/lib/israel";
 import { createClient } from "@/lib/supabase/server";
 
 function refresh(id?: string) {
@@ -65,5 +66,16 @@ export async function uploadAttachmentAction(id: string, kind: "photo" | "invoic
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) return;
   await tickets.uploadAttachment(await createClient(), user.profileId, id, kind, file);
+  refresh(id);
+}
+
+export async function updateTicketAction(id: string, formData: FormData): Promise<void> {
+  const user = await requireUser();
+  const text = (k: string) => String(formData.get(k) ?? "").trim();
+  const visit = text("scheduled_at");
+  await tickets.updateTicket(await createClient(), user.profileId, id, {
+    title: text("title"), category: text("category"), urgency: text("urgency"), building_id: text("building_id") || null,
+    due_at: text("due_at") || null, scheduled_at: visit ? israelLocalToIso(visit) : null, description: text("description") || null,
+  });
   refresh(id);
 }

@@ -18,7 +18,7 @@ export default async function SettingsPage() {
         <h2 className="text-[17px] font-bold">{t.settings.founders}</h2>
         {(profiles.data ?? []).map((p) => (
           <div key={p.id} className="flex flex-col">
-            <span dir="auto" className="font-semibold">{(p.person as unknown as { name: string } | null)?.name ?? "—"}</span>
+            <span dir="rtl" className="font-semibold">{(p.person as unknown as { name: string } | null)?.name ?? "—"}</span>
             <span dir="ltr" className="text-start text-sm text-muted">{p.email}</span>
           </div>
         ))}

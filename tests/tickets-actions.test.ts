@@ -2,7 +2,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { adminClient, founderClient } from "./helpers/db";
-import { addNote, assign, createTicket, listTickets, setStatus, uploadAttachment } from "@/lib/db/tickets";
+import { addNote, assign, createTicket, listTickets, setStatus, updateTicket, uploadAttachment, validatePatch } from "@/lib/db/tickets";
 
 const tag = `t6-${Date.now()}`;
 let db: SupabaseClient, admin: SupabaseClient, profileId: string, buildingId: string, founderPersonId: string;
@@ -128,6 +128,74 @@ describe("listTickets", () => {
     await admin.from("ticket").update({ archived_at: new Date().toISOString() }).eq("id", r.id);
     const rows = await listTickets(db, { q: "ייחודי-חיפוש" }, founderPersonId);
     expect(rows.map((x) => x.id)).not.toContain(r.id);
+  });
+});
+
+describe("listTickets closed tickets", () => {
+  it("hides closed tickets by default and shows them when asked", async () => {
+    const open = await make({ title: `${tag} פתוחה-רשימה` });
+    const closed = await make({ title: `${tag} סגורה-רשימה` });
+    await setStatus(db, profileId, closed.id, "בוצע");
+    const def = (await listTickets(db, { building: buildingId }, founderPersonId)).map((r) => r.id);
+    expect(def).toContain(open.id);
+    expect(def).not.toContain(closed.id);
+    const all = (await listTickets(db, { building: buildingId, closed: true }, founderPersonId)).map((r) => r.id);
+    expect(all).toContain(closed.id);
+  });
+  it("an explicit status filter shows that status, closed or not", async () => {
+    const closed = await make({ title: `${tag} סגורה-סינון` });
+    await setStatus(db, profileId, closed.id, "בוצע");
+    const rows = await listTickets(db, { building: buildingId, status: "בוצע" }, founderPersonId);
+    expect(rows.map((r) => r.id)).toContain(closed.id);
+  });
+});
+
+describe("updateTicket", () => {
+  it("changes the editable fields and writes an edit event", async () => {
+    const r = await make();
+    await updateTicket(db, profileId, r.id, { title: `${tag} חדש`, urgency: "דחוף", due_at: "2026-12-01", scheduled_at: "2026-12-02T09:30:00+02:00" });
+    const t = (await admin.from("ticket").select("title, urgency, due_at, scheduled_at").eq("id", r.id).single()).data!;
+    expect(t).toMatchObject({ title: `${tag} חדש`, urgency: "דחוף", due_at: "2026-12-01" });
+    expect(new Date(t.scheduled_at).toISOString()).toBe("2026-12-02T07:30:00.000Z");
+    const { count } = await admin.from("ticket_event").select("*", { count: "exact", head: true }).eq("ticket_id", r.id).eq("type", "edit");
+    expect(count).toBe(1);
+  });
+  it("ignores fields that are not editable, such as status and created_by", async () => {
+    const r = await make();
+    await updateTicket(db, profileId, r.id, { status: "בוצע", created_by: "x" } as never);
+    const t = (await admin.from("ticket").select("status, created_by").eq("id", r.id).single()).data!;
+    expect(t).toEqual({ status: "חדש", created_by: profileId });
+  });
+});
+
+describe("validatePatch", () => {
+  it("accepts a good patch", () => expect(() => validatePatch({ title: "x", urgency: "סכנה", category: "חשמל" })).not.toThrow());
+  it("rejects an empty title", () => expect(() => validatePatch({ title: "  " })).toThrow());
+  it("rejects an urgency that is not on the list", () => expect(() => validatePatch({ urgency: "דחוף מאוד" })).toThrow());
+  it("rejects a category that is not on the list", () => expect(() => validatePatch({ category: "בלגן" })).toThrow());
+  it("rejects a bad date", () => expect(() => validatePatch({ due_at: "32.13.2026" })).toThrow());
+});
+
+describe("createTicket with a unit number", () => {
+  it("creates the unit when it does not exist and links the ticket to it", async () => {
+    const r = await make({ unit_number: "12" });
+    const t = (await admin.from("ticket").select("unit_id").eq("id", r.id).single()).data!;
+    const u = (await admin.from("unit").select("number, building_id").eq("id", t.unit_id).single()).data!;
+    expect(u).toEqual({ number: "12", building_id: buildingId });
+    const r2 = await make({ unit_number: "12" });
+    const t2 = (await admin.from("ticket").select("unit_id").eq("id", r2.id).single()).data!;
+    expect(t2.unit_id).toBe(t.unit_id);
+  });
+});
+
+describe("concurrent status and assignment", () => {
+  it("both changes land and the timeline has both events", async () => {
+    const r = await make();
+    await Promise.all([setStatus(db, profileId, r.id, "בטיפול"), assign(db2, profile2, r.id, founderPersonId)]);
+    const t = (await admin.from("ticket").select("assignee_id").eq("id", r.id).single()).data!;
+    expect(t.assignee_id).toBe(founderPersonId);
+    const { data: ev } = await admin.from("ticket_event").select("type").eq("ticket_id", r.id);
+    expect(ev!.map((e) => e.type)).toEqual(expect.arrayContaining(["status", "assignment"]));
   });
 });
 

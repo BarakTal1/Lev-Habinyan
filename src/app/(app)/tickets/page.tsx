@@ -11,7 +11,7 @@ import { formatDate } from "@/lib/israel";
 import { STATUSES, URGENCIES, t } from "@/lib/labels";
 import { createClient } from "@/lib/supabase/server";
 
-type SP = { q?: string; kind?: string; status?: string; urgency?: string; building?: string; assignee?: string; mine?: string };
+type SP = { closed?: string; q?: string; kind?: string; status?: string; urgency?: string; building?: string; assignee?: string; mine?: string };
 
 function href(sp: SP, patch: Partial<SP>) {
   const merged = { ...sp, ...patch } as Record<string, string | undefined>;
@@ -24,7 +24,7 @@ export default async function TicketsPage({ searchParams }: { searchParams: Prom
   const user = await requireUser();
   const db = await createClient();
   const filters: TicketFilters = {
-    q: sp.q, status: sp.status, urgency: sp.urgency, building: sp.building, assignee: sp.assignee, mine: sp.mine === "1",
+    q: sp.q, status: sp.status, urgency: sp.urgency, building: sp.building, assignee: sp.assignee, mine: sp.mine === "1", closed: sp.closed === "1",
     kind: sp.kind === "fault" || sp.kind === "task" ? (sp.kind as TicketKind) : undefined,
   };
   const [rows, buildings, assignees] = await Promise.all([listTickets(db, filters, user.personId), listBuildings(db), listAssignees(db)]);
@@ -38,7 +38,8 @@ export default async function TicketsPage({ searchParams }: { searchParams: Prom
       <form action="/tickets" className="flex gap-2 px-4 pb-3">
         {sp.kind && <input type="hidden" name="kind" value={sp.kind} />}
         {sp.mine && <input type="hidden" name="mine" value={sp.mine} />}
-        <input name="q" defaultValue={sp.q ?? ""} dir="auto" placeholder={t.tickets.search} className="h-12 flex-1 rounded-xl bg-white px-3 text-base shadow-[0_1px_2px_rgba(27,42,74,.06)]" />
+        {sp.closed && <input type="hidden" name="closed" value={sp.closed} />}
+        <input name="q" defaultValue={sp.q ?? ""} dir="rtl" placeholder={t.tickets.search} className="h-12 flex-1 rounded-xl bg-white px-3 text-base shadow-[0_1px_2px_rgba(27,42,74,.06)]" />
         <button className="flex h-12 w-12 items-center justify-center rounded-xl bg-navy text-white" aria-label={t.tickets.search}><Icon name="search" size={22} /></button>
       </form>
       <div className="flex gap-2 overflow-x-auto px-4 pb-3">
@@ -46,6 +47,7 @@ export default async function TicketsPage({ searchParams }: { searchParams: Prom
         <Link href={href(sp, { kind: "fault" })} className={chip(sp.kind === "fault")}>{t.tickets.faults}</Link>
         <Link href={href(sp, { kind: "task" })} className={chip(sp.kind === "task")}>{t.tickets.tasks}</Link>
         <Link href={href(sp, { mine: sp.mine ? undefined : "1" })} className={chip(sp.mine === "1")}>{t.tickets.mine}</Link>
+        <Link href={href(sp, { closed: sp.closed ? undefined : "1" })} className={chip(sp.closed === "1")}>{t.tickets.closed}</Link>
       </div>
       <details className="px-4 pb-3">
         <summary className="flex h-10 cursor-pointer items-center gap-1 text-[15px] font-semibold text-navy"><Icon name="filter_list" size={20} />{t.tickets.filter}</summary>

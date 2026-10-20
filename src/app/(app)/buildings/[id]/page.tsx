@@ -25,7 +25,7 @@ export default async function BuildingPage({ params, searchParams }: { params: P
     <main className="mx-auto flex max-w-3xl flex-col gap-4 p-4">
       <Link href="/buildings" className="flex h-12 items-center text-navy"><Icon name="arrow_forward" size={22} /></Link>
       <header>
-        <h1 dir="auto" className="text-2xl font-bold">{b.name}</h1>
+        <h1 dir="rtl" className="text-2xl font-bold">{b.name}</h1>
         <p className="text-muted">{[b.city, b.address].filter(Boolean).join(" · ")}</p>
       </header>
       <nav className="flex gap-2 overflow-x-auto" aria-label="tabs">
@@ -41,7 +41,7 @@ export default async function BuildingPage({ params, searchParams }: { params: P
         <section className={`${card} flex flex-col gap-3`}>
           <div className="flex justify-between"><span className="text-muted">{t.buildings.units}</span><b>{b.units}</b></div>
           <div className="flex justify-between"><span className="text-muted">{t.buildings.openTickets}</span><b>{b.open_tickets}</b></div>
-          {b.notes && <p dir="auto">{b.notes}</p>}
+          {b.notes && <p dir="rtl">{b.notes}</p>}
           <Link href={`/tickets?building=${id}`} className="flex h-12 items-center justify-center rounded-xl border border-navy font-semibold text-navy">{t.buildings.openList}</Link>
           <Link href={`/maintenance/${id}`} className="flex h-12 items-center justify-center rounded-xl border border-navy font-semibold text-navy">{t.buildings.openMaintenance}</Link>
         </section>
@@ -52,7 +52,7 @@ export default async function BuildingPage({ params, searchParams }: { params: P
           <details className={card}>
             <summary className="flex h-10 cursor-pointer items-center gap-1 font-semibold text-navy"><Icon name="person_add" size={20} />{t.buildings.addResident}</summary>
             <form action={addResidentAction.bind(null, id)} className="mt-3 flex flex-col gap-3">
-              <Field label={t.buildings.resName}><input name="name" required dir="auto" className={inputCls} /></Field>
+              <Field label={t.buildings.resName}><input name="name" required dir="rtl" className={inputCls} /></Field>
               <Field label={t.buildings.phone}><input name="phone" type="tel" dir="ltr" className={inputCls} /></Field>
               <Field label={t.buildings.unit}><input name="unit" required dir="ltr" inputMode="numeric" className={inputCls} /></Field>
               <Field label={t.buildings.owner + " / " + t.buildings.tenant}>
@@ -67,7 +67,7 @@ export default async function BuildingPage({ params, searchParams }: { params: P
               {b.residents.map((r) => (
                 <div key={r.person_id + r.unit_id} className="flex min-h-[72px] items-center gap-2 bg-white py-2 pe-3 ps-2">
                   <div className="min-w-0 flex-1 ps-2">
-                    <div dir="auto" className="text-base font-semibold">{r.name}{r.is_committee && <span className="ms-2 rounded-md bg-[#E3E8F2] px-1.5 text-[13px] text-navy">{t.buildings.committee}</span>}</div>
+                    <div dir="rtl" className="text-base font-semibold">{r.name}{r.is_committee && <span className="ms-2 rounded-md bg-[#E3E8F2] px-1.5 text-[13px] text-navy">{t.buildings.committee}</span>}</div>
                     <div className="text-sm text-muted">{t.buildings.unit} <LtrText>{r.unit}</LtrText> · {r.relation === "tenant" ? t.buildings.tenant : t.buildings.owner}{r.phone && <> · <LtrText>{r.phone}</LtrText></>}</div>
                   </div>
                   {telLink(r.phone) && <a href={telLink(r.phone)!} aria-label={t.buildings.call} className={`${iconBtn} bg-[#E3E8F2] text-navy`}><Icon name="call" size={22} filled /></a>}
@@ -84,7 +84,7 @@ export default async function BuildingPage({ params, searchParams }: { params: P
         <div className="flex flex-col gap-px overflow-hidden rounded-2xl bg-[#EFEBE3]">
           {b.suppliers.map((s) => (
             <div key={s.id} className="flex min-h-[68px] items-center gap-2 bg-white px-4">
-              <div className="flex-1"><div dir="auto" className="font-semibold">{s.name}</div><div className="text-sm text-muted">{s.category}</div></div>
+              <div className="flex-1"><div dir="rtl" className="font-semibold">{s.name}</div><div className="text-sm text-muted">{s.category}</div></div>
               {telLink(s.phone) && <a href={telLink(s.phone)!} aria-label={t.buildings.call} className={`${iconBtn} bg-[#E3E8F2] text-navy`}><Icon name="call" size={22} filled /></a>}
             </div>
           ))}

@@ -24,13 +24,17 @@ export async function applyImport(db: SupabaseClient, rows: ParsedRow[]): Promis
     if (cur.error) throw new Error(cur.error.message);
     const idBySystem = new Map(cur.data.map((i) => [i.system, i.id as string]));
     for (const r of rows.filter((x) => x.building === name)) {
-      const patch: Record<string, unknown> = { applicable: r.applicable };
+      const patch: Record<string, unknown> = {};
+      // Only an explicit dash (not applicable), or a cell with data, changes this flag. An empty cell leaves it alone.
+      if (!r.applicable || r.frequency_unit || r.last_done_at) patch.applicable = r.applicable;
       if (r.frequency_unit && r.frequency_count) { patch.frequency_unit = r.frequency_unit; patch.frequency_count = r.frequency_count; }
       if (r.last_done_at) patch.last_done_at = r.last_done_at;
       const next = nextDueFor(r);
       if (next) patch.next_due_at = next;
-      const upd = await db.from("maintenance_item").update(patch).eq("id", idBySystem.get(r.system)!);
-      if (upd.error) throw new Error(upd.error.message);
+      if (Object.keys(patch).length > 0) {
+        const upd = await db.from("maintenance_item").update(patch).eq("id", idBySystem.get(r.system)!);
+        if (upd.error) throw new Error(upd.error.message);
+      }
       items++;
     }
   }
