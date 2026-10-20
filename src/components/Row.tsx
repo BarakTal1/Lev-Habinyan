@@ -26,7 +26,7 @@ export function Row({ kind, title, building, meta, late, badge, flag, trailing, 
       </div>
       <div className="flex min-w-0 flex-1 flex-col gap-[3px]">
         <div dir="auto" className="text-base font-semibold leading-snug">{title}</div>
-        <div className="flex items-center gap-1.5 whitespace-nowrap text-sm text-muted">
+        <div className="flex flex-wrap items-center gap-x-1.5 text-sm text-muted">
           {building && <span>{building}</span>}
           {building && meta && <span>·</span>}
           {meta && <span className={late ? "font-medium text-[#B3261E]" : "font-medium"}>{meta}</span>}
@@ -45,7 +45,7 @@ export function Row({ kind, title, building, meta, late, badge, flag, trailing, 
   return (
     <div className="flex items-center bg-white">
       {href ? <Link href={href} className={`${cls} flex-1`}>{body}</Link> : <div className={`${cls} flex-1`}>{body}</div>}
-      {trailing}
+      {trailing && <div className="flex-none">{trailing}</div>}
     </div>
   );
 }
