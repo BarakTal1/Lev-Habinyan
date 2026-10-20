@@ -88,3 +88,13 @@ test("mobile: assignee column is hidden on the ticket list", async ({ page }) =>
   await page.goto("/tickets");
   await expect(page.getByRole("main").getByText("עומר שטיגליץ", { exact: true }).last()).toBeHidden();
 });
+
+test("mobile: import the control sheet with a preview and flagged problems", async ({ page }) => {
+  await signIn(page);
+  await page.goto("/import");
+  await page.locator('input[type="file"]').setInputFiles("tests/fixtures/control-sheet.csv");
+  await expect(page.getByText("בניין ייבוא fixture")).toBeVisible();
+  await expect(page.getByText("בערך פעם בחורף").or(page.getByText(/גג/)).first()).toBeVisible();
+  await page.getByRole("button", { name: "אישור וייבוא" }).click();
+  await expect(page.getByRole("status")).toContainText("הייבוא הסתיים");
+});

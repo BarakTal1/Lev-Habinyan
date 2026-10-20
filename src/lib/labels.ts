@@ -71,5 +71,10 @@ export const t = {
     title: "הגדרות", founders: "המשתמשים", emailReminders: "תזכורות במייל", emailHelp: "תזכורת 14 יום לפני ובמועד היעד. השליחה תופעל כשכתובת השולח תוגדר.",
     saved: "נשמר", signOut: "יציאה",
   },
+  import: {
+    title: "ייבוא ראשוני", help: "העלו את גיליון הבקרה כקובץ CSV. שורה לכל בניין, עמודה לכל מערכת. נציג תצוגה מקדימה לפני השמירה.", choose: "בחירת קובץ",
+    preview: "תצוגה מקדימה", newBuilding: "בניין חדש", existing: "קיים", problems: "תאים שלא הובנו (לא ייובאו)", confirm: "אישור וייבוא", done: "הייבוא הסתיים",
+    result: (b: number, c: number, i: number) => `${b} בניינים (${c} חדשים), ${i} פריטי תחזוקה`, toCalendar: "ליומן התחזוקה", row: "שורה", empty: "לא נמצאו שורות בקובץ",
+  },
   common: { save: "שמירה", cancel: "ביטול", close: "סגירה" },
 } as const;

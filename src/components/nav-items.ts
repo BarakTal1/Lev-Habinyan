@@ -9,6 +9,7 @@ export const NAV_EXTRA = [
   { href: "/maintenance", label: "יומן תחזוקה", icon: "calendar_month" },
   { href: "/suppliers", label: "ספקים", icon: "engineering" },
   { href: "/employees", label: "עובדים", icon: "groups" },
+  { href: "/import", label: "ייבוא ראשוני", icon: "upload_file" },
   { href: "/settings", label: "הגדרות", icon: "settings" },
 ] as const;
 
