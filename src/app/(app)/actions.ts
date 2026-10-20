@@ -4,8 +4,9 @@ import { requireUser } from "@/lib/auth";
 import { completeRow } from "@/lib/db/complete";
 import { createClient } from "@/lib/supabase/server";
 
-export async function completeRowAction(kind: "task" | "maintenance", id: string): Promise<void> {
+export async function completeRowAction(kind: "task" | "maintenance", id: string): Promise<{ needsFrequency: boolean }> {
   const user = await requireUser();
-  await completeRow(await createClient(), user.profileId, kind, id);
+  const r = await completeRow(await createClient(), user.profileId, kind, id);
   revalidatePath("/");
+  return r;
 }

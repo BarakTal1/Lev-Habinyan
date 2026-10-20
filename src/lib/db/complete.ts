@@ -16,19 +16,26 @@ export async function completeMaintenanceItem(db: SupabaseClient, profileId: str
   return { next_due_at: next.next_due_at };
 }
 
-/** The Today check-off. A task closes (and completes its linked item). A maintenance row completes the item. */
-export async function completeRow(db: SupabaseClient, profileId: string, kind: "task" | "maintenance", id: string, now: Date = new Date()): Promise<void> {
+/**
+ * The Today check-off. A task closes (and completes its linked item). A maintenance row completes the item.
+ * `needsFrequency` is true when the item has no next date afterwards, so the screen can ask for a frequency.
+ * Safe to repeat: a retry after a partial failure still completes the linked item.
+ */
+export async function completeRow(db: SupabaseClient, profileId: string, kind: "task" | "maintenance", id: string, now: Date = new Date()): Promise<{ needsFrequency: boolean }> {
   const today = todayIL(now);
   if (kind === "maintenance") {
-    await completeMaintenanceItem(db, profileId, id, today);
-    return;
+    const r = await completeMaintenanceItem(db, profileId, id, today);
+    return { needsFrequency: r.next_due_at === null };
   }
   const { data: t, error } = await db.from("ticket").select("status, maintenance_item_id").eq("id", id).single();
   if (error) throw error;
-  if (t.status === "בוצע") return;
-  const upd = await db.from("ticket").update({ status: "בוצע", closed_at: now.toISOString() }).eq("id", id);
-  if (upd.error) throw upd.error;
-  const ev = await db.from("ticket_event").insert({ ticket_id: id, type: "status", actor: profileId, payload: { from: t.status, to: "בוצע" } });
-  if (ev.error) throw ev.error;
-  if (t.maintenance_item_id) await completeMaintenanceItem(db, profileId, t.maintenance_item_id, today);
+  if (t.status !== "בוצע") {
+    const upd = await db.from("ticket").update({ status: "בוצע", closed_at: now.toISOString() }).eq("id", id);
+    if (upd.error) throw upd.error;
+    const ev = await db.from("ticket_event").insert({ ticket_id: id, type: "status", actor: profileId, payload: { from: t.status, to: "בוצע" } });
+    if (ev.error) throw ev.error;
+  }
+  if (!t.maintenance_item_id) return { needsFrequency: false };
+  const r = await completeMaintenanceItem(db, profileId, t.maintenance_item_id, today);
+  return { needsFrequency: r.next_due_at === null };
 }

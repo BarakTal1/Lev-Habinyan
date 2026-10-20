@@ -39,6 +39,7 @@ export const t = {
     soon: "קרוב",
     faults: "תקלות פתוחות",
     empty: "הכל מסודר",
+    needsFrequency: "נשמר. הגדירו תדירות ביומן התחזוקה כדי שהתאריך הבא יחושב.", failed: "השמירה נכשלה. נסו שוב.", toCalendar: "ליומן התחזוקה",
   },
   signIn: { title: "לב הבניין · מערכת ניהול", google: "כניסה עם Google", noAccess: "אין לך הרשאת גישה", noAccessHelp: "החשבון הזה לא ברשימת המורשים. פנו לרועי או לעומר." },
   tickets: {

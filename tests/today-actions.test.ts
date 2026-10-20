@@ -79,6 +79,27 @@ describe("completeRow", () => {
   });
 });
 
+describe("completeRow robustness", () => {
+  it("a linked task that is already closed still completes its item (a retry after a partial failure)", async () => {
+    const itemId = await newItem({ system: "בדיקת אינסטלציה", frequency_unit: "month", frequency_count: 12, next_due_at: addDays(today, -3), last_done_at: addDays(today, -370) });
+    const ticketId = await newTicket({ maintenance_item_id: itemId, status: "בוצע" });
+    await completeRow(db, profileId, "task", ticketId);
+    const { data } = await admin.from("maintenance_item").select("last_done_at").eq("id", itemId).single();
+    expect(data!.last_done_at).toBe(today);
+  });
+
+  it("tells the caller when the item has no frequency, so the screen can ask for one", async () => {
+    const id = await newItem({ system: "שעוני חשמל", next_due_at: today, last_done_at: addDays(today, -300) });
+    const r = await completeRow(db, profileId, "maintenance", id);
+    expect(r).toEqual({ needsFrequency: true });
+  });
+
+  it("does not ask for a frequency when the item has one", async () => {
+    const id = await newItem({ system: "חיטוי מאגר מים", frequency_unit: "year", frequency_count: 1, next_due_at: today, last_done_at: addDays(today, -365) });
+    expect(await completeRow(db, profileId, "maintenance", id)).toEqual({ needsFrequency: false });
+  });
+});
+
 describe("loadToday", () => {
   it("does not return an archived item or an archived ticket", async () => {
     const itemId = await newItem({ system: "שער חניון", next_due_at: addDays(today, -3), last_done_at: addDays(today, -90), archived_at: new Date().toISOString() });

@@ -1,8 +1,10 @@
 "use client";
+import Link from "next/link";
 import { useState } from "react";
 import { Row } from "./Row";
 import { CheckButton } from "./CheckButton";
 import { completeRowAction } from "@/app/(app)/actions";
+import { t } from "@/lib/labels";
 
 export type SectionRow = {
   id: string;
@@ -19,14 +21,17 @@ export type SectionRow = {
 /** One Today section. Check-off hides the row at once and brings it back if the save fails. */
 export function TodaySection({ title, sub, rows }: { title: string; sub?: string; rows: SectionRow[] }) {
   const [hidden, setHidden] = useState<Set<string>>(new Set());
+  const [notice, setNotice] = useState<"needsFrequency" | "failed" | null>(null);
   const shown = rows.filter((r) => !hidden.has(r.id));
-  if (shown.length === 0) return null;
 
   async function check(r: SectionRow) {
+    setNotice(null);
     setHidden((h) => new Set(h).add(r.id));
     try {
-      await completeRowAction(r.kind as "task" | "maintenance", r.id);
+      const res = await completeRowAction(r.kind as "task" | "maintenance", r.id);
+      if (res.needsFrequency) setNotice("needsFrequency");
     } catch {
+      setNotice("failed");
       setHidden((h) => {
         const n = new Set(h);
         n.delete(r.id);
@@ -35,8 +40,16 @@ export function TodaySection({ title, sub, rows }: { title: string; sub?: string
     }
   }
 
+  const banner = notice && (
+    <div role={notice === "failed" ? "alert" : "status"} className={`mb-3 rounded-xl p-3 ${notice === "failed" ? "bg-[#FCE4E1] text-[#B3261E]" : "bg-[#FDF0DC] text-[#7A4A00]"}`}>
+      {notice === "failed" ? t.today.failed : <>{t.today.needsFrequency} <Link href="/maintenance" className="font-semibold underline">{t.today.toCalendar}</Link></>}
+    </div>
+  );
+  if (shown.length === 0) return banner ? <section className="px-4 pb-5">{banner}</section> : null;
+
   return (
     <section className="px-4 pb-5">
+      {banner}
       <div className="flex items-baseline gap-2 px-1 pb-2.5">
         <h2 className="text-lg font-bold">{title}</h2>
         <span className="text-sm text-muted">{shown.length}</span>

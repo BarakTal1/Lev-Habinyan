@@ -86,6 +86,35 @@ describe("updateItem", () => {
   });
 });
 
+describe("setting a frequency after mark done", () => {
+  it("computes the next date from the last done date when the next date is blank", async () => {
+    const b = await newBuilding();
+    await ensureItems(db, b);
+    const id = await item(b, "שעוני חשמל");
+    await markDone(db, profileId, id, { done_at: "2026-10-08" });
+    await updateItem(db, id, { frequency_unit: "month", frequency_count: 6, next_due_at: null });
+    const { data } = await admin.from("maintenance_item").select("next_due_at").eq("id", id).single();
+    expect(data!.next_due_at).toBe("2027-04-08");
+  });
+  it("keeps a next date the founder typed", async () => {
+    const b = await newBuilding();
+    await ensureItems(db, b);
+    const id = await item(b, "בדיקת אינסטלציה");
+    await markDone(db, profileId, id, { done_at: "2026-10-08" });
+    await updateItem(db, id, { frequency_unit: "month", frequency_count: 6, next_due_at: "2027-01-15" });
+    const { data } = await admin.from("maintenance_item").select("next_due_at").eq("id", id).single();
+    expect(data!.next_due_at).toBe("2027-01-15");
+  });
+  it("leaves the next date empty when there is no last done date", async () => {
+    const b = await newBuilding();
+    await ensureItems(db, b);
+    const id = await item(b, "ניקיון");
+    await updateItem(db, id, { frequency_unit: "week", frequency_count: 1, next_due_at: null });
+    const { data } = await admin.from("maintenance_item").select("next_due_at").eq("id", id).single();
+    expect(data!.next_due_at).toBeNull();
+  });
+});
+
 describe("createTaskFromItem", () => {
   it("creates a linked task and completing it from Today completes the item", async () => {
     const b = await newBuilding();

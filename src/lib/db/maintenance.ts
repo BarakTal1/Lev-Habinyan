@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { completeMaintenanceItem } from "@/lib/db/complete";
 import { createTicket } from "@/lib/db/tickets";
-import { maintenanceState, type FreqUnit, type MaintState } from "@/lib/domain/maintenance";
+import { addFrequency, maintenanceState, type FreqUnit, type MaintState } from "@/lib/domain/maintenance";
 import { todayIL } from "@/lib/israel";
 import { SYSTEMS, SYSTEM_CATEGORY, type System } from "@/lib/labels";
 
@@ -22,8 +22,14 @@ export type ItemPatch = {
   last_done_at?: string | null; next_due_at?: string | null; supplier_id?: string | null; notes?: string | null;
 };
 
+/** Updates an item. When a frequency is set and no next date is given, the next date is computed from the last done date (if there is one). */
 export async function updateItem(db: SupabaseClient, itemId: string, patch: ItemPatch): Promise<void> {
-  must(await db.from("maintenance_item").update(patch).eq("id", itemId).select("id").single());
+  const next = { ...patch };
+  if (next.frequency_unit && next.frequency_count && !next.next_due_at) {
+    const last = next.last_done_at ?? must(await db.from("maintenance_item").select("last_done_at").eq("id", itemId).single()).last_done_at;
+    if (last) next.next_due_at = addFrequency(last, next.frequency_unit, next.frequency_count);
+  }
+  must(await db.from("maintenance_item").update(next).eq("id", itemId).select("id").single());
 }
 
 /** Marks an item done. `needsFrequency` is true when there is no next date, so the screen can ask for a frequency. */
