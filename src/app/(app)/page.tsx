@@ -74,9 +74,15 @@ export default async function TodayPage() {
         </div>
       ) : (
         <>
-          <TodaySection title={t.today.overdue} rows={data.overdue.map((r) => toRow(r, "overdue"))} />
-          <TodaySection title={t.today.soon} sub="14 ימים" rows={data.soon.map((r) => toRow(r, "soon"))} />
-          <TodaySection title={t.today.faults} rows={data.faults.map((r) => toRow(r, "faults"))} />
+          <div data-testid="today-columns" className="lg:grid lg:grid-cols-2 lg:items-start lg:gap-6 lg:px-4">
+            <div>
+              <TodaySection title={t.today.overdue} rows={data.overdue.map((r) => toRow(r, "overdue"))} />
+              <TodaySection title={t.today.soon} sub="14 ימים" rows={data.soon.map((r) => toRow(r, "soon"))} />
+            </div>
+            <div>
+              <TodaySection title={t.today.faults} rows={data.faults.map((r) => toRow(r, "faults"))} />
+            </div>
+          </div>
         </>
       )}
       <Fab href="/tickets/new" label="כרטיס חדש" />

@@ -64,3 +64,27 @@ test("mobile: add a supplier and see it grouped by category", async ({ page }) =
   await expect(page.getByRole("heading", { name: "הדברה" })).toBeVisible();
   await expect(page.getByText(name)).toBeVisible();
 });
+
+test.describe("desktop 1280", () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  test("rail visible, bottom nav hidden, Today in two columns", async ({ page }) => {
+    await signIn(page);
+    await expect(page.getByRole("complementary").getByRole("link", { name: "יומן תחזוקה" })).toBeVisible();
+    await expect(page.locator("nav.fixed")).toBeHidden();
+    const cols = await page.getByTestId("today-columns").evaluate((el) => getComputedStyle(el).gridTemplateColumns.split(" ").length);
+    expect(cols).toBe(2);
+  });
+
+  test("ticket list shows assignee and due columns", async ({ page }) => {
+    await signIn(page);
+    await page.goto("/tickets");
+    await expect(page.getByRole("main").getByText("עומר שטיגליץ", { exact: true }).last()).toBeVisible();
+  });
+});
+
+test("mobile: assignee column is hidden on the ticket list", async ({ page }) => {
+  await signIn(page);
+  await page.goto("/tickets");
+  await expect(page.getByRole("main").getByText("עומר שטיגליץ", { exact: true }).last()).toBeHidden();
+});

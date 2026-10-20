@@ -16,9 +16,11 @@ export type RowProps = {
   flag?: string;
   trailing?: ReactNode;
   href?: string;
+  /** Extra columns shown from 1024 px up (assignee, due date). */
+  extra?: { assignee: string | null; due: string | null };
 };
 
-export function Row({ kind, title, building, meta, late, badge, flag, trailing, href }: RowProps) {
+export function Row({ kind, title, building, meta, late, badge, flag, trailing, href, extra }: RowProps) {
   const body = (
     <>
       <div className="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-[#F1EFEA] text-navy">
@@ -38,6 +40,12 @@ export function Row({ kind, title, building, meta, late, badge, flag, trailing, 
           </div>
         )}
       </div>
+      {extra && (
+        <>
+          <div className="hidden w-40 flex-none text-sm lg:block">{extra.assignee ?? <span className="text-muted">לא שויך</span>}</div>
+          <div className="hidden w-24 flex-none text-sm lg:block" dir="ltr">{extra.due ?? ""}</div>
+        </>
+      )}
       {badge && <Badge list={badge.list} value={badge.value} />}
     </>
   );

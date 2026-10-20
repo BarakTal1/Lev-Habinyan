@@ -7,6 +7,7 @@ import { listAssignees, listBuildings } from "@/lib/db/people";
 import { listTickets, type TicketFilters, type TicketKind } from "@/lib/db/tickets";
 import { hoursWithoutAction } from "@/lib/domain/tickets";
 import { ageLabel } from "@/lib/format";
+import { formatDate } from "@/lib/israel";
 import { STATUSES, URGENCIES, t } from "@/lib/labels";
 import { createClient } from "@/lib/supabase/server";
 
@@ -67,7 +68,8 @@ export default async function TicketsPage({ searchParams }: { searchParams: Prom
             const flag = hoursWithoutAction({ kind: r.kind, status: r.status, created_at: r.created_at, first_action_at: r.first_action_at }, now);
             return (
               <Row key={r.id} kind={r.kind} title={r.title} building={r.building_name} meta={`${ageLabel(r.created_at, now)} · ${r.status}`}
-                flag={flag ? `${flag} שעות ללא טיפול` : undefined} badge={{ list: "urgency", value: r.urgency }} href={`/tickets/${r.id}`} />
+                flag={flag ? `${flag} שעות ללא טיפול` : undefined} badge={{ list: "urgency", value: r.urgency }} href={`/tickets/${r.id}`}
+                extra={{ assignee: r.assignee_name, due: r.due_at ? formatDate(r.due_at) : null }} />
             );
           })}
         </div>
