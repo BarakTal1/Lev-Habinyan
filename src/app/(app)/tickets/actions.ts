@@ -19,7 +19,9 @@ export async function createTicketAction(input: tickets.CreateTicketInput): Prom
   if (!(CATEGORIES as readonly string[]).includes(input.category)) throw new Error("bad category");
   if (input.urgency && !(URGENCIES as readonly string[]).includes(input.urgency)) throw new Error("bad urgency");
   if (input.kind !== "fault" && input.kind !== "task") throw new Error("bad kind");
-  const r = await tickets.createTicket(await createClient(), user.profileId, { ...input, title });
+  // Only the fields the form sends. The reporter, the maintenance link and the unit id are not taken from the browser.
+  const { kind, category, urgency, building_id, unit_number, assignee_id, description, due_at, original_message } = input;
+  const r = await tickets.createTicket(await createClient(), user.profileId, { kind, category, urgency, building_id, unit_number, assignee_id, description, due_at, original_message, title });
   refresh();
   return r;
 }

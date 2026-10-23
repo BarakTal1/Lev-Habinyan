@@ -21,13 +21,18 @@ export async function signOut() {
   redirect("/sign-in");
 }
 
+/** SITE_URL is the fixed production address. The forwarded headers are only a fallback for local development. */
+async function siteUrl(): Promise<string> {
+  if (process.env.SITE_URL) return process.env.SITE_URL.replace(/\/$/, "");
+  const h = await headers();
+  const host = h.get("host");
+  return `${host?.startsWith("localhost") || host?.startsWith("127.") ? "http" : "https"}://${host}`;
+}
+
 /** Starts the Google sign-in on the server, so the browser needs no Supabase client code. */
 export async function googleSignIn() {
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host");
-  const proto = h.get("x-forwarded-proto") ?? (host?.startsWith("localhost") || host?.startsWith("127.") ? "http" : "https");
   const supabase = await createClient();
-  const { data, error } = await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: `${proto}://${host}/auth/callback` } });
+  const { data, error } = await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: `${await siteUrl()}/auth/callback` } });
   if (error || !data.url) redirect("/sign-in?error=1");
   redirect(data.url);
 }

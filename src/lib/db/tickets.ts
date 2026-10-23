@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { addUnit } from "@/lib/db/buildings";
 import { CATEGORIES, URGENCIES } from "@/lib/labels";
+import { validateUpload } from "@/lib/uploads";
 
 export type TicketKind = "fault" | "task";
 
@@ -72,7 +73,11 @@ export async function assign(db: SupabaseClient, profileId: string, id: string, 
   if (cur.assignee_id === personId) return;
   const patch: Record<string, unknown> = { assignee_id: personId };
   if (personId && cur.status === "חדש") patch.status = "הוקצה";
-  must(await db.from("ticket").update(patch).eq("id", id).select("id").single());
+  // Conditional on what we read, so a status another founder set in between is not overwritten.
+  let upd = db.from("ticket").update(patch).eq("id", id).eq("status", cur.status);
+  upd = cur.assignee_id === null ? upd.is("assignee_id", null) : upd.eq("assignee_id", cur.assignee_id);
+  const done = must(await upd.select("id"));
+  if (done.length === 0) return assign(db, profileId, id, personId);
   await event(db, id, "assignment", profileId, { from: cur.assignee_id, to: personId });
   if (patch.status) await event(db, id, "status", profileId, { from: cur.status, to: patch.status });
 }
@@ -103,6 +108,7 @@ export async function updateTicket(db: SupabaseClient, profileId: string, id: st
 }
 
 export async function uploadAttachment(db: SupabaseClient, profileId: string, ticketId: string, kind: "photo" | "invoice" | "document", file: File): Promise<void> {
+  validateUpload(file);
   const ext = (file.name.split(".").pop() ?? "bin").replace(/[^a-z0-9]/gi, "").toLowerCase() || "bin";
   const path = `tickets/${ticketId}/${crypto.randomUUID()}.${ext}`;
   const up = await db.storage.from("attachments").upload(path, file, { contentType: file.type || undefined });

@@ -18,8 +18,8 @@ describe("remindersDue", () => {
   it("an item due today gives due", () => {
     expect(remindersDue([item({ next_due_at: today })], today, new Set())).toEqual([expect.objectContaining({ itemId: "i1", kind: "due" })]);
   });
-  it("an item due in 13 or 15 days gives nothing", () => {
-    expect(remindersDue([item({ next_due_at: "2026-11-02" }), item({ id: "i2", next_due_at: "2026-11-04" })], today, new Set())).toEqual([]);
+  it("an item due in 10 or 15 days gives nothing", () => {
+    expect(remindersDue([item({ next_due_at: "2026-10-30" }), item({ id: "i2", next_due_at: "2026-11-04" })], today, new Set())).toEqual([]);
   });
   it("skips a reminder that was already sent", () => {
     expect(remindersDue([item({})], today, new Set(["i1:before14:2026-11-03"]))).toEqual([]);
@@ -67,9 +67,12 @@ describe("runReminders", () => {
     expect(sent[0].text).toContain(`${tag} בניין`);
     const { count } = await admin.from("reminder_log").select("*", { count: "exact", head: true }).eq("item_id", itemId);
     expect(count).toBe(1);
+    // Other test files share this database, so judge only this test's own item.
     const again = await runReminders(db, async (m) => { sent.push(m); }, nowDate);
-    expect(again.sent).toBe(0);
-    expect(sent).toHaveLength(1);
+    expect(sent.slice(1).some((m) => m.text.includes(tag))).toBe(false);
+    expect(again.sent).toBeGreaterThanOrEqual(0);
+    const { count: after } = await admin.from("reminder_log").select("*", { count: "exact", head: true }).eq("item_id", itemId);
+    expect(after).toBe(1);
   });
 
   it("does not log a reminder when sending fails, so the next run retries", async () => {

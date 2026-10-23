@@ -9,6 +9,9 @@ export type ReminderItem = {
 export type Reminder = { itemId: string; kind: "before14" | "due"; due: string; building: string | null; system: string };
 export type Mail = { to: string[]; subject: string; text: string };
 
+/** The job also covers this many days it may have missed, for example when a daily run fails. */
+export const MISSED_DAYS = 3;
+
 export const reminderKey = (itemId: string, kind: string, due: string) => `${itemId}:${kind}:${due}`;
 
 /** Reminders to send today: 14 days before the due date and on the due date. Items already sent are skipped. */
@@ -17,7 +20,7 @@ export function remindersDue(items: ReminderItem[], today: string, alreadySent: 
   for (const i of items) {
     if (i.archived_at || !i.applicable || !i.next_due_at) continue;
     const d = daysBetween(today, i.next_due_at);
-    const kind = d === SOON_DAYS ? "before14" : d === 0 ? "due" : null;
+    const kind = d <= SOON_DAYS && d > SOON_DAYS - MISSED_DAYS - 1 ? "before14" : d <= 0 && d >= -MISSED_DAYS ? "due" : null;
     if (!kind || alreadySent.has(reminderKey(i.id, kind, i.next_due_at))) continue;
     out.push({ itemId: i.id, kind, due: i.next_due_at, building: i.building_name, system: i.system });
   }
@@ -41,7 +44,7 @@ export async function runReminders(db: SupabaseClient, send: (m: Mail) => Promis
   const today = todayIL(now);
   const horizon = addDays(today, SOON_DAYS);
   const [items, log, profiles] = await Promise.all([
-    db.from("maintenance_item").select("id, system, applicable, next_due_at, archived_at, building:building_id(name, archived_at)").is("archived_at", null).in("next_due_at", [today, horizon]),
+    db.from("maintenance_item").select("id, system, applicable, next_due_at, archived_at, building:building_id(name, archived_at)").is("archived_at", null).gte("next_due_at", addDays(today, -MISSED_DAYS)).lte("next_due_at", horizon),
     db.from("reminder_log").select("item_id, kind, due_date"),
     db.from("profile").select("email"),
   ]);

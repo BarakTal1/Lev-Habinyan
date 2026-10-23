@@ -37,6 +37,6 @@ npm run typecheck
    insert into profile (email, person_id) values ('<roi email>', '<id>');
    -- repeat for עומר שטיגליץ
    ```
-5. Vercel environment variables: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `CRON_SECRET`. Do **not** set `NEXT_PUBLIC_DEV_LOGIN`.
+5. Vercel environment variables: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `CRON_SECRET`, `SITE_URL` (the public address, for example `https://app.example.com`). Do **not** set `NEXT_PUBLIC_DEV_LOGIN`.
 6. Email reminders: set `RESEND_API_KEY` and `EMAIL_FROM`, then switch on "תזכורות במייל" in the app settings. The job runs daily (`vercel.json`).
 7. Open the site on a phone, sign in with Google, and add it to the home screen.

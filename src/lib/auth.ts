@@ -8,7 +8,7 @@ export async function getUser(): Promise<AppUser | null> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user?.email) return null;
-  const { data } = await supabase.from("profile").select("id, email, person_id, person:person_id(name)").eq("email", user.email).maybeSingle();
+  const { data } = await supabase.from("profile").select("id, email, person_id, person:person_id(name)").ilike("email", user.email.replace(/[\\%_]/g, "\\$&")).maybeSingle();
   if (!data) return null;
   const person = data.person as unknown as { name: string } | null;
   return { profileId: data.id, email: data.email, personId: data.person_id, name: person?.name ?? data.email };

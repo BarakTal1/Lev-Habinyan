@@ -57,7 +57,7 @@ export const t = {
     tabs: { overview: "סקירה", residents: "דיירים", suppliers: "ספקים", maintenance: "תחזוקה", documents: "מסמכים" },
     addResident: "הוספת דייר", resName: "שם", phone: "טלפון", unit: "דירה", owner: "בעלים", tenant: "שוכר", committee: "ועד", noResidents: "אין דיירים עדיין",
     noSuppliers: "אין ספקים משויכים. שייכו ספק לפריט תחזוקה.", noDocs: "אין מסמכים", addDoc: "הוספת מסמך", openMaintenance: "ליומן התחזוקה", openList: "לכרטיסים של הבניין",
-    archive: "הסרה", call: "חיוג", chat: "וואטסאפ", allFine: "הכל תקין",
+    archive: "הסרה", archiveConfirm: "להסיר את", call: "חיוג", chat: "וואטסאפ", allFine: "הכל תקין",
   },
   maint: {
     title: "יומן תחזוקה", portfolio: "כל הבניינים", last: "אחרון", next: "הבא", markDone: "סימון כבוצע", doneDate: "תאריך ביצוע", note: "הערה", file: "מסמך או תמונה",

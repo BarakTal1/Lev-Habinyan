@@ -1,6 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { maintenanceState, type MaintState } from "@/lib/domain/maintenance";
 import { todayIL } from "@/lib/israel";
+import { SYSTEMS } from "@/lib/labels";
+import { validateUpload } from "@/lib/uploads";
 
 const must = <T>(r: { data: T; error: { message: string } | null }): NonNullable<T> => {
   if (r.error) throw new Error(r.error.message);
@@ -27,6 +29,7 @@ export async function listBuildingCards(db: SupabaseClient, now: Date = new Date
   const open = new Map<string, number>();
   for (const r of must(t)) open.set(r.building_id!, (open.get(r.building_id!) ?? 0) + 1);
   const worst = new Map<string, { state: MaintState; count: number }>();
+  const withItems = new Set(must(m).map((r) => r.building_id));
   for (const r of must(m)) {
     const s = maintenanceState(r, today);
     if (s === "ok" || s === "na") continue;
@@ -36,7 +39,8 @@ export async function listBuildingCards(db: SupabaseClient, now: Date = new Date
   }
   return must(b).map((r) => ({
     id: r.id, name: r.name, city: r.city, units: units.get(r.id) ?? 0, open_tickets: open.get(r.id) ?? 0,
-    worst: worst.get(r.id)?.state ?? "ok", worst_count: worst.get(r.id)?.count ?? 0,
+    // A building with no maintenance items has no data, the same as in the portfolio view.
+    worst: withItems.has(r.id) ? (worst.get(r.id)?.state ?? "ok") : "nodata", worst_count: withItems.has(r.id) ? (worst.get(r.id)?.count ?? 0) : SYSTEMS.length,
   }));
 }
 
@@ -53,10 +57,13 @@ export async function getBuilding(db: SupabaseClient, id: string): Promise<Build
   const b = await db.from("building").select("id, name, city, address, notes").eq("id", id).is("archived_at", null).maybeSingle();
   if (b.error) throw new Error(b.error.message);
   if (!b.data) return null;
-  const [units, ups, items, docs, tickets] = await Promise.all([
-    db.from("unit").select("id, number").eq("building_id", id).is("archived_at", null),
-    db.from("unit_person").select("unit_id, relation, is_committee, person:person_id(id, name, phone, archived_at), unit:unit_id(number, building_id)"),
-    db.from("maintenance_item").select("supplier:supplier_id(id, name, phone, supplier_profile(category))").eq("building_id", id).not("supplier_id", "is", null),
+  const units = await db.from("unit").select("id, number").eq("building_id", id).is("archived_at", null);
+  const unitIds = must(units).map((u) => u.id);
+  const [ups, items, docs, tickets] = await Promise.all([
+    unitIds.length === 0
+      ? Promise.resolve({ data: [], error: null })
+      : db.from("unit_person").select("unit_id, relation, is_committee, person:person_id(id, name, phone, archived_at), unit:unit_id(number, building_id)").in("unit_id", unitIds),
+    db.from("maintenance_item").select("supplier:supplier_id(id, name, phone, archived_at, supplier_profile(category))").eq("building_id", id).not("supplier_id", "is", null),
     db.from("attachment").select("id, kind, storage_path, created_at").eq("building_id", id).is("archived_at", null).order("created_at", { ascending: false }),
     db.from("ticket").select("id", { count: "exact", head: true }).eq("building_id", id).is("archived_at", null).not("status", "in", "(בוצע,בוטל)"),
   ]);
@@ -67,9 +74,9 @@ export async function getBuilding(db: SupabaseClient, id: string): Promise<Build
     .sort((a, c) => a.unit.localeCompare(c.unit, undefined, { numeric: true }));
   const seen = new Set<string>();
   const suppliers: BuildingDetail["suppliers"] = [];
-  for (const r of must(items) as unknown as { supplier: { id: string; name: string; phone: string | null; supplier_profile: { category: string } | { category: string }[] | null } | null }[]) {
+  for (const r of must(items) as unknown as { supplier: { id: string; name: string; phone: string | null; archived_at: string | null; supplier_profile: { category: string } | { category: string }[] | null } | null }[]) {
     const s = r.supplier;
-    if (!s || seen.has(s.id)) continue;
+    if (!s || s.archived_at || seen.has(s.id)) continue;
     seen.add(s.id);
     const sp = Array.isArray(s.supplier_profile) ? s.supplier_profile[0] : s.supplier_profile;
     suppliers.push({ id: s.id, name: s.name, phone: s.phone, category: sp?.category ?? "" });
@@ -112,6 +119,7 @@ export async function archiveResident(db: SupabaseClient, personId: string): Pro
 }
 
 export async function uploadBuildingDocument(db: SupabaseClient, profileId: string, buildingId: string, file: File): Promise<void> {
+  validateUpload(file);
   const ext = (file.name.split(".").pop() ?? "bin").replace(/[^a-z0-9]/gi, "").toLowerCase() || "bin";
   const path = `buildings/${buildingId}/${crypto.randomUUID()}.${ext}`;
   const up = await db.storage.from("attachments").upload(path, file, { contentType: file.type || undefined });

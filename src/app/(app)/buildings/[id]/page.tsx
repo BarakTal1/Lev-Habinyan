@@ -7,6 +7,7 @@ import { getBuilding } from "@/lib/db/buildings";
 import { t } from "@/lib/labels";
 import { telLink, waLink } from "@/lib/phone";
 import { createClient } from "@/lib/supabase/server";
+import { ConfirmForm } from "@/components/ConfirmForm";
 import { addResidentAction, archiveResidentAction, uploadBuildingDocumentAction } from "../actions";
 
 const TABS = ["overview", "residents", "suppliers", "maintenance", "documents"] as const;
@@ -72,7 +73,7 @@ export default async function BuildingPage({ params, searchParams }: { params: P
                   </div>
                   {telLink(r.phone) && <a href={telLink(r.phone)!} aria-label={t.buildings.call} className={`${iconBtn} bg-[#E3E8F2] text-navy`}><Icon name="call" size={22} filled /></a>}
                   {waLink(r.phone) && <a href={waLink(r.phone)!} aria-label={t.buildings.chat} className={`${iconBtn} bg-[#E3F4EA] text-[#1E6B45]`}><Icon name="chat" size={22} /></a>}
-                  <form action={archiveResidentAction.bind(null, id, r.person_id)}><button aria-label={t.buildings.archive} className={`${iconBtn} text-muted`}><Icon name="close" size={20} /></button></form>
+                  <ConfirmForm action={archiveResidentAction.bind(null, id, r.person_id)} message={`${t.buildings.archiveConfirm} ${r.name}?`}><button aria-label={t.buildings.archive} className={`${iconBtn} text-muted`}><Icon name="close" size={20} /></button></ConfirmForm>
                 </div>
               ))}
             </div>

@@ -4,6 +4,7 @@ import { createTicket } from "@/lib/db/tickets";
 import { addFrequency, maintenanceState, type FreqUnit, type MaintState } from "@/lib/domain/maintenance";
 import { todayIL } from "@/lib/israel";
 import { SYSTEMS, SYSTEM_CATEGORY, type System } from "@/lib/labels";
+import { validateUpload } from "@/lib/uploads";
 
 const must = <T>(r: { data: T; error: { message: string } | null }): NonNullable<T> => {
   if (r.error) throw new Error(r.error.message);
@@ -36,6 +37,7 @@ export async function updateItem(db: SupabaseClient, itemId: string, patch: Item
 export async function markDone(
   db: SupabaseClient, profileId: string, itemId: string, input: { done_at: string; note?: string; file?: File },
 ): Promise<{ next_due_at: string | null; needsFrequency: boolean }> {
+  if (input.file && input.file.size > 0) validateUpload(input.file);
   const r = await completeMaintenanceItem(db, profileId, itemId, input.done_at, input.note);
   if (input.file && input.file.size > 0) {
     const item = must(await db.from("maintenance_item").select("building_id").eq("id", itemId).single());
@@ -44,7 +46,8 @@ export async function markDone(
     const up = await db.storage.from("attachments").upload(path, input.file, { contentType: input.file.type || undefined });
     if (up.error) throw new Error(up.error.message);
     const att = must(await db.from("attachment").insert({ building_id: item.building_id, kind: input.file.type.startsWith("image/") ? "photo" : "document", storage_path: path, mime_type: input.file.type || null, created_by: profileId }).select("id").single());
-    await db.from("maintenance_log").update({ attachment_id: att.id }).eq("item_id", itemId).eq("done_at", input.done_at);
+    const link = await db.from("maintenance_log").update({ attachment_id: att.id }).eq("item_id", itemId).eq("done_at", input.done_at);
+    if (link.error) throw new Error(link.error.message);
   }
   return { next_due_at: r.next_due_at, needsFrequency: r.next_due_at === null };
 }

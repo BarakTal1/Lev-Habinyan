@@ -1,3 +1,4 @@
+import "server-only";
 import { createClient } from "@supabase/supabase-js";
 
 /** Service-role client for server jobs that run without a signed-in user. Never import this in a component or action that serves a user. */

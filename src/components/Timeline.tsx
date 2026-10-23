@@ -1,6 +1,7 @@
 import { t } from "@/lib/labels";
 import { formatDate } from "@/lib/israel";
 import type { TicketDetail } from "@/lib/db/tickets";
+import { describeEdit } from "@/lib/ticketEvents";
 
 function describe(e: TicketDetail["events"][number]): string {
   const p = e.payload;
@@ -8,7 +9,7 @@ function describe(e: TicketDetail["events"][number]): string {
   if (e.type === "note") return String(p.text ?? "");
   if (e.type === "assignment") return t.tickets.ev.assignment;
   if (e.type === "photo") return t.tickets.ev.photo;
-  if (e.type === "edit") return `${t.tickets.ev.edit}: ${Object.keys(p).join(", ")}`;
+  if (e.type === "edit") return `${t.tickets.ev.edit}: ${describeEdit(p)}`;
   return t.tickets.ev[e.type as keyof typeof t.tickets.ev] ?? e.type;
 }
 
