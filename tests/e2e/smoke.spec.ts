@@ -127,3 +127,40 @@ test("mobile: edit a ticket and set a visit time", async ({ page }) => {
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(newTitle);
   await expect(page.getByText("2026-12-02 09:30")).toBeVisible();
 });
+
+test("mobile: archive a ticket and it leaves the list", async ({ page }) => {
+  await signIn(page);
+  await page.goto("/tickets/new");
+  await page.getByRole("button", { name: "ויצמן 9" }).click();
+  const title = `לארכוב ${Date.now()}`;
+  await page.getByRole("textbox").first().fill(title);
+  await page.getByRole("button", { name: "שמירה" }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(title);
+  page.once("dialog", (d) => d.accept());
+  await page.getByRole("button", { name: "העברה לארכיון" }).click();
+  await expect(page).toHaveURL(/\/tickets$/);
+  await expect(page.getByRole("main").getByText(title)).toHaveCount(0);
+});
+
+test("mobile: edit a building, then archive it", async ({ page }) => {
+  await signIn(page);
+  await page.goto("/buildings");
+  await page.getByText("הוספת בניין").click();
+  const name = `בניין לעריכה ${Date.now()}`;
+  await page.locator('input[name="name"]').fill(name);
+  await page.getByRole("button", { name: "שמירה" }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(name);
+  await page.getByRole("button", { name: "עריכת בניין" }).click();
+  const dialog = page.getByRole("dialog");
+  const renamed = `${name} ב`;
+  await dialog.locator('input[name="name"]').fill(renamed);
+  await dialog.locator('input[name="city"]').fill("חיפה");
+  await dialog.getByRole("button", { name: "שמירה" }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(renamed);
+  await expect(page.getByText("חיפה")).toBeVisible();
+  await page.getByRole("button", { name: "עריכת בניין" }).click();
+  page.once("dialog", (d) => d.accept());
+  await page.getByRole("dialog").getByRole("button", { name: "העברת הבניין לארכיון" }).click();
+  await expect(page).toHaveURL(/\/buildings$/);
+  await expect(page.getByRole("main").getByText(renamed)).toHaveCount(0);
+});

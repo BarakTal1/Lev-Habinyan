@@ -8,6 +8,7 @@ import { t } from "@/lib/labels";
 import { telLink, waLink } from "@/lib/phone";
 import { createClient } from "@/lib/supabase/server";
 import { ConfirmForm } from "@/components/ConfirmForm";
+import { EditBuildingSheet } from "@/components/EditBuildingSheet";
 import { addResidentAction, archiveResidentAction, uploadBuildingDocumentAction } from "../actions";
 
 const TABS = ["overview", "residents", "suppliers", "maintenance", "documents"] as const;
@@ -25,9 +26,12 @@ export default async function BuildingPage({ params, searchParams }: { params: P
   return (
     <main className="mx-auto flex max-w-3xl flex-col gap-4 p-4">
       <Link href="/buildings" className="flex h-12 items-center text-navy"><Icon name="arrow_forward" size={22} /></Link>
-      <header>
-        <h1 dir="rtl" className="text-2xl font-bold">{b.name}</h1>
-        <p className="text-muted">{[b.city, b.address].filter(Boolean).join(" · ")}</p>
+      <header className="flex items-start gap-2">
+        <div className="min-w-0 flex-1">
+          <h1 dir="rtl" className="text-2xl font-bold">{b.name}</h1>
+          <p className="text-muted">{[b.city, b.address].filter(Boolean).join(" · ")}</p>
+        </div>
+        <EditBuildingSheet building={{ id: b.id, name: b.name, city: b.city, address: b.address, notes: b.notes }} />
       </header>
       <nav className="flex gap-2 overflow-x-auto" aria-label="tabs">
         {TABS.map((k) => (

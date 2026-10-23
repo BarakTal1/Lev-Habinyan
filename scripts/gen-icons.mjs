@@ -10,7 +10,7 @@ const NAMES = [
   "verified","home","confirmation_number","apartment","more_horiz","chevron_left","arrow_forward",
   "calendar_month","groups","engineering","settings","upload_file","photo_camera","attach_file",
   "edit","logout","plumbing","elevator","fire_extinguisher","door_sliding","inbox","content_paste",
-  "event","filter_list","person","list_alt","description","open_in_new","info",
+  "event","filter_list","person","list_alt","description","open_in_new","info","inventory_2",
 ];
 
 const dir = "node_modules/@material-symbols/svg-400/rounded/";

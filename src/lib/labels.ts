@@ -49,7 +49,7 @@ export const t = {
     originalMessage: "הודעת וואטסאפ מקורית", pasteMessage: "הדביקו כאן הודעה מוואטסאפ", saveMessage: "שמירת ההודעה",
     status: "סטטוס", nextStatus: "העברה ל", notes: "הערות", addNote: "הוספת הערה", timeline: "היסטוריה", photos: "תמונות", addPhoto: "הוספת תמונה",
     cost: "עלות (₪)", invoice: "חשבונית", addInvoice: "הוספת חשבונית", saved: "נשמר", number: "מס׳",
-    edit: "עריכה", visit: "ביקור", visitTime: "מועד ביקור", closed: "סגורות", unit: "דירה (מספר)",
+    edit: "עריכה", archive: "העברה לארכיון", archiveConfirm: "להעביר את הכרטיס לארכיון? הוא יוסתר מכל הרשימות.", visit: "ביקור", visitTime: "מועד ביקור", closed: "סגורות", unit: "דירה (מספר)",
     ev: { created: "נוצר", status: "סטטוס", assignment: "שיוך", note: "הערה", edit: "עריכה", photo: "קובץ" },
   },
   buildings: {
@@ -58,6 +58,8 @@ export const t = {
     addResident: "הוספת דייר", resName: "שם", phone: "טלפון", unit: "דירה", owner: "בעלים", tenant: "שוכר", committee: "ועד", noResidents: "אין דיירים עדיין",
     noSuppliers: "אין ספקים משויכים. שייכו ספק לפריט תחזוקה.", noDocs: "אין מסמכים", addDoc: "הוספת מסמך", openMaintenance: "ליומן התחזוקה", openList: "לכרטיסים של הבניין",
     archive: "הסרה", archiveConfirm: "להסיר את", call: "חיוג", chat: "וואטסאפ", allFine: "הכל תקין",
+    edit: "עריכת בניין", notes: "הערות", archiveBuilding: "העברת הבניין לארכיון", archiveBuildingConfirm: "להעביר את הבניין לארכיון? הוא יוסתר מהרשימות.",
+    archiveBlocked: "אי אפשר לארכב בניין עם כרטיסים פתוחים. סגרו אותם קודם.", archiveFailed: "הפעולה נכשלה. נסו שוב.",
   },
   maint: {
     title: "יומן תחזוקה", portfolio: "כל הבניינים", last: "אחרון", next: "הבא", markDone: "סימון כבוצע", doneDate: "תאריך ביצוע", note: "הערה", file: "מסמך או תמונה",

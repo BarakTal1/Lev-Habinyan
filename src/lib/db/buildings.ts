@@ -95,7 +95,20 @@ export async function createBuilding(db: SupabaseClient, input: { name: string; 
 }
 
 export async function updateBuilding(db: SupabaseClient, id: string, patch: { name?: string; city?: string | null; address?: string | null; notes?: string | null }): Promise<void> {
-  must(await db.from("building").update(patch).eq("id", id).select("id").single());
+  const clean = { ...patch };
+  if ("name" in clean) {
+    clean.name = String(clean.name ?? "").trim();
+    if (!clean.name) throw new Error("name required");
+  }
+  must(await db.from("building").update(clean).eq("id", id).select("id").single());
+}
+
+/** Hides a building. Refused while it has an open ticket, so no open work disappears from the lists. */
+export async function archiveBuilding(db: SupabaseClient, id: string): Promise<void> {
+  const open = await db.from("ticket").select("id", { count: "exact", head: true }).eq("building_id", id).is("archived_at", null).not("status", "in", "(בוצע,בוטל)");
+  if (open.error) throw new Error(open.error.message);
+  if ((open.count ?? 0) > 0) throw new Error("building has open tickets");
+  must(await db.from("building").update({ archived_at: new Date().toISOString() }).eq("id", id).select("id").single());
 }
 
 export async function addUnit(db: SupabaseClient, buildingId: string, number: string): Promise<string> {

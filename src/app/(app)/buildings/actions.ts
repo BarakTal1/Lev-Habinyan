@@ -39,3 +39,24 @@ export async function uploadBuildingDocumentAction(buildingId: string, formData:
   await b.uploadBuildingDocument(await createClient(), user.profileId, buildingId, file);
   revalidatePath(`/buildings/${buildingId}`);
 }
+
+export async function updateBuildingAction(id: string, formData: FormData): Promise<void> {
+  await requireUser();
+  const text = (k: string) => String(formData.get(k) ?? "").trim();
+  await b.updateBuilding(await createClient(), id, { name: text("name"), city: text("city") || null, address: text("address") || null, notes: text("notes") || null });
+  revalidatePath(`/buildings/${id}`);
+  revalidatePath("/buildings");
+}
+
+/** Returns an error text for the screen instead of throwing, because "has open tickets" is an expected answer. */
+export async function archiveBuildingAction(id: string): Promise<{ error: string | null }> {
+  await requireUser();
+  try {
+    await b.archiveBuilding(await createClient(), id);
+  } catch (e) {
+    return { error: e instanceof Error && e.message === "building has open tickets" ? "open" : "failed" };
+  }
+  revalidatePath("/buildings");
+  revalidatePath("/");
+  redirect("/buildings");
+}

@@ -85,7 +85,7 @@ export function NewTicketForm({ buildings, assignees }: { buildings: BuildingOpt
         </select>
       </Field>
 
-      <button type="button" onClick={() => setMore((m) => !m)} aria-expanded={more} className="flex h-10 items-center gap-1 self-start text-[15px] font-semibold text-navy"><Icon name={more ? "expand_less" : "expand_more"} size={20} />{t.tickets.more}</button>
+      <button type="button" onClick={() => setMore((m) => !m)} aria-expanded={more} className="flex h-10 items-center gap-1 self-start text-[15px] font-semibold text-navy"><Icon name={more ? "keyboard_arrow_up" : "keyboard_arrow_down"} size={20} />{t.tickets.more}</button>
       {more && (
         <div className="rise-in flex flex-col gap-4">
           {kind === "fault" && building && <Field label={t.tickets.unit}><input value={unit} onChange={(e) => setUnit(e.target.value)} inputMode="numeric" dir="ltr" className={inputCls} /></Field>}

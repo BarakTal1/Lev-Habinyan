@@ -107,6 +107,14 @@ export async function updateTicket(db: SupabaseClient, profileId: string, id: st
   await event(db, id, "edit", profileId, clean);
 }
 
+/** Hides a ticket from every list. The row stays in the database. A repeat call changes nothing. */
+export async function archiveTicket(db: SupabaseClient, profileId: string, id: string): Promise<void> {
+  const archived_at = new Date().toISOString();
+  const done = must(await db.from("ticket").update({ archived_at }).eq("id", id).is("archived_at", null).select("id"));
+  if (done.length === 0) return;
+  await event(db, id, "edit", profileId, { archived_at });
+}
+
 export async function uploadAttachment(db: SupabaseClient, profileId: string, ticketId: string, kind: "photo" | "invoice" | "document", file: File): Promise<void> {
   validateUpload(file);
   const ext = (file.name.split(".").pop() ?? "bin").replace(/[^a-z0-9]/gi, "").toLowerCase() || "bin";
@@ -150,7 +158,7 @@ export type TicketDetail = TicketListRow & {
 export async function getTicket(db: SupabaseClient, id: string): Promise<TicketDetail | null> {
   const r = await db.from("ticket")
     .select("id, number, kind, title, urgency, status, category, due_at, created_at, first_action_at, building_id, assignee_id, description, original_message, scheduled_at, cost_amount, unit_id, building:building_id(name), assignee:assignee_id(name)")
-    .eq("id", id).maybeSingle();
+    .eq("id", id).is("archived_at", null).maybeSingle();
   if (r.error) throw new Error(r.error.message);
   if (!r.data) return null;
   const [ev, att] = await Promise.all([

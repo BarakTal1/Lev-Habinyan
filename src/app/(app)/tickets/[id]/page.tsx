@@ -5,13 +5,14 @@ import { Badge } from "@/components/Badge";
 import { Icon } from "@/components/Icon";
 import { StatusControl } from "@/components/StatusControl";
 import { Timeline } from "@/components/Timeline";
+import { ConfirmForm } from "@/components/ConfirmForm";
 import { EditTicketSheet } from "@/components/EditTicketSheet";
 import { listAssignees, listBuildings } from "@/lib/db/people";
 import { getTicket } from "@/lib/db/tickets";
 import { formatDate, isoToIsraelLocal } from "@/lib/israel";
 import { KINDS, t } from "@/lib/labels";
 import { createClient } from "@/lib/supabase/server";
-import { addNoteAction, saveCostAction, saveOriginalMessageAction, uploadAttachmentAction } from "../actions";
+import { addNoteAction, archiveTicketAction, saveCostAction, saveOriginalMessageAction, uploadAttachmentAction } from "../actions";
 
 const card = "flex flex-col gap-3 rounded-2xl bg-white p-4 shadow-[0_1px_2px_rgba(27,42,74,.06),0_4px_14px_rgba(27,42,74,.05)]";
 const h = "text-[17px] font-bold tracking-[-0.01em]";
@@ -39,8 +40,11 @@ export default async function TicketPage({ params }: { params: Promise<{ id: str
         <div className="text-sm text-muted">{ticket.category}{ticket.due_at && <> · {t.tickets.dueAt} <span dir="ltr">{formatDate(ticket.due_at)}</span></>}</div>
         {ticket.scheduled_at && <div className="text-sm text-muted">{t.tickets.visit} <span dir="ltr">{isoToIsraelLocal(ticket.scheduled_at).replace("T", " ")}</span></div>}
         {ticket.description && <p dir="rtl" className="text-base">{ticket.description}</p>}
-        <div className="pt-1">
+        <div className="flex flex-wrap items-center gap-2 pt-1">
           <EditTicketSheet ticket={{ id: ticket.id, title: ticket.title, category: ticket.category, urgency: ticket.urgency, building_id: ticket.building_id, due_at: ticket.due_at, scheduled_local: ticket.scheduled_at ? isoToIsraelLocal(ticket.scheduled_at) : "", description: ticket.description }} buildings={buildings} />
+          <ConfirmForm action={archiveTicketAction.bind(null, ticket.id)} message={t.tickets.archiveConfirm}>
+            <button className="flex h-12 items-center gap-1 rounded-xl px-3 font-semibold text-muted"><Icon name="inventory_2" size={20} />{t.tickets.archive}</button>
+          </ConfirmForm>
         </div>
       </header>
 

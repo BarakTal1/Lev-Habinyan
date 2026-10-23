@@ -1,5 +1,6 @@
 "use server";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import * as tickets from "@/lib/db/tickets";
 import { CATEGORIES, STATUSES, URGENCIES } from "@/lib/labels";
@@ -80,4 +81,11 @@ export async function updateTicketAction(id: string, formData: FormData): Promis
     due_at: text("due_at") || null, scheduled_at: visit ? israelLocalToIso(visit) : null, description: text("description") || null,
   });
   refresh(id);
+}
+
+export async function archiveTicketAction(id: string): Promise<void> {
+  const user = await requireUser();
+  await tickets.archiveTicket(await createClient(), user.profileId, id);
+  refresh(id);
+  redirect("/tickets");
 }
