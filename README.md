@@ -40,3 +40,10 @@ npm run typecheck
 5. Vercel environment variables: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `CRON_SECRET`, `SITE_URL` (the public address, for example `https://app.example.com`). Do **not** set `NEXT_PUBLIC_DEV_LOGIN`.
 6. Email reminders: set `RESEND_API_KEY` and `EMAIL_FROM`, then switch on "תזכורות במייל" in the app settings. The job runs daily (`vercel.json`).
 7. Open the site on a phone, sign in with Google, and add it to the home screen.
+
+## Hosted test deploy (free plan, fake data only)
+
+- Supabase project `lev-habinyan`, ref `dfasbjtcaehdugjzufto`, region eu-central-1. Migrations 0001 to 0005 are applied.
+- The hosted database holds the fake sample data from `supabase/seed.sql`, without the local dev user. The dev password sign-in does not exist there.
+- The two remaining security advisor notes (`is_allowed`, `current_profile_id` callable by signed-in users) are intended: they return only facts about the caller.
+- Do not load real resident data here. Create a paid project and run the migrations again for real data.
