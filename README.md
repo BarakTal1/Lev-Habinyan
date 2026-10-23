@@ -25,7 +25,7 @@ npm run typecheck
 
 ## Deploy checklist (hosted Supabase and Vercel)
 
-1. Create the Supabase project in an account the client owns. Use a paid plan (daily backups) before any real resident data goes in.
+1. Create the Supabase project in an account the client owns. During development the free plan is fine, with fake data only. The free plan has no daily backups, and it pauses the project after about one week without use. Move to a paid plan before any real resident data goes in.
 2. Apply the migrations: `npx supabase link --project-ref <ref>` then `npx supabase db push`. Do not run `seed.sql` on a hosted project.
 3. **Auth settings (important).** In the Supabase dashboard, Authentication:
    - Turn **off** the Email provider, or turn off email sign-ups. Access control trusts the email claim in the token, so open email sign-up would let anyone claim a founder's email.
