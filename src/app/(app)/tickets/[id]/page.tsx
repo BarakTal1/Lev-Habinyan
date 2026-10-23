@@ -14,8 +14,8 @@ import { createClient } from "@/lib/supabase/server";
 import { addNoteAction, saveCostAction, saveOriginalMessageAction, uploadAttachmentAction } from "../actions";
 
 const card = "flex flex-col gap-3 rounded-2xl bg-white p-4 shadow-[0_1px_2px_rgba(27,42,74,.06),0_4px_14px_rgba(27,42,74,.05)]";
-const h = "text-[17px] font-bold";
-const input = "w-full rounded-xl bg-[#F7F5F0] px-3 text-base";
+const h = "text-[17px] font-bold tracking-[-0.01em]";
+const input = "w-full rounded-xl bg-[#F7F5F0] px-3 text-base outline-none transition-shadow duration-150 focus:ring-4 focus:ring-navy/10";
 
 export default async function TicketPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -27,7 +27,7 @@ export default async function TicketPage({ params }: { params: Promise<{ id: str
 
   return (
     <main className="mx-auto flex max-w-2xl flex-col gap-4 p-4">
-      <Link href="/tickets" className="flex h-12 items-center gap-1 text-navy"><Icon name="arrow_forward" size={22} /></Link>
+      <Link href="/tickets" className="press flex h-12 w-12 items-center justify-center rounded-full text-navy"><Icon name="arrow_forward" size={22} /></Link>
       <header className="flex flex-col gap-2">
         <div className="flex flex-wrap items-center gap-2 text-sm text-muted">
           <span className="inline-flex items-center gap-1"><Icon name={ticket.kind === "fault" ? "report" : "task_alt"} size={18} />{KINDS[ticket.kind]}</span>
@@ -35,7 +35,7 @@ export default async function TicketPage({ params }: { params: Promise<{ id: str
           {ticket.building_name && <span>· {ticket.building_name}</span>}
           <Badge list="urgency" value={ticket.urgency} />
         </div>
-        <h1 dir="rtl" className="text-2xl font-bold leading-snug">{ticket.title}</h1>
+        <h1 dir="rtl" className="text-[28px] font-bold leading-[1.15]">{ticket.title}</h1>
         <div className="text-sm text-muted">{ticket.category}{ticket.due_at && <> · {t.tickets.dueAt} <span dir="ltr">{formatDate(ticket.due_at)}</span></>}</div>
         {ticket.scheduled_at && <div className="text-sm text-muted">{t.tickets.visit} <span dir="ltr">{isoToIsraelLocal(ticket.scheduled_at).replace("T", " ")}</span></div>}
         {ticket.description && <p dir="rtl" className="text-base">{ticket.description}</p>}

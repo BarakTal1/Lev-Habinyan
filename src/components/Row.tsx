@@ -27,11 +27,10 @@ export function Row({ kind, title, building, meta, late, badge, flag, trailing, 
         <Icon name={KIND_ICON[kind]} size={22} />
       </div>
       <div className="flex min-w-0 flex-1 flex-col gap-[3px]">
-        <div dir="rtl" className="text-base font-semibold leading-snug">{title}</div>
+        <div dir="rtl" className="text-base font-semibold leading-snug tracking-[-0.005em]">{title}</div>
         <div className="flex flex-wrap items-center gap-x-1.5 text-sm text-muted">
           {building && <span>{building}</span>}
-          {building && meta && <span>·</span>}
-          {meta && <span className={late ? "font-medium text-[#B3261E]" : "font-medium"}>{meta}</span>}
+          {meta && <span className={`whitespace-nowrap ${late ? "font-medium text-[#B3261E]" : "font-medium"}`}>{building && <span className="font-normal text-muted">· </span>}{meta}</span>}
         </div>
         {flag && (
           <div className="inline-flex items-center gap-1 self-start rounded-md bg-[#FBE3BC] px-2 text-[13px] font-semibold text-[#7A4A00]">
@@ -49,7 +48,7 @@ export function Row({ kind, title, building, meta, late, badge, flag, trailing, 
       {badge && <Badge list={badge.list} value={badge.value} />}
     </>
   );
-  const cls = "flex min-h-[72px] items-center gap-3 bg-white py-2.5 pe-3.5 ps-1.5";
+  const cls = "press-row flex min-h-[72px] items-center gap-3 bg-white py-2.5 pe-3.5 ps-1.5";
   return (
     <div className="flex items-center bg-white">
       {href ? <Link href={href} className={`${cls} flex-1`}>{body}</Link> : <div className={`${cls} flex-1`}>{body}</div>}

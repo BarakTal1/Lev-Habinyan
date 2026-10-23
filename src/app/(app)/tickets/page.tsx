@@ -29,20 +29,20 @@ export default async function TicketsPage({ searchParams }: { searchParams: Prom
   };
   const [rows, buildings, assignees] = await Promise.all([listTickets(db, filters, user.personId), listBuildings(db), listAssignees(db)]);
   const now = new Date();
-  const chip = (active: boolean) => `flex h-10 items-center whitespace-nowrap rounded-full px-3.5 text-[15px] ${active ? "bg-navy font-semibold text-white" : "border border-[#DAD5CB] bg-white"}`;
-  const sel = "h-12 w-full rounded-xl bg-[#F7F5F0] px-3 text-base";
+  const chip = (active: boolean) => `press flex h-10 flex-none items-center whitespace-nowrap rounded-full px-3.5 text-[15px] ${active ? "bg-navy font-semibold text-white" : "border border-[#DAD5CB] bg-white"}`;
+  const sel = "h-12 w-full rounded-xl bg-[#F7F5F0] px-3 text-base outline-none transition-shadow duration-150 focus:ring-4 focus:ring-navy/10";
 
   return (
     <main>
-      <h1 className="px-5 pb-3 pt-5 text-[26px] font-bold">{t.tickets.title}</h1>
+      <h1 className="px-5 pb-3 pt-5 text-[28px] font-bold leading-[1.1]">{t.tickets.title}</h1>
       <form action="/tickets" className="flex gap-2 px-4 pb-3">
         {sp.kind && <input type="hidden" name="kind" value={sp.kind} />}
         {sp.mine && <input type="hidden" name="mine" value={sp.mine} />}
         {sp.closed && <input type="hidden" name="closed" value={sp.closed} />}
-        <input name="q" defaultValue={sp.q ?? ""} dir="rtl" placeholder={t.tickets.search} className="h-12 flex-1 rounded-xl bg-white px-3 text-base shadow-[0_1px_2px_rgba(27,42,74,.06)]" />
+        <input name="q" defaultValue={sp.q ?? ""} dir="rtl" placeholder={t.tickets.search} className="h-12 flex-1 rounded-xl bg-white px-3.5 text-base shadow-[0_1px_2px_rgba(27,42,74,.06)] outline-none transition-shadow duration-150 placeholder:text-muted/70 focus:ring-4 focus:ring-navy/10" />
         <button className="flex h-12 w-12 items-center justify-center rounded-xl bg-navy text-white" aria-label={t.tickets.search}><Icon name="search" size={22} /></button>
       </form>
-      <div className="flex gap-2 overflow-x-auto px-4 pb-3">
+      <div className="no-scrollbar flex gap-2 overflow-x-auto overscroll-x-contain px-4 pb-3">
         <Link href={href(sp, { kind: undefined, mine: undefined })} className={chip(!sp.kind && !sp.mine)}>{t.tickets.all}</Link>
         <Link href={href(sp, { kind: "fault" })} className={chip(sp.kind === "fault")}>{t.tickets.faults}</Link>
         <Link href={href(sp, { kind: "task" })} className={chip(sp.kind === "task")}>{t.tickets.tasks}</Link>
@@ -50,8 +50,8 @@ export default async function TicketsPage({ searchParams }: { searchParams: Prom
         <Link href={href(sp, { closed: sp.closed ? undefined : "1" })} className={chip(sp.closed === "1")}>{t.tickets.closed}</Link>
       </div>
       <details className="px-4 pb-3">
-        <summary className="flex h-10 cursor-pointer items-center gap-1 text-[15px] font-semibold text-navy"><Icon name="filter_list" size={20} />{t.tickets.filter}</summary>
-        <form action="/tickets" className="mt-2 flex flex-col gap-2 rounded-2xl bg-white p-3">
+        <summary className="press flex h-10 w-fit cursor-pointer select-none items-center gap-1 text-[15px] font-semibold text-navy"><Icon name="filter_list" size={20} />{t.tickets.filter}</summary>
+        <form action="/tickets" className="rise-in mt-2 flex flex-col gap-2 rounded-2xl bg-white p-3 shadow-[0_1px_2px_rgba(27,42,74,.06),0_4px_14px_rgba(27,42,74,.05)]">
           {sp.kind && <input type="hidden" name="kind" value={sp.kind} />}
           {sp.mine && <input type="hidden" name="mine" value={sp.mine} />}
           <select name="building" defaultValue={sp.building ?? ""} className={sel}><option value="">{t.tickets.building}</option>{buildings.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}</select>
@@ -63,7 +63,7 @@ export default async function TicketsPage({ searchParams }: { searchParams: Prom
       </details>
 
       {rows.length === 0 ? (
-        <p className="px-4 py-16 text-center text-lg text-muted">{t.tickets.empty}</p>
+        <p className="px-4 py-16 text-center text-lg font-medium text-muted">{t.tickets.empty}</p>
       ) : (
         <div className="mx-4 flex flex-col gap-px overflow-hidden rounded-2xl bg-[#EFEBE3] shadow-[0_1px_2px_rgba(27,42,74,.06),0_4px_14px_rgba(27,42,74,.05)]">
           {rows.map((r) => {

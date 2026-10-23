@@ -41,12 +41,14 @@ export function NewTicketForm({ buildings, assignees }: { buildings: BuildingOpt
   }
 
   return (
-    <div className="flex flex-col gap-4 p-4 pb-32">
-      <h1 className="text-[22px] font-bold">{t.tickets.newTitle}</h1>
-      <div className="grid grid-cols-2 gap-1 rounded-[14px] bg-[#F1EFEA] p-1" role="group" aria-label={t.tickets.kind}>
+    <div className="flex flex-col gap-5 p-4 pb-32">
+      <h1 className="pt-1 text-[28px] font-bold leading-[1.1]">{t.tickets.newTitle}</h1>
+      <div className="relative grid grid-cols-2 gap-1 rounded-[14px] bg-[#EAE6DD] p-1" role="group" aria-label={t.tickets.kind}>
+        {/* The thumb slides between segments instead of swapping backgrounds. */}
+        <span aria-hidden className={`pointer-events-none absolute inset-y-1 start-1 w-[calc(50%-6px)] rounded-[11px] bg-navy shadow-[0_2px_6px_rgba(27,42,74,.28)] transition-transform duration-[320ms] ease-[var(--ease-out)] motion-reduce:transition-none ${kind === "task" ? "translate-x-[calc(100%+4px)] rtl:-translate-x-[calc(100%+4px)]" : ""}`} />
         {(["fault", "task"] as const).map((k) => (
           <button key={k} type="button" onClick={() => setKind(k)} aria-pressed={kind === k}
-            className={`flex h-[46px] items-center justify-center gap-1.5 rounded-[11px] text-base ${kind === k ? "bg-navy font-semibold text-white" : ""}`}>
+            className={`relative flex h-[46px] items-center justify-center gap-1.5 rounded-[11px] text-base transition-colors duration-200 ${kind === k ? "font-semibold text-white" : "text-ink"}`}>
             <Icon name={k === "fault" ? "report" : "task_alt"} size={20} />
             {KINDS[k]}
           </button>
@@ -83,9 +85,9 @@ export function NewTicketForm({ buildings, assignees }: { buildings: BuildingOpt
         </select>
       </Field>
 
-      <button type="button" onClick={() => setMore((m) => !m)} className="self-start text-[15px] font-semibold text-navy underline">{t.tickets.more}</button>
+      <button type="button" onClick={() => setMore((m) => !m)} aria-expanded={more} className="flex h-10 items-center gap-1 self-start text-[15px] font-semibold text-navy"><Icon name={more ? "expand_less" : "expand_more"} size={20} />{t.tickets.more}</button>
       {more && (
-        <div className="flex flex-col gap-4">
+        <div className="rise-in flex flex-col gap-4">
           {kind === "fault" && building && <Field label={t.tickets.unit}><input value={unit} onChange={(e) => setUnit(e.target.value)} inputMode="numeric" dir="ltr" className={inputCls} /></Field>}
           <Field label={t.tickets.dueAt}><input type="date" value={dueAt} onChange={(e) => setDueAt(e.target.value)} dir="ltr" className={inputCls} /></Field>
           <Field label={t.tickets.description}><textarea value={description} onChange={(e) => setDescription(e.target.value)} dir="rtl" rows={3} className={`${inputCls} h-auto py-2`} /></Field>
@@ -94,10 +96,12 @@ export function NewTicketForm({ buildings, assignees }: { buildings: BuildingOpt
       )}
 
       {error && <p className="text-[#B3261E]" role="alert">{error}</p>}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[#EFEBE3] bg-white p-3 pb-[max(12px,env(safe-area-inset-bottom))]">
+      <div className="material fixed inset-x-0 bottom-0 z-40 border-t border-[var(--hairline)] p-4 pb-[max(16px,env(safe-area-inset-bottom))]">
+        <div className="mx-auto max-w-xl">
         <button type="button" onClick={save} disabled={!canSave || pending} className="h-14 w-full rounded-2xl bg-navy text-[17px] font-bold text-white disabled:opacity-40">
           {t.common.save}
         </button>
+        </div>
       </div>
     </div>
   );

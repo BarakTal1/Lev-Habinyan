@@ -43,12 +43,12 @@ export default async function TodayPage() {
       <header className="flex h-14 items-center gap-2.5 px-4 lg:hidden">
         <div className="flex h-9 w-9 items-center justify-center rounded-[11px] bg-navy text-[15px] font-extrabold text-white">לב</div>
         <div className="flex-1" />
-        <Link href="/tickets" aria-label="חיפוש" className="flex h-12 w-12 items-center justify-center"><Icon name="search" size={24} /></Link>
+        <Link href="/tickets" aria-label="חיפוש" className="press flex h-12 w-12 items-center justify-center"><Icon name="search" size={24} /></Link>
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#E3E8F2] text-sm font-bold text-navy">{user.name.slice(0, 1)}</div>
       </header>
 
       <div className="px-5 pb-4 pt-1 lg:pt-6">
-        <h1 className="text-[26px] font-bold leading-tight">{t.today.greeting(firstName)}</h1>
+        <h1 className="text-[28px] font-bold leading-[1.1]">{t.today.greeting(firstName)}</h1>
         <p className="mt-0.5 text-[15px] text-muted">{dateText}</p>
       </div>
 

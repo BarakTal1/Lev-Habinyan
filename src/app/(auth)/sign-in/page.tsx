@@ -10,14 +10,14 @@ export default function SignInPage() {
       <Image src="/logo.png" alt={t.appName} width={140} height={140} priority />
       <h1 className="text-2xl font-extrabold">{t.signIn.title}</h1>
       <form action={googleSignIn} className="w-full">
-        <button className="h-14 w-full rounded-2xl bg-navy text-[17px] font-bold text-white">{t.signIn.google}</button>
+        <button className="press h-14 w-full rounded-2xl bg-navy text-[17px] font-bold text-white">{t.signIn.google}</button>
       </form>
       {dev && (
         <form action={devSignIn} className="flex w-full flex-col gap-2 rounded-2xl border border-dashed border-muted/40 p-3">
           <span className="text-sm text-muted">DEV</span>
           <input name="email" type="email" dir="ltr" placeholder="email" className="h-12 rounded-xl border px-3" />
           <input name="password" type="password" dir="ltr" placeholder="password" className="h-12 rounded-xl border px-3" />
-          <button className="h-12 rounded-xl bg-navy font-semibold text-white">DEV</button>
+          <button className="press h-12 rounded-xl bg-navy font-semibold text-white">DEV</button>
         </form>
       )}
     </main>
