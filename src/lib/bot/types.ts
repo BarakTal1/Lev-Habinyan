@@ -13,7 +13,8 @@ export type TemplateName = "ticket_assigned" | "ticket_visit" | "ticket_done" | 
 export type Step = "consent" | "menu" | "where" | "place" | "type" | "danger" | "details" | "summary" | "fix"
   | "unk_building" | "unk_street" | "unk_unit" | "unk_name" | "unk_relation" | "check" | "agent";
 export type Draft = { where?: "unit" | "common"; place?: string; typeId?: string; danger?: boolean; text?: string;
-  photoMediaIds: string[]; audioMediaIds: string[]; buildingId?: string; unitNumber?: string; name?: string; relation?: "owner" | "tenant" | "committee"; firstText?: string };
+  photoMediaIds: string[]; audioMediaIds: string[]; buildingId?: string; unitNumber?: string; name?: string; relation?: "owner" | "tenant" | "committee"; firstText?: string;
+  askedForText?: boolean; dangerRechecked?: boolean };
 export type ChatState = { step: Step; draft: Draft };
 export type Effect =
   | { type: "save_consent" } | { type: "opt_out" } | { type: "register_unknown"; draft: Draft }
