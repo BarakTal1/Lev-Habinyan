@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { nextStep } from "@/lib/bot/flow";
+import { bot } from "@/lib/bot/texts";
 import type { Inbound, Out, StepContext, StepResult } from "@/lib/bot/types";
 
 type Building = StepContext["buildings"][number];
@@ -116,13 +117,16 @@ describe("building", () => {
     const { last } = run([text("היי"), btn("consent"), text("   ")], makeBuildings(11));
     expect(last.state?.step).toBe("unk_street");
     expect(last.effects).toEqual([]);
+    expect(last.out).toEqual([{ type: "text", body: bot.unkStreetQ }]);
   });
 
   it("re-asks a blank unit and a blank name", () => {
     const unit = run([text("היי"), btn("consent"), btn("b1"), text("  ")]);
     expect(unit.last.state?.step).toBe("unk_unit");
+    expect(unit.last.out).toEqual([{ type: "text", body: bot.unkUnitQ }]);
     const name = run([text("היי"), btn("consent"), btn("b1"), text("5"), text(" ")]);
     expect(name.last.state?.step).toBe("unk_name");
+    expect(name.last.out).toEqual([{ type: "text", body: bot.unkNameQ }]);
   });
 
   it("trims and caps unit and name at 60 characters", () => {

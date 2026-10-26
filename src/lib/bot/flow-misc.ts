@@ -1,10 +1,9 @@
 // Handlers for the menu, "check a fault", the human agent and "stop" (spec 6.1, steps 4, 6, 7 and 8).
 import { bot } from "./texts";
-import { MAX_ROW_TITLE, emptyDraft, go, menuPrompt, wherePrompt } from "./flow-common";
+import { MAX_LIST_ROWS, MAX_ROW_TITLE, emptyDraft, go, menuPrompt, wherePrompt } from "./flow-common";
 import type { Handler } from "./flow-common";
-import type { Inbound, Out, StepResult } from "./types";
+import type { ChatState, Inbound, Out, StepContext, StepResult } from "./types";
 
-const MAX_LIST_ROWS = 10;
 
 /** "stop" in any case, or the Hebrew word. */
 export const isStop = (input: Inbound): boolean =>
@@ -17,7 +16,7 @@ export const stopResult = (): StepResult => ({
   effects: [{ type: "opt_out" }],
 });
 
-const agentResult = (state: Parameters<Handler>[0], hours: Parameters<Handler>[2]["hours"]): StepResult => {
+const agentResult = (state: ChatState, hours: StepContext["hours"]): StepResult => {
   const out: Out[] = [{ type: "text", body: bot.agentOpen }];
   if (!hours.open) out.push({ type: "text", body: bot.agentClosed(hours.text) });
   return { state: { step: "agent", draft: state.draft }, out, effects: [{ type: "agent_request" }] };

@@ -1,7 +1,7 @@
 // Handlers for the fault report: where, place, type, danger, details, summary, fix (spec 6.1, steps 3 to 5).
 import { FAULT_TYPES, PLACES, hasDangerWord } from "./catalog";
 import { bot } from "./texts";
-import { dangerPrompt, detailsPrompt, fixPrompt, go, placePrompt, reprompt, summaryPrompt, typePrompt, wherePrompt } from "./flow-common";
+import { dangerPrompt, detailsPrompt, fixPrompt, go, placePrompt, reprompt, summaryPrompt, toMenu, typePrompt, wherePrompt } from "./flow-common";
 import type { Handler } from "./flow-common";
 import type { Draft, StepResult } from "./types";
 
@@ -20,27 +20,27 @@ function afterWhere(draft: Draft): StepResult {
 // ---- Handlers: one per step ----
 
 export const onWhere: Handler = (state, input, ctx) => {
-  if (input.kind !== "button") return reprompt(state, ctx);
+  if (input.kind !== "button") return toMenu();
   if (input.id === "unit") {
     const { place: _place, ...rest } = state.draft;
     return afterWhere({ ...rest, where: "unit" });
   }
   if (input.id === "common") return go("place", { ...state.draft, where: "common" }, placePrompt());
-  return reprompt(state, ctx);
+  return toMenu();
 };
 
 export const onPlace: Handler = (state, input, ctx) => {
-  if (input.kind !== "button" || !PLACES.some((p) => p.id === input.id)) return reprompt(state, ctx);
+  if (input.kind !== "button" || !PLACES.some((p) => p.id === input.id)) return toMenu();
   return afterWhere({ ...state.draft, place: input.id });
 };
 
 export const onType: Handler = (state, input, ctx) => {
-  if (input.kind !== "button" || !FAULT_TYPES.some((t) => t.id === input.id)) return reprompt(state, ctx);
+  if (input.kind !== "button" || !FAULT_TYPES.some((t) => t.id === input.id)) return toMenu();
   return afterType({ ...state.draft, typeId: input.id });
 };
 
 export const onDanger: Handler = (state, input, ctx) => {
-  if (input.kind !== "button" || (input.id !== "danger_yes" && input.id !== "danger_no")) return reprompt(state, ctx);
+  if (input.kind !== "button" || (input.id !== "danger_yes" && input.id !== "danger_no")) return toMenu();
   const draft = { ...state.draft, danger: input.id === "danger_yes" };
   return hasContent(draft) ? go("summary", draft, summaryPrompt(draft)) : go("details", draft, detailsPrompt());
 };
@@ -78,16 +78,16 @@ export const onSummary: Handler = (state, input, ctx) => {
     return { state: null, out: [], effects: [{ type: "create_ticket", draft }] };
   }
   if (input.kind === "button" && input.id === "fix") return go("fix", state.draft, fixPrompt());
-  return reprompt(state, ctx);
+  return toMenu();
 };
 
 export const onFix: Handler = (state, input, ctx) => {
-  if (input.kind !== "button") return reprompt(state, ctx);
+  if (input.kind !== "button") return toMenu();
   if (input.id === "where") return go("where", state.draft, wherePrompt());
   if (input.id === "type") return go("type", state.draft, typePrompt());
   if (input.id === "details") {
     const { text: _text, askedForText: _asked, ...rest } = state.draft;
     return go("details", rest, detailsPrompt());
   }
-  return reprompt(state, ctx);
+  return toMenu();
 };

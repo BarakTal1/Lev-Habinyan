@@ -213,9 +213,9 @@ describe("report-a-fault flow", () => {
     for (const r of all) assertLimits(r.out);
   });
 
-  it("an unexpected input re-sends the current question", () => {
+  it("an unexpected input at where shows the menu", () => {
     const { last } = run([text("שלום"), btn("report"), text("בלה")]);
-    expect(last.state?.step).toBe("where");
-    expect(ids(last.out[last.out.length - 1])).toEqual(["unit", "common"]);
+    expect(last.state).toEqual({ step: "menu", draft: { photoMediaIds: [], audioMediaIds: [] } });
+    expect(ids(last.out[last.out.length - 1])).toEqual(["report", "check", "agent"]);
   });
 });

@@ -93,6 +93,7 @@ export const consentPrompt = (): Out => ({
 
 // WhatsApp lists hold 10 rows. One row is the "not on the list" row.
 export const MAX_BUILDINGS_IN_LIST = 9;
+export const MAX_LIST_ROWS = 10;
 export const MAX_ROW_TITLE = 24;
 
 export const buildingPrompt = (ctx: StepContext): Out => ({
@@ -123,15 +124,18 @@ export const relationPrompt = (): Out => ({
 
 export const go = (step: Step, draft: Draft, ...out: Out[]): StepResult => ({ state: { step, draft }, out, effects: [] });
 
-/** Send the question of the current step again. Used for input the step does not expect. */
+/** Stale button, free text or an unsupported message: back to the menu, the draft is dropped. */
+export const toMenu = (): StepResult => go("menu", emptyDraft(), menuPrompt());
+
+/** Send the question of the current step again. Used by the consent, details and unknown-number steps only. */
 export function reprompt(state: ChatState, ctx: StepContext): StepResult {
-  const prompt: Record<string, (d: Draft) => Out> = {
-    menu: menuPrompt, where: wherePrompt, place: placePrompt, type: typePrompt,
-    danger: dangerPrompt, details: detailsPrompt, summary: summaryPrompt, fix: fixPrompt,
+  const prompt: Partial<Record<Step, (d: Draft) => Out>> = {
+    details: detailsPrompt,
     consent: consentPrompt, unk_street: streetPrompt, unk_unit: unitPrompt, unk_name: namePrompt,
     unk_relation: relationPrompt, unk_building: () => buildingPrompt(ctx),
   };
-  const make = prompt[state.step] ?? menuPrompt;
+  const make = prompt[state.step];
+  if (!make) throw new Error(`No prompt for step ${state.step}`);
   return go(state.step, state.draft, make(state.draft));
 }
 

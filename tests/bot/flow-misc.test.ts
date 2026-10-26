@@ -85,6 +85,12 @@ describe("stop", () => {
     expect(r.out).toEqual([{ type: "text", body: bot.optOut }]);
   });
 
+  it("opts out inside the agent step", () => {
+    const r = nextStep(ctx({ step: "agent", draft: emptyDraft }), text("stop"));
+    expect(r.effects).toEqual([{ type: "opt_out" }]);
+    expect(r.state).toBeNull();
+  });
+
   it("opts out also before consent", () => {
     const r = nextStep(ctx(null, { resident: { consented: false } }), text("stop"));
     expect(r.effects).toEqual([{ type: "opt_out" }]);
@@ -122,6 +128,19 @@ describe("time-out and fallbacks", () => {
     const r = nextStep(ctx({ step: "menu", draft: emptyDraft }), btn("confirm"));
     expect(r.state?.step).toBe("menu");
     expect(ids(r.out[0])).toEqual(["report", "check", "agent"]);
+  });
+
+  const full = { where: "common" as const, place: "roof", typeId: "lift", danger: false, text: "x",
+    photoMediaIds: ["m1"], audioMediaIds: [] };
+  it.each([
+    ["where", btn("confirm")], ["danger", btn("confirm")], ["summary", btn("danger_yes")],
+    ["where", text("בלה")], ["summary", text("בלה")], ["type", btn("roof")], ["place", btn("electric")],
+    ["fix", text("בלה")], ["fix", btn("confirm")],
+  ] as const)("stale input at %s shows the menu and drops the draft", (step, input) => {
+    const r = nextStep(ctx({ step, draft: full }), input);
+    expect(r.state).toEqual({ step: "menu", draft: emptyDraft });
+    expect(ids(r.out[0])).toEqual(["report", "check", "agent"]);
+    expect(r.effects).toEqual([]);
   });
 
   it("free text at the menu shows the menu", () => {
