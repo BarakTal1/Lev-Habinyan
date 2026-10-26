@@ -21,9 +21,9 @@ export const PLACES: { id: string; title: string }[] = [
   { id: "other", title: "אחר" },
 ];
 
-/** The spec words (including the feminine "תקועה במעלית") plus a few unambiguous variants. */
+/** The spec words (including the feminine and plural forms of "תקוע במעלית") plus a few unambiguous variants. */
 export const DANGER_WORDS = [
-  "הצפה", "גז", "אש", "תקוע במעלית", "תקועה במעלית",
+  "הצפה", "גז", "אש", "תקוע במעלית", "תקועה במעלית", "תקועים במעלית", "תקועות במעלית",
   "הצפות", "מציף", "שריפה", "עשן", "התחשמלות",
 ] as const;
 
