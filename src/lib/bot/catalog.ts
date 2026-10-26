@@ -21,10 +21,10 @@ export const PLACES: { id: string; title: string }[] = [
   { id: "other", title: "אחר" },
 ];
 
-/** A word or phrase that marks a message as dangerous. */
+/** The spec words (including the feminine "תקועה במעלית") plus a few unambiguous variants. */
 export const DANGER_WORDS = [
-  "הצפה", "הצפות", "מציף", "גז", "אש", "שריפה", "עשן", "קצר", "ניצוצות", "התחשמלות",
-  "תקוע במעלית", "תקועה במעלית", "תקועים במעלית", "תקועות במעלית",
+  "הצפה", "גז", "אש", "תקוע במעלית", "תקועה במעלית",
+  "הצפות", "מציף", "שריפה", "עשן", "התחשמלות",
 ] as const;
 
 // A danger word counts only as a whole word, with one optional Hebrew prefix letter.

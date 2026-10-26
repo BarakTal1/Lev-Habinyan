@@ -22,10 +22,10 @@ describe("fault catalog", () => {
 });
 
 describe("hasDangerWord", () => {
-  it.each(["יש הצפה בחדר מדרגות", "ריח גז", "יש אש", "אני תקוע במעלית", "תקועה במעלית"])("is true for %s", (text) => {
+  it.each(["יש הצפה בחדר מדרגות", "ריח גז", "יש אש", "אני תקוע במעלית", "תקועה במעלית", "בגז", "הצפות", "שריפה"])("is true for %s", (text) => {
     expect(hasDangerWord(text)).toBe(true);
   });
-  it.each(["נורה שרופה בלובי", ""])("is false for %j", (text) => {
+  it.each(["נורה שרופה בלובי", "", "אשכנזי", "קצר", "תיאור קצר"])("is false for %j", (text) => {
     expect(hasDangerWord(text)).toBe(false);
   });
 });
@@ -33,6 +33,7 @@ describe("hasDangerWord", () => {
 describe("bot texts", () => {
   it("keeps every button title at most 20 characters", () => {
     for (const title of Object.values(bot.btn)) expect(title.length).toBeLessThanOrEqual(20);
+    for (const label of [bot.placeButton, bot.typeButton, bot.unkBuildingButton]) expect(label.length).toBeLessThanOrEqual(20);
   });
   it("builds the ticket number message", () => {
     expect(bot.ticketCreated(1042)).toBe("קיבלנו. מספר פנייה 1042. נעדכן אותך כאן בכל שינוי.");
