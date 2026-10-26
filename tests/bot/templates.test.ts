@@ -69,3 +69,41 @@ describe("statusPreviewKind", () => {
     expect(statusPreviewKind("חדש")).toBeNull();
   });
 });
+
+describe("buildPreview guards", () => {
+  const base = { number: 42, residentName: "דנה", visit: { date: "27.10", from: "09:00", to: "11:00" }, question: "שאלה" };
+  const kinds = ["assigned", "visit", "done", "info"] as const;
+
+  it("placeholder count equals params length for each kind", () => {
+    for (const k of kinds) {
+      const p = buildPreview(k, base, null, now);
+      const distinct = new Set(TEMPLATES[p.template].body.match(/\{\{\d+\}\}/g));
+      expect(distinct.size).toBe(p.params.length);
+    }
+  });
+  it("throws when visit fields are missing or empty", () => {
+    expect(() => buildPreview("visit", { ...base, visit: undefined }, null, now)).toThrow(/visit\.date/);
+    expect(() => buildPreview("visit", { ...base, visit: { date: "", from: "09:00", to: "11:00" } }, null, now)).toThrow(/visit\.date/);
+    expect(() => buildPreview("visit", { ...base, visit: { date: "1.1", from: "", to: "11:00" } }, null, now)).toThrow(/visit\.from/);
+    expect(() => buildPreview("visit", { ...base, visit: { date: "1.1", from: "09:00", to: " " } }, null, now)).toThrow(/visit\.to/);
+  });
+  it("throws when the question is missing or blank", () => {
+    expect(() => buildPreview("info", { ...base, question: undefined }, null, now)).toThrow(/question/);
+    expect(() => buildPreview("info", { ...base, question: "   " }, null, now)).toThrow(/question/);
+  });
+  it("throws when the resident name or number is missing", () => {
+    expect(() => buildPreview("assigned", { ...base, residentName: "" }, null, now)).toThrow(/residentName/);
+    expect(() => buildPreview("done", { ...base, number: 0 }, null, now)).toThrow(/number/);
+    expect(() => buildPreview("done", { ...base, number: Number.NaN }, null, now)).toThrow(/number/);
+  });
+  it("inserts special values literally", () => {
+    const a = buildPreview("info", { ...base, question: "כסף $& ו-$1" }, null, now);
+    expect(a.text).toBe("לגבי פנייה 42: כסף $& ו-$1");
+    const b = buildPreview("info", { ...base, question: "{{2}}" }, null, now);
+    expect(b.text).toBe("לגבי פנייה 42: {{2}}");
+  });
+  it("fills done button ids for another number", () => {
+    const p = buildPreview("done", { ...base, number: 7 }, null, now);
+    expect(p.buttons!.map((b) => b.id)).toEqual(["done_yes:7", "done_no:7"]);
+  });
+});

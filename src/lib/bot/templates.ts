@@ -53,20 +53,25 @@ function fill(s: string, params: string[]): string {
 
 export function buildPreview(kind: PreviewKind, t: PreviewInput, lastInboundAt: Date | null, now: Date): Preview {
   const template = KIND_TEMPLATE[kind];
+  if (!Number.isInteger(t.number) || t.number <= 0) throw new Error("buildPreview: missing or invalid field: number");
   const num = String(t.number);
+  const need = (value: string | undefined, field: string): string => {
+    if (!value || !value.trim()) throw new Error(`buildPreview: missing required field: ${field}`);
+    return value;
+  };
   let params: string[];
   switch (kind) {
     case "assigned":
-      params = [t.residentName, num];
+      params = [need(t.residentName, "residentName"), num];
       break;
     case "visit":
-      params = [num, t.visit?.date ?? "", t.visit?.from ?? "", t.visit?.to ?? ""];
+      params = [num, need(t.visit?.date, "visit.date"), need(t.visit?.from, "visit.from"), need(t.visit?.to, "visit.to")];
       break;
     case "done":
       params = [num];
       break;
     case "info":
-      params = [num, t.question ?? ""];
+      params = [num, need(t.question?.trim(), "question")];
       break;
   }
   const def = TEMPLATES[template];
