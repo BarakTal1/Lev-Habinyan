@@ -10,6 +10,7 @@ export const SYSTEMS = [
   "ניקיון", "גינון", "בדיקת מעלית", "בדיקת כיבוי אש", "הדברה", "שעוני חשמל",
   "בדיקת אינסטלציה", "ניקוי פיר ביוב", "בדיקת גג", "משאבות", "חיטוי מאגר מים", "שער חניון",
 ] as const;
+export const RESPONSIBILITIES = ["החברה", "הוועד", "בעל דירה או שוכר", "אחריות ספק", "לא ידוע"] as const;
 export const MAINT_STATES = ["תקין", "מתקרב", "באיחור", "אין נתונים", "לא רלוונטי"] as const;
 export const TIERS = ["קבוע", "דחוף", "חירום"] as const;
 /** The ticket category that fits each maintenance system, used when a task is created from an item. */
@@ -25,6 +26,7 @@ export type Status = (typeof STATUSES)[number];
 export type Urgency = (typeof URGENCIES)[number];
 export type Category = (typeof CATEGORIES)[number];
 export type System = (typeof SYSTEMS)[number];
+export type Responsibility = (typeof RESPONSIBILITIES)[number];
 export type Tier = (typeof TIERS)[number];
 
 export const t = {

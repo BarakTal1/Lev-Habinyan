@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { SYSTEMS, STATUSES, URGENCIES } from "@/lib/labels";
+import { SYSTEMS, STATUSES, URGENCIES, RESPONSIBILITIES } from "@/lib/labels";
 import { badge } from "@/lib/tokens";
 
 describe("labels", () => {
@@ -13,6 +13,9 @@ describe("labels", () => {
   });
   it("has the five urgencies in order", () => {
     expect([...URGENCIES]).toEqual(["לא חשוב", "חשוב", "חשוב מאוד", "דחוף", "סכנה"]);
+  });
+  it("has the five responsibilities in order", () => {
+    expect([...RESPONSIBILITIES]).toEqual(["החברה", "הוועד", "בעל דירה או שוכר", "אחריות ספק", "לא ידוע"]);
   });
 });
 
