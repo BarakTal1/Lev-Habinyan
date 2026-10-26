@@ -100,6 +100,37 @@ describe("building", () => {
     assertLimits(last.out);
   });
 
+  it("asks for a street name at exactly 10 buildings", () => {
+    const { last } = run([text("היי"), btn("consent")], makeBuildings(10));
+    expect(last.state?.step).toBe("unk_street");
+    expect(last.out.some((o) => o.type === "list")).toBe(false);
+  });
+
+  it("goes straight to the agent step with 0 buildings", () => {
+    const { last } = run([text("היי"), btn("consent")], []);
+    expect(last.state?.step).toBe("agent");
+    expect(last.effects).toEqual([{ type: "save_consent" }, { type: "agent_request" }]);
+  });
+
+  it("re-asks a blank street", () => {
+    const { last } = run([text("היי"), btn("consent"), text("   ")], makeBuildings(11));
+    expect(last.state?.step).toBe("unk_street");
+    expect(last.effects).toEqual([]);
+  });
+
+  it("re-asks a blank unit and a blank name", () => {
+    const unit = run([text("היי"), btn("consent"), btn("b1"), text("  ")]);
+    expect(unit.last.state?.step).toBe("unk_unit");
+    const name = run([text("היי"), btn("consent"), btn("b1"), text("5"), text(" ")]);
+    expect(name.last.state?.step).toBe("unk_name");
+  });
+
+  it("trims and caps unit and name at 60 characters", () => {
+    const { last } = run([text("היי"), btn("consent"), btn("b1"), text(`  ${"1".repeat(80)}  `), text(`${"א".repeat(70)} `)]);
+    expect(last.state?.draft.unitNumber).toBe("1".repeat(60));
+    expect(last.state?.draft.name).toBe("א".repeat(60));
+  });
+
   it("shows a list for 3 buildings", () => {
     const { last } = run([text("היי"), btn("consent")], makeBuildings(3));
     expect(last.out.some((o) => o.type === "list")).toBe(true);

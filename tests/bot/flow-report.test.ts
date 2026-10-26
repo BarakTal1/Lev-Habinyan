@@ -179,6 +179,25 @@ describe("report-a-fault flow", () => {
     expect(back.state?.draft.text).toBe("חדש");
   });
 
+  it("fix details clears only the text, not photos or audio", () => {
+    const draft = { where: "unit" as const, typeId: "electric", danger: false, text: "ישן", askedForText: true,
+      photoMediaIds: ["m1"], audioMediaIds: ["a1"] };
+    const det = nextStep(ctx({ step: "fix", draft }), btn("details"));
+    expect(det.state?.draft.text).toBeUndefined();
+    expect(det.state?.draft.askedForText).toBeUndefined();
+    expect(det.state?.draft.photoMediaIds).toEqual(["m1"]);
+    expect(det.state?.draft.audioMediaIds).toEqual(["a1"]);
+  });
+
+  it("create_ticket draft has no internal markers", () => {
+    const draft = { where: "unit" as const, typeId: "electric", danger: false, text: "x", askedForText: true,
+      dangerRechecked: true, photoMediaIds: [], audioMediaIds: [] };
+    const r = nextStep(ctx({ step: "summary", draft }), btn("confirm"));
+    const eff = r.effects[0];
+    expect(eff.type === "create_ticket" && eff.draft).toEqual({ where: "unit", typeId: "electric", danger: false, text: "x",
+      photoMediaIds: [], audioMediaIds: [] });
+  });
+
   it("full happy path ends with one create_ticket effect", () => {
     const { all, last } = run([
       text("שלום"), btn("report"), btn("common"), btn("parking"), btn("electric"), btn("danger_no"),

@@ -55,6 +55,7 @@ export const bot = {
   openTicketLine: (n: number, typeLabel: string, status: string, visit: string | null) =>
     `${n} · ${typeLabel} · ${status}${visit ? ` · ביקור: ${visit}` : ""}`,
   openTicketsTitle: "הפניות הפתוחות שלך:",
+  openTicketsButton: "בחירת פנייה",
   // Unknown number flow.
   unkIntro: "לא מצאנו את המספר שלך במערכת. נכיר אותך בקצרה.",
   unkBuildingQ: "באיזה בניין את/ה גר/ה?",
