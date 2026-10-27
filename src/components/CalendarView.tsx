@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Icon } from "./Icon";
+import { Plaque } from "./Plaque";
 import { dayLabel, eventsByDay, monthGrid, monthLabel, shiftMonth, type CalEvent, type CalKind } from "@/lib/domain/calendar";
 import { googleAddUrl } from "@/lib/domain/ics";
 import { t } from "@/lib/labels";
@@ -93,6 +94,7 @@ export function CalendarView({ month, today, events, origin, children }: { month
           <ul className="flex flex-col gap-px overflow-hidden rounded-2xl border border-[var(--hairline)] bg-[#EFEBE3]">
             {dayEvents.map((e) => (
               <li key={e.id} className="flex items-center gap-3 bg-white p-3">
+                {e.building ? <Plaque name={e.building} /> : <span aria-hidden className="h-11 w-11 flex-none rounded-[10px] border border-[var(--hairline)]" />}
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5 text-[13px] font-semibold" style={{ color: COLOR[e.kind] }}>
                     <span aria-hidden className="h-2 w-2 rounded-full" style={{ backgroundColor: COLOR[e.kind] }} />
