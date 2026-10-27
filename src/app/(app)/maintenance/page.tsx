@@ -18,7 +18,7 @@ export default async function PortfolioPage() {
       <div className="mb-3 flex flex-wrap gap-2 px-1 text-sm">
         {(Object.keys(MAINT_LABEL) as (keyof typeof MAINT_LABEL)[]).map((k) => {
           const b = badge("maint", MAINT_LABEL[k]);
-          return <span key={k} className="inline-flex items-center gap-1" style={{ color: b.fg }}><Icon name={ICON[k]} size={16} filled />{MAINT_LABEL[k]}</span>;
+          return <span key={k} className="inline-flex items-center gap-1" style={{ color: b.fg }}>{k === "nodata" ? <span aria-hidden="true" className="h-2 w-2 rounded-full border border-[#AEB3BE]" /> : <Icon name={ICON[k]} size={16} filled />}{MAINT_LABEL[k]}</span>;
         })}
       </div>
       {rows.length === 0 ? <p className="py-10 text-center text-muted">{t.maint.noBuildings}</p> : (
