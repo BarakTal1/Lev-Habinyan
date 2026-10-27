@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { plaqueSpec, splitAddress, streetCode } from "@/lib/plaque";
+import { fitFontSize, plaqueSpec, splitAddress } from "@/lib/plaque";
 
 describe("splitAddress", () => {
   it("splits a street and a number", () => {
@@ -16,12 +16,17 @@ describe("splitAddress", () => {
   });
 });
 
-describe("streetCode", () => {
-  it("uses initials for several words", () => {
-    expect(streetCode("אבא אחימאיר")).toBe("אא");
+describe("fitFontSize", () => {
+  it("keeps the largest size for a short street", () => {
+    expect(fitFontSize("ויצמן", 62, 11)).toBe(11);
   });
-  it("uses three letters for one word", () => {
-    expect(streetCode("דיזנגוף")).toBe("דיז");
+  it("shrinks a long street so it fits one line", () => {
+    const size = fitFontSize("אבא אחימאיר", 62, 11);
+    expect(size).toBeLessThan(11);
+    expect(size * 0.52 * 11).toBeLessThanOrEqual(62.5);
+  });
+  it("never goes below the minimum", () => {
+    expect(fitFontSize("רחוב ארוך מאוד מאוד מאוד מאוד", 62, 11)).toBe(7.5);
   });
 });
 
@@ -33,12 +38,7 @@ describe("plaqueSpec", () => {
     const a = plaqueSpec("ויצמן 5");
     const b = plaqueSpec("הירקון 5");
     expect(a.number).toBe(b.number);
-    expect(a.code).not.toBe(b.code);
-  });
-  it("tells apart the five demo buildings by code and number", () => {
-    const names = ["אבא אחימאיר 5", "דיזנגוף 78", "הירקון 112", "ויצמן 9", "סוקולוב 24"];
-    const keys = names.map((n) => { const p = plaqueSpec(n); return `${p.code}${p.number}`; });
-    expect(new Set(keys).size).toBe(names.length);
+    expect(a.street).not.toBe(b.street);
   });
   it("trims spaces before it picks a color", () => {
     expect(plaqueSpec("  ויצמן 9 ").color).toBe(plaqueSpec("ויצמן 9").color);

@@ -36,8 +36,8 @@ export function Row({ kind, title, building, meta, late, badge, flag, trailing, 
       <div className="flex min-w-0 flex-1 flex-col gap-[3px]">
         <div dir="rtl" className="text-base font-semibold leading-snug tracking-[-0.005em]">{title}</div>
         <div className="flex flex-wrap items-center gap-x-1.5 text-sm text-muted">
-          {building && <span className="font-medium text-ink/80">{building}</span>}
-          {meta && <span className={`whitespace-nowrap ${late ? "font-medium text-[#B3261E]" : "font-medium"}`}>{building && <span className="font-normal text-muted">· </span>}{meta}</span>}
+          {building && <span className="sr-only">{building}</span>}
+          {meta && <span className={`whitespace-nowrap ${late ? "font-medium text-[#B3261E]" : "font-medium"}`}>{meta}</span>}
         </div>
         {flag && <div className="text-[13px] font-semibold text-[#B3261E]">{flag}</div>}
       </div>

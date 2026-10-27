@@ -101,7 +101,7 @@ export function CalendarView({ month, today, events, origin, children }: { month
                     {t.cal.kinds[e.kind]}{e.time && <span dir="ltr"> · {e.time}</span>}
                   </div>
                   {e.href ? <Link href={e.href} className={`block font-semibold ${e.done ? "line-through opacity-60" : ""}`}>{e.title}</Link> : <div className="font-semibold">{e.title}</div>}
-                  {e.building && <div className="text-sm text-muted">{e.building}</div>}
+                  {e.building && <div className="sr-only">{e.building}</div>}
                 </div>
                 {e.kind !== "opened" && (
                   <a href={googleAddUrl(e, origin)} target="_blank" rel="noopener noreferrer" className="press flex h-12 flex-none items-center rounded-xl px-2 text-sm font-semibold text-navy">{t.cal.addGoogle}</a>

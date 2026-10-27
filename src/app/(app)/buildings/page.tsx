@@ -21,7 +21,7 @@ export default async function BuildingsPage() {
             <div className="flex items-center gap-2">
               <Plaque name={c.name} size="md" />
               <div className="min-w-0 flex-1">
-                <div dir="rtl" className="text-[17px] font-bold">{c.name}</div>
+                <div dir="rtl" className="sr-only">{c.name}</div>
                 <div className="text-sm text-muted">{c.city}{c.city && " · "}{c.units} {t.buildings.units}</div>
               </div>
               <Icon name="chevron_left" size={22} />

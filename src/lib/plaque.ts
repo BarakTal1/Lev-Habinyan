@@ -7,11 +7,11 @@ export function splitAddress(name: string): { street: string; number: string | n
   return m ? { street: m[1], number: m[2] } : { street: name.trim(), number: null };
 }
 
-/** A short code for the street: initials of a name with several words, the first three letters of a single word. */
-export function streetCode(street: string): string {
-  const words = street.split(/\s+/).filter(Boolean);
-  if (words.length > 1) return words.slice(0, 3).map((w) => w[0]).join("");
-  return [...street].slice(0, 3).join("");
+/** The largest font size, in px, that fits the whole street name on one line. Hebrew letters average about half an em wide. */
+export function fitFontSize(text: string, innerWidth: number, maxSize: number, minSize = 7.5): number {
+  const len = [...text].length;
+  if (len === 0) return maxSize;
+  return Math.round(Math.max(minSize, Math.min(maxSize, innerWidth / (len * 0.52))) * 10) / 10;
 }
 
 function hash(s: string): number {
@@ -20,10 +20,10 @@ function hash(s: string): number {
   return Math.abs(h);
 }
 
-export type PlaqueSpec = { code: string; number: string; color: string };
+export type PlaqueSpec = { street: string; number: string; color: string };
 
-/** What a building's plaque shows. The same name always gives the same plaque. The street code, the number and the color together tell buildings apart. */
+/** What a building's plaque shows. The same name always gives the same plaque. The full street, the number and the color together tell buildings apart. */
 export function plaqueSpec(name: string): PlaqueSpec {
   const { street, number } = splitAddress(name);
-  return { code: streetCode(street), number: number ?? "", color: COLORS[hash(name.trim()) % COLORS.length] };
+  return { street, number: number ?? "", color: COLORS[hash(name.trim()) % COLORS.length] };
 }
