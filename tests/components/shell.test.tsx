@@ -66,9 +66,10 @@ describe("LtrText", () => {
 });
 
 describe("BottomNav", () => {
-  it("has four links and marks the current route", () => {
+  it("has five links and marks the current route", () => {
     render(<BottomNav />);
-    expect(screen.getAllByRole("link")).toHaveLength(4);
+    expect(screen.getAllByRole("link")).toHaveLength(5);
+    expect(screen.getByRole("link", { name: /לוח שנה/ })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /כרטיסים/ })).toHaveAttribute("aria-current", "page");
     expect(screen.getByRole("link", { name: /היום/ })).not.toHaveAttribute("aria-current");
   });
