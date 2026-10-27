@@ -2,11 +2,9 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Icon } from "./Icon";
-import { Plaque } from "./Plaque";
 import { dayLabel, eventsByDay, monthGrid, monthLabel, shiftMonth, type CalEvent, type CalKind } from "@/lib/domain/calendar";
 import { googleAddUrl } from "@/lib/domain/ics";
 import { t } from "@/lib/labels";
-import { splitAddress } from "@/lib/address";
 
 const KINDS: CalKind[] = ["visit", "due", "maintenance", "opened"];
 const COLOR: Record<CalKind, string> = { visit: "#1F4FA3", due: "#D9822B", maintenance: "#0B6B5F", opened: "#8A909C" };
@@ -95,14 +93,13 @@ export function CalendarView({ month, today, events, origin, children }: { month
           <ul className="flex flex-col gap-px overflow-hidden rounded-2xl border border-[var(--hairline)] bg-[#EFEBE3]">
             {dayEvents.map((e) => (
               <li key={e.id} className="flex items-center gap-3 bg-white p-3">
-                {e.building ? <Plaque name={e.building} /> : <span aria-hidden className="h-10 w-10 flex-none rounded-[10px] border border-[var(--hairline)]" />}
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5 text-[13px] font-semibold" style={{ color: COLOR[e.kind] }}>
                     <span aria-hidden className="h-2 w-2 rounded-full" style={{ backgroundColor: COLOR[e.kind] }} />
                     {t.cal.kinds[e.kind]}{e.time && <span dir="ltr"> · {e.time}</span>}
                   </div>
                   {e.href ? <Link href={e.href} className={`block font-semibold ${e.done ? "line-through opacity-60" : ""}`}>{e.title}</Link> : <div className="font-semibold">{e.title}</div>}
-                  {e.building && <div className="text-sm text-muted">{splitAddress(e.building).street}</div>}
+                  {e.building && <div className="text-sm text-muted">{e.building}</div>}
                 </div>
                 {e.kind !== "opened" && (
                   <a href={googleAddUrl(e, origin)} target="_blank" rel="noopener noreferrer" className="press flex h-12 flex-none items-center rounded-xl px-2 text-sm font-semibold text-navy">{t.cal.addGoogle}</a>

@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { Badge } from "@/components/Badge";
 import { Icon } from "@/components/Icon";
-import { Plaque } from "@/components/Plaque";
 import { Field, inputCls } from "@/components/Field";
 import { listBuildingCards } from "@/lib/db/buildings";
 import { MAINT_LABEL, t } from "@/lib/labels";
@@ -19,7 +18,6 @@ export default async function BuildingsPage() {
         {cards.map((c) => (
           <Link key={c.id} href={`/buildings/${c.id}`} className="flex flex-col gap-2 rounded-2xl bg-white p-4 border border-[var(--hairline)]">
             <div className="flex items-center gap-2">
-              <Plaque name={c.name} size="md" />
               <div className="min-w-0 flex-1">
                 <div dir="rtl" className="text-[17px] font-bold">{c.name}</div>
                 <div className="text-sm text-muted">{c.city}{c.city && " · "}{c.units} {t.buildings.units}</div>

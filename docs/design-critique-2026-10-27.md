@@ -26,7 +26,7 @@ Nothing said "building" or "Israel". The managers could not tell it apart from a
 
 ## What changed
 
-1. **House-number plaque.** Each building now has a navy plaque with its house number, like the enamel signs on Israeli buildings. It replaces the generic icon tile on rows, building cards and the building page. The founders think in addresses (`דיזנגוף 78`), so the plaque is also the fastest scan aid.
+1. **Building name as text.** A house-number plaque was tried and removed. Two buildings can share a number on different streets, and the plaque would look the same for both. Each row now shows the full address above the title.
 2. **Badges show exceptions only.** The default urgency has no badge. `חשוב מאוד`, `דחוף` and `סכנה` keep a badge and get a colored edge mark on the row. Status and maintenance badges are text only.
 3. **Wait time in plain text.** The amber chip is now one red line, in days after 48 hours (`5 ימים ללא טיפול`).
 4. **A headline, not tiles.** The Today screen now opens with the one thing that matters: `3 תקלות דחופות מחכות לטיפול`. Counts sit in one quiet line below. The greeting moved to a small line above.
