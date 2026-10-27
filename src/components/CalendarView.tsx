@@ -32,9 +32,9 @@ export function CalendarView({ month, today, events, origin, children }: { month
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-2 px-1">
-        <Link href={`/calendar?m=${shiftMonth(month, -1)}`} aria-label={t.cal.prev} className="press flex h-12 w-12 items-center justify-center rounded-xl border border-[#DAD5CB] bg-white"><Icon name="chevron_left" size={22} className="rotate-180" /></Link>
+        <Link href={`/calendar?m=${shiftMonth(month, -1)}`} aria-label={t.cal.prev} className="press flex h-12 w-12 items-center justify-center rounded-xl border border-[#DAD5CB] bg-white"><Icon name="chevron_left" size={22} /></Link>
         <h2 className="min-w-[8.5rem] text-center text-xl font-bold">{monthLabel(month)}</h2>
-        <Link href={`/calendar?m=${shiftMonth(month, 1)}`} aria-label={t.cal.next} className="press flex h-12 w-12 items-center justify-center rounded-xl border border-[#DAD5CB] bg-white"><Icon name="chevron_left" size={22} /></Link>
+        <Link href={`/calendar?m=${shiftMonth(month, 1)}`} aria-label={t.cal.next} className="press flex h-12 w-12 items-center justify-center rounded-xl border border-[#DAD5CB] bg-white"><Icon name="chevron_left" size={22} className="rotate-180" /></Link>
         {!today.startsWith(month) && <Link href="/calendar" className="press flex h-12 items-center rounded-xl px-3 font-semibold text-navy">{t.cal.today}</Link>}
         <span className="flex-1" />
         {children}
