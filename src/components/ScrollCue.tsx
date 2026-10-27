@@ -13,21 +13,13 @@ export function ScrollCue({ children, hint, className }: { children: ReactNode; 
     update();
     el.addEventListener("scroll", update, { passive: true });
     window.addEventListener("resize", update);
-    return () => {
-      el.removeEventListener("scroll", update);
-      window.removeEventListener("resize", update);
-    };
-  }, []);
-
-  return (
-    <div className="relative">
-      <div ref={ref} className={className}>{children}</div>
-      {more && (
-        <>
-          <div aria-hidden className="pointer-events-none absolute inset-y-0 end-0 w-10 rounded-s-2xl bg-gradient-to-l from-white to-transparent" />
-          <p className="px-1 pt-2 text-center text-sm text-muted">{hint}</p>
-        </>
-      )}
+    return (
+    <div>
+      <div className="relative">
+        <div ref={ref} className={className}>{children}</div>
+        {more && <div aria-hidden className="pointer-events-none absolute inset-y-0 end-0 w-10 rounded-s-2xl bg-gradient-to-l from-white to-transparent" />}
+      </div>
+      {more && <p className="px-1 pt-2 text-center text-sm text-muted">{hint}</p>}
     </div>
   );
 }
