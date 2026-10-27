@@ -13,7 +13,13 @@ export function ScrollCue({ children, hint, className }: { children: ReactNode; 
     update();
     el.addEventListener("scroll", update, { passive: true });
     window.addEventListener("resize", update);
-    return (
+    return () => {
+      el.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, []);
+
+  return (
     <div>
       <div className="relative">
         <div ref={ref} className={className}>{children}</div>
