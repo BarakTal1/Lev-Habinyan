@@ -2,6 +2,7 @@ import { getSetting } from "@/lib/db/people";
 import { t } from "@/lib/labels";
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/app/(auth)/sign-in/actions";
+import { demoModeEnabled } from "@/lib/demo";
 import { setEmailRemindersAction } from "../people-actions";
 
 export default async function SettingsPage() {
@@ -31,7 +32,7 @@ export default async function SettingsPage() {
           <button className="h-12 rounded-xl border border-navy px-5 font-semibold text-navy">{t.common.save}</button>
         </form>
       </section>
-      <form action={signOut}><button className="h-12 w-full rounded-xl border border-[#DAD5CB] bg-white font-semibold">{t.settings.signOut}</button></form>
+      {!demoModeEnabled() && <form action={signOut}><button className="h-12 w-full rounded-xl border border-[#DAD5CB] bg-white font-semibold">{t.settings.signOut}</button></form>}
     </main>
   );
 }

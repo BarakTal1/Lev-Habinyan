@@ -34,6 +34,9 @@ export default async function TodayPage() {
     };
   };
 
+  const isUrgent = (r: TodayRow) => r.urgency === "סכנה" || r.urgency === "דחוף";
+  const urgentFaults = data.faults.filter(isUrgent);
+  const otherFaults = data.faults.filter((r) => !isUrgent(r));
   const empty = !data.overdue.length && !data.soon.length && !data.faults.length;
   const dateText = new Intl.DateTimeFormat("he-IL", { weekday: "long", day: "numeric", month: "long", timeZone: "Asia/Jerusalem" }).format(now);
   const firstName = user.name.split(" ")[0];
@@ -74,13 +77,14 @@ export default async function TodayPage() {
         </div>
       ) : (
         <>
+          <TodaySection title={t.today.urgentNow} rows={urgentFaults.map((r) => toRow(r, "faults"))} />
           <div data-testid="today-columns" className="lg:grid lg:grid-cols-2 lg:items-start lg:gap-6 lg:px-4">
             <div>
               <TodaySection title={t.today.overdue} rows={data.overdue.map((r) => toRow(r, "overdue"))} />
               <TodaySection title={t.today.soon} sub="14 ימים" rows={data.soon.map((r) => toRow(r, "soon"))} />
             </div>
             <div>
-              <TodaySection title={t.today.faults} rows={data.faults.map((r) => toRow(r, "faults"))} />
+              <TodaySection title={t.today.faults} rows={otherFaults.map((r) => toRow(r, "faults"))} />
             </div>
           </div>
         </>

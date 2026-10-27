@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { demoModeEnabled } from "@/lib/demo";
 
 const PUBLIC_PREFIXES = ["/sign-in", "/auth", "/no-access", "/manifest.webmanifest", "/logo.png", "/api/cron", "/demo"];
 
@@ -20,7 +21,7 @@ export async function proxy(request: NextRequest) {
   const isPublic = PUBLIC_PREFIXES.some((p) => path.startsWith(p));
   if (!user && !isPublic) {
     const url = request.nextUrl.clone();
-    url.pathname = process.env.DEMO_EMAIL && process.env.DEMO_PASSWORD ? "/demo" : "/sign-in";
+    url.pathname = demoModeEnabled() ? "/demo" : "/sign-in";
     url.search = "";
     return NextResponse.redirect(url);
   }

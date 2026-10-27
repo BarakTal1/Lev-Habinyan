@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Icon } from "@/components/Icon";
+import { ScrollCue } from "@/components/ScrollCue";
 import { loadPortfolio } from "@/lib/db/maintenance";
 import { MAINT_LABEL, SYSTEMS, t } from "@/lib/labels";
 import { badge } from "@/lib/tokens";
@@ -21,7 +22,7 @@ export default async function PortfolioPage() {
         })}
       </div>
       {rows.length === 0 ? <p className="py-10 text-center text-muted">{t.maint.noBuildings}</p> : (
-        <div className="overflow-x-auto rounded-2xl bg-white shadow-[0_1px_2px_rgba(27,42,74,.06),0_4px_14px_rgba(27,42,74,.05)]">
+        <ScrollCue hint={t.maint.scrollHint} className="overflow-x-auto rounded-2xl bg-white shadow-[0_1px_2px_rgba(27,42,74,.06),0_4px_14px_rgba(27,42,74,.05)]">
           <table className="w-full border-collapse text-sm">
             <thead>
               <tr>
@@ -47,7 +48,7 @@ export default async function PortfolioPage() {
               ))}
             </tbody>
           </table>
-        </div>
+        </ScrollCue>
       )}
     </main>
   );

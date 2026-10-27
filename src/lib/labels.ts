@@ -40,6 +40,7 @@ export const t = {
     open: "פתוחות",
     soon: "קרוב",
     faults: "תקלות פתוחות",
+    urgentNow: "דחוף עכשיו",
     empty: "הכל מסודר",
     needsFrequency: "נשמר. הגדירו תדירות ביומן התחזוקה כדי שהתאריך הבא יחושב.", failed: "השמירה נכשלה. נסו שוב.", toCalendar: "ליומן התחזוקה",
   },
@@ -56,6 +57,7 @@ export const t = {
   },
   buildings: {
     title: "בניינים", add: "הוספת בניין", name: "שם הבניין", city: "עיר", address: "כתובת", units: "דירות", openTickets: "תקלות ומשימות פתוחות",
+    noDataSystems: (n: number) => (n === 1 ? "אין נתונים במערכת אחת" : `אין נתונים ב־${n} מערכות`),
     tabs: { overview: "סקירה", residents: "דיירים", suppliers: "ספקים", maintenance: "תחזוקה", documents: "מסמכים" },
     addResident: "הוספת דייר", resName: "שם", phone: "טלפון", unit: "דירה", owner: "בעלים", tenant: "שוכר", committee: "ועד", noResidents: "אין דיירים עדיין",
     noSuppliers: "אין ספקים משויכים. שייכו ספק לפריט תחזוקה.", noDocs: "אין מסמכים", addDoc: "הוספת מסמך", openMaintenance: "ליומן התחזוקה", openList: "לכרטיסים של הבניין",
@@ -64,7 +66,7 @@ export const t = {
     archiveBlocked: "אי אפשר לארכב בניין עם כרטיסים פתוחים. סגרו אותם קודם.", archiveFailed: "הפעולה נכשלה. נסו שוב.",
   },
   maint: {
-    title: "יומן תחזוקה", portfolio: "כל הבניינים", last: "אחרון", next: "הבא", markDone: "סימון כבוצע", doneDate: "תאריך ביצוע", note: "הערה", file: "מסמך או תמונה",
+    title: "יומן תחזוקה", scrollHint: "החליקו לצדדים לראות את כל המערכות", portfolio: "כל הבניינים", last: "אחרון", next: "הבא", markDone: "סימון כבוצע", doneDate: "תאריך ביצוע", note: "הערה", file: "מסמך או תמונה",
     frequency: "תדירות", every: "כל", units: { day: "ימים", week: "שבועות", month: "חודשים", year: "שנים" }, nextDue: "תאריך הבא", supplier: "ספק", applicable: "רלוונטי לבניין",
     createTask: "יצירת משימה", taskCreated: "המשימה נוצרה", needsFrequency: "נשמר. הגדירו תדירות כדי שהתאריך הבא יחושב.", saveSettings: "שמירת הגדרות", none: "ללא",
     noBuildings: "אין בניינים", legend: "מקרא",

@@ -26,8 +26,8 @@ export default async function BuildingsPage() {
               <Icon name="chevron_left" size={22} />
             </div>
             <div className="flex flex-wrap items-center gap-2 text-sm text-muted">
-              <span>{c.open_tickets} {t.buildings.openTickets}</span>
-              <Badge list="maint" value={STATE_TO_LABEL[c.worst]} label={c.worst === "ok" ? t.buildings.allFine : `${c.worst_count} ${STATE_TO_LABEL[c.worst]}`} />
+              <span>{t.buildings.openTickets}: {c.open_tickets}</span>
+              <Badge list="maint" value={STATE_TO_LABEL[c.worst]} label={c.worst === "ok" ? t.buildings.allFine : c.worst === "nodata" ? t.buildings.noDataSystems(c.worst_count) : `${c.worst_count} ${STATE_TO_LABEL[c.worst]}`} />
             </div>
           </Link>
         ))}
