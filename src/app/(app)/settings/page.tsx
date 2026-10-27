@@ -11,7 +11,7 @@ export default async function SettingsPage() {
     getSetting(db, "email_reminders", false),
     db.from("profile").select("id, email, person:person_id(name)").order("email"),
   ]);
-  const card = "flex flex-col gap-3 rounded-2xl bg-white p-4 shadow-[0_1px_2px_rgba(27,42,74,.06),0_4px_14px_rgba(27,42,74,.05)]";
+  const card = "flex flex-col gap-3 rounded-2xl bg-white p-4 border border-[var(--hairline)]";
   return (
     <main className="mx-auto flex max-w-xl flex-col gap-4 p-4">
       <h1 className="px-1 pt-2 text-[26px] font-bold">{t.settings.title}</h1>

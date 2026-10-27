@@ -23,3 +23,9 @@ export function ageLabel(createdAt: string, now: Date): string {
   const days = Math.floor(hours / 24);
   return days === 2 ? "לפני יומיים" : `לפני ${days} ימים`;
 }
+
+/** How long a fault waits for a first action. Hours below two days, days after that. */
+export function waitLabel(hours: number): string {
+  if (hours < 48) return `${hours} שעות ללא טיפול`;
+  return `${Math.floor(hours / 24)} ימים ללא טיפול`;
+}

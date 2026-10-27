@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Badge } from "@/components/Badge";
 import { Icon } from "@/components/Icon";
+import { Plaque } from "@/components/Plaque";
 import { Field, inputCls } from "@/components/Field";
 import { listBuildingCards } from "@/lib/db/buildings";
 import { MAINT_LABEL, t } from "@/lib/labels";
@@ -16,9 +17,9 @@ export default async function BuildingsPage() {
       <h1 className="px-1 pb-3 pt-2 text-[26px] font-bold">{t.buildings.title}</h1>
       <div className="grid gap-3 sm:grid-cols-2">
         {cards.map((c) => (
-          <Link key={c.id} href={`/buildings/${c.id}`} className="flex flex-col gap-2 rounded-2xl bg-white p-4 shadow-[0_1px_2px_rgba(27,42,74,.06),0_4px_14px_rgba(27,42,74,.05)]">
+          <Link key={c.id} href={`/buildings/${c.id}`} className="flex flex-col gap-2 rounded-2xl bg-white p-4 border border-[var(--hairline)]">
             <div className="flex items-center gap-2">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#F1EFEA] text-navy"><Icon name="apartment" size={22} /></div>
+              <Plaque name={c.name} size="md" />
               <div className="min-w-0 flex-1">
                 <div dir="rtl" className="text-[17px] font-bold">{c.name}</div>
                 <div className="text-sm text-muted">{c.city}{c.city && " · "}{c.units} {t.buildings.units}</div>

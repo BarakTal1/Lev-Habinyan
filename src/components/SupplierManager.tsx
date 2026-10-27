@@ -20,7 +20,7 @@ export function SupplierManager({ groups }: { groups: SupplierGroup[] }) {
         {groups.map((g) => (
           <section key={g.category}>
             <h2 className="px-1 pb-2 text-lg font-bold">{g.category}</h2>
-            <div className="flex flex-col gap-px overflow-hidden rounded-2xl bg-[#EFEBE3] shadow-[0_1px_2px_rgba(27,42,74,.06),0_4px_14px_rgba(27,42,74,.05)]">
+            <div className="flex flex-col gap-px overflow-hidden rounded-2xl bg-[#EFEBE3] border border-[var(--hairline)]">
               {g.items.map((r) => (
                 <div key={r.id} className="flex min-h-[72px] items-center gap-2 bg-white py-2 pe-3 ps-2">
                   <button type="button" onClick={() => setEditing(r)} className="min-w-0 flex-1 ps-2 text-start">

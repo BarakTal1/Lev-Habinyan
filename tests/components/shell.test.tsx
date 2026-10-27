@@ -25,8 +25,22 @@ describe("Row", () => {
   });
   it("shows building, separator and meta when a building exists", () => {
     render(<Row kind="fault" title="נזילה" building="ויצמן 9" meta="לפני 3 ימים" />);
-    expect(screen.getByText("ויצמן 9")).toBeInTheDocument();
+    expect(screen.getByText("ויצמן")).toBeInTheDocument();
     expect(screen.getByText("·")).toBeInTheDocument();
+  });
+  it("does not badge the default urgency and has no edge mark for it", () => {
+    render(<Row kind="fault" title="נורה" building="ויצמן 9" badge={{ list: "urgency", value: "חשוב" }} />);
+    expect(screen.queryByText("חשוב")).toBeNull();
+    expect(screen.queryByTestId("row-edge")).toBeNull();
+  });
+  it("badges and marks the edge for an urgent fault", () => {
+    render(<Row kind="fault" title="נזילה" building="ויצמן 9" badge={{ list: "urgency", value: "דחוף" }} />);
+    expect(screen.getByText("דחוף")).toBeInTheDocument();
+    expect(screen.getByTestId("row-edge")).toBeInTheDocument();
+  });
+  it("shows the house number on the plaque", () => {
+    const { container } = render(<Row kind="fault" title="נזילה" building="דיזנגוף 78" />);
+    expect(container.textContent).toContain("78");
   });
   it("keeps a Hebrew title with Latin text as one text node, laid out right to left", () => {
     render(<Row kind="fault" title="ראוטר TP-Link בלובי" building="דיזנגוף 78" />);

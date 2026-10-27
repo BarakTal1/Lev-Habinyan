@@ -39,3 +39,9 @@ const FALLBACK: Raw = { bg: "#EEF0F3", fg: "#4A5468", icon: "help" };
 export function badge(list: BadgeList, value: string): BadgeToken {
   return { ...(MAPS[list][value] ?? FALLBACK), label: value };
 }
+
+/** Edge mark for rows that need quick attention. The default level has no mark. */
+const EDGE: Record<string, string> = { "חשוב מאוד": "#E0A030", "דחוף": "#D9531E", "סכנה": "#C62828" };
+export const urgencyEdge = (value: string | undefined): string | null => (value ? EDGE[value] ?? null : null);
+/** Badges show the exceptions. The default urgency adds no information. */
+export const DEFAULT_URGENCY = "חשוב";

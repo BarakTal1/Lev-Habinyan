@@ -6,7 +6,7 @@ import { requireUser } from "@/lib/auth";
 import { listAssignees, listBuildings } from "@/lib/db/people";
 import { listTickets, type TicketFilters, type TicketKind } from "@/lib/db/tickets";
 import { hoursWithoutAction } from "@/lib/domain/tickets";
-import { ageLabel } from "@/lib/format";
+import { ageLabel, waitLabel } from "@/lib/format";
 import { formatDate } from "@/lib/israel";
 import { STATUSES, URGENCIES, t } from "@/lib/labels";
 import { createClient } from "@/lib/supabase/server";
@@ -51,7 +51,7 @@ export default async function TicketsPage({ searchParams }: { searchParams: Prom
       </div>
       <details className="px-4 pb-3">
         <summary className="press flex h-10 w-fit cursor-pointer select-none items-center gap-1 text-[15px] font-semibold text-navy"><Icon name="filter_list" size={20} />{t.tickets.filter}</summary>
-        <form action="/tickets" className="rise-in mt-2 flex flex-col gap-2 rounded-2xl bg-white p-3 shadow-[0_1px_2px_rgba(27,42,74,.06),0_4px_14px_rgba(27,42,74,.05)]">
+        <form action="/tickets" className="rise-in mt-2 flex flex-col gap-2 rounded-2xl bg-white p-3 border border-[var(--hairline)]">
           {sp.kind && <input type="hidden" name="kind" value={sp.kind} />}
           {sp.mine && <input type="hidden" name="mine" value={sp.mine} />}
           <select name="building" defaultValue={sp.building ?? ""} className={sel}><option value="">{t.tickets.building}</option>{buildings.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}</select>
@@ -65,12 +65,12 @@ export default async function TicketsPage({ searchParams }: { searchParams: Prom
       {rows.length === 0 ? (
         <p className="px-4 py-16 text-center text-lg font-medium text-muted">{t.tickets.empty}</p>
       ) : (
-        <div className="mx-4 flex flex-col gap-px overflow-hidden rounded-2xl bg-[#EFEBE3] shadow-[0_1px_2px_rgba(27,42,74,.06),0_4px_14px_rgba(27,42,74,.05)]">
+        <div className="mx-4 flex flex-col gap-px overflow-hidden rounded-2xl bg-[#EFEBE3] border border-[var(--hairline)]">
           {rows.map((r) => {
             const flag = hoursWithoutAction({ kind: r.kind, status: r.status, created_at: r.created_at, first_action_at: r.first_action_at }, now);
             return (
               <Row key={r.id} kind={r.kind} title={r.title} building={r.building_name} meta={`${ageLabel(r.created_at, now)} · ${r.status}`}
-                flag={flag ? `${flag} שעות ללא טיפול` : undefined} badge={{ list: "urgency", value: r.urgency }} href={`/tickets/${r.id}`}
+                flag={flag ? waitLabel(flag) : undefined} badge={{ list: "urgency", value: r.urgency }} href={`/tickets/${r.id}`}
                 extra={{ assignee: r.assignee_name, due: r.due_at ? formatDate(r.due_at) : null }} />
             );
           })}

@@ -14,7 +14,7 @@ import { KINDS, t } from "@/lib/labels";
 import { createClient } from "@/lib/supabase/server";
 import { addNoteAction, archiveTicketAction, saveCostAction, saveOriginalMessageAction, uploadAttachmentAction } from "../actions";
 
-const card = "flex flex-col gap-3 rounded-2xl bg-white p-4 shadow-[0_1px_2px_rgba(27,42,74,.06),0_4px_14px_rgba(27,42,74,.05)]";
+const card = "flex flex-col gap-3 rounded-2xl bg-white p-4 border border-[var(--hairline)]";
 const h = "text-[17px] font-bold tracking-[-0.01em]";
 const input = "w-full rounded-xl bg-[#F7F5F0] px-3 text-base outline-none transition-shadow duration-150 focus:ring-4 focus:ring-navy/10";
 

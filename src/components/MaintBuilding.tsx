@@ -21,7 +21,7 @@ export function MaintBuilding({ buildingId, rows, suppliers, today }: { building
 
   return (
     <>
-      <div className="flex flex-col gap-px overflow-hidden rounded-2xl bg-[#EFEBE3] shadow-[0_1px_2px_rgba(27,42,74,.06),0_4px_14px_rgba(27,42,74,.05)]">
+      <div className="flex flex-col gap-px overflow-hidden rounded-2xl bg-[#EFEBE3] border border-[var(--hairline)]">
         {rows.map((r) => (
           <button key={r.id} type="button" onClick={() => setOpenId(r.id)} className="press-row flex min-h-[72px] items-center gap-3 bg-white py-2.5 pe-3.5 ps-3 text-start">
             <div className="min-w-0 flex-1">

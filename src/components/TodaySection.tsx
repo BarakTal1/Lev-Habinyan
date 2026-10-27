@@ -56,7 +56,7 @@ export function TodaySection({ title, sub, rows }: { title: string; sub?: string
         <span className="flex-1" />
         {sub && <span className="text-sm text-muted">{sub}</span>}
       </div>
-      <div className="flex flex-col gap-px overflow-hidden rounded-2xl bg-[#EFEBE3] shadow-[0_1px_2px_rgba(27,42,74,.06),0_4px_14px_rgba(27,42,74,.05)]">
+      <div className="flex flex-col gap-px overflow-hidden rounded-2xl bg-[#EFEBE3] border border-[var(--hairline)]">
         {shown.map((r) => (
           <Row
             key={r.id}

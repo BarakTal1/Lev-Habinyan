@@ -22,7 +22,7 @@ export default async function PortfolioPage() {
         })}
       </div>
       {rows.length === 0 ? <p className="py-10 text-center text-muted">{t.maint.noBuildings}</p> : (
-        <ScrollCue hint={t.maint.scrollHint} className="overflow-x-auto rounded-2xl bg-white shadow-[0_1px_2px_rgba(27,42,74,.06),0_4px_14px_rgba(27,42,74,.05)]">
+        <ScrollCue hint={t.maint.scrollHint} className="overflow-x-auto rounded-2xl bg-white border border-[var(--hairline)]">
           <table className="w-full border-collapse text-sm">
             <thead>
               <tr>
@@ -38,8 +38,8 @@ export default async function PortfolioPage() {
                     const b = badge("maint", MAINT_LABEL[c.state]);
                     return (
                       <td key={c.system} className="p-1 text-center">
-                        <Link href={`/maintenance/${r.id}`} aria-label={`${c.system}: ${MAINT_LABEL[c.state]}`} className="inline-flex h-10 w-10 items-center justify-center rounded-full" style={{ backgroundColor: b.bg, color: b.fg }}>
-                          <Icon name={ICON[c.state]} size={18} filled />
+                        <Link href={`/maintenance/${r.id}`} aria-label={`${c.system}: ${MAINT_LABEL[c.state]}`} className="inline-flex h-10 w-10 items-center justify-center rounded-full" style={c.state === "nodata" ? { color: b.fg } : { backgroundColor: b.bg, color: b.fg }}>
+                          {c.state === "nodata" ? <span aria-hidden="true" className="h-2 w-2 rounded-full border border-[#AEB3BE]" /> : <Icon name={ICON[c.state]} size={18} filled />}
                         </Link>
                       </td>
                     );

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Field, inputCls } from "@/components/Field";
 import { Icon } from "@/components/Icon";
+import { Plaque } from "@/components/Plaque";
 import { LtrText } from "@/components/LtrText";
 import { getBuilding } from "@/lib/db/buildings";
 import { t } from "@/lib/labels";
@@ -13,7 +14,7 @@ import { addResidentAction, archiveResidentAction, uploadBuildingDocumentAction 
 
 const TABS = ["overview", "residents", "suppliers", "maintenance", "documents"] as const;
 type Tab = (typeof TABS)[number];
-const card = "rounded-2xl bg-white p-4 shadow-[0_1px_2px_rgba(27,42,74,.06),0_4px_14px_rgba(27,42,74,.05)]";
+const card = "rounded-2xl bg-white p-4 border border-[var(--hairline)]";
 const iconBtn = "flex h-12 w-12 items-center justify-center rounded-[14px]";
 
 export default async function BuildingPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ tab?: string }> }) {
@@ -26,7 +27,8 @@ export default async function BuildingPage({ params, searchParams }: { params: P
   return (
     <main className="mx-auto flex max-w-3xl flex-col gap-4 p-4">
       <Link href="/buildings" className="flex h-12 items-center text-navy"><Icon name="arrow_forward" size={22} /></Link>
-      <header className="flex items-start gap-2">
+      <header className="flex items-center gap-3">
+        <Plaque name={b.name} size="lg" />
         <div className="min-w-0 flex-1">
           <h1 dir="rtl" className="text-2xl font-bold">{b.name}</h1>
           <p className="text-muted">{[b.city, b.address].filter(Boolean).join(" · ")}</p>

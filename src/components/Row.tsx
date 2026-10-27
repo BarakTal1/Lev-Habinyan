@@ -2,7 +2,9 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { Badge } from "./Badge";
 import { Icon } from "./Icon";
-import type { BadgeList } from "@/lib/tokens";
+import { Plaque } from "./Plaque";
+import { splitAddress } from "@/lib/address";
+import { DEFAULT_URGENCY, urgencyEdge, type BadgeList } from "@/lib/tokens";
 
 const KIND_ICON = { fault: "report", task: "task_alt", maintenance: "build" } as const;
 
@@ -21,23 +23,24 @@ export type RowProps = {
 };
 
 export function Row({ kind, title, building, meta, late, badge, flag, trailing, href, extra }: RowProps) {
+  const edge = badge?.list === "urgency" ? urgencyEdge(badge.value) : null;
+  const showBadge = badge && !(badge.list === "urgency" && badge.value === DEFAULT_URGENCY);
   const body = (
     <>
-      <div className="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-[#F1EFEA] text-navy">
-        <Icon name={KIND_ICON[kind]} size={22} />
-      </div>
+      {building ? (
+        <Plaque name={building} />
+      ) : (
+        <div className="flex h-10 w-10 flex-none items-center justify-center rounded-[10px] border border-[var(--hairline)] text-muted">
+          <Icon name={KIND_ICON[kind]} size={20} />
+        </div>
+      )}
       <div className="flex min-w-0 flex-1 flex-col gap-[3px]">
         <div dir="rtl" className="text-base font-semibold leading-snug tracking-[-0.005em]">{title}</div>
         <div className="flex flex-wrap items-center gap-x-1.5 text-sm text-muted">
-          {building && <span>{building}</span>}
+          {building && <span>{splitAddress(building).street}</span>}
           {meta && <span className={`whitespace-nowrap ${late ? "font-medium text-[#B3261E]" : "font-medium"}`}>{building && <span className="font-normal text-muted">· </span>}{meta}</span>}
         </div>
-        {flag && (
-          <div className="inline-flex items-center gap-1 self-start rounded-md bg-[#FBE3BC] px-2 text-[13px] font-semibold text-[#7A4A00]">
-            <Icon name="hourglass_bottom" size={16} />
-            {flag}
-          </div>
-        )}
+        {flag && <div className="text-[13px] font-semibold text-[#B3261E]">{flag}</div>}
       </div>
       {extra && (
         <>
@@ -45,12 +48,13 @@ export function Row({ kind, title, building, meta, late, badge, flag, trailing, 
           <div className="hidden w-24 flex-none text-sm lg:block" dir="ltr">{extra.due ?? ""}</div>
         </>
       )}
-      {badge && <Badge list={badge.list} value={badge.value} />}
+      {showBadge && <Badge list={badge.list} value={badge.value} />}
     </>
   );
   const cls = "press-row flex min-h-[72px] items-center gap-3 bg-white py-2.5 pe-3.5 ps-1.5";
   return (
-    <div className="flex items-center bg-white">
+    <div className="relative flex items-center bg-white">
+      {edge && <span aria-hidden="true" data-testid="row-edge" className="absolute inset-y-0 start-0 w-1" style={{ backgroundColor: edge }} />}
       {href ? <Link href={href} className={`${cls} flex-1`}>{body}</Link> : <div className={`${cls} flex-1`}>{body}</div>}
       {trailing && <div className="flex-none">{trailing}</div>}
     </div>

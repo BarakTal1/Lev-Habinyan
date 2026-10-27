@@ -15,7 +15,7 @@ export function EmployeeManager({ rows }: { rows: EmployeeRow[] }) {
   return (
     <>
       {rows.length === 0 && <p className="py-10 text-center text-muted">{t.people.emptyEmployees}</p>}
-      <div className="flex flex-col gap-px overflow-hidden rounded-2xl bg-[#EFEBE3] shadow-[0_1px_2px_rgba(27,42,74,.06),0_4px_14px_rgba(27,42,74,.05)]">
+      <div className="flex flex-col gap-px overflow-hidden rounded-2xl bg-[#EFEBE3] border border-[var(--hairline)]">
         {rows.map((r) => (
           <div key={r.id} className="flex min-h-[72px] items-center gap-2 bg-white py-2 pe-3 ps-2">
             <div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-[#E3E8F2] text-sm font-bold text-navy">{r.name.slice(0, 2)}</div>

@@ -5,7 +5,7 @@ import { Fab } from "@/components/Fab";
 import { requireUser } from "@/lib/auth";
 import { loadToday } from "@/lib/db/today";
 import type { TodayRow } from "@/lib/domain/today";
-import { ageLabel, dueLabel } from "@/lib/format";
+import { ageLabel, dueLabel, waitLabel } from "@/lib/format";
 import { t } from "@/lib/labels";
 import { todayIL } from "@/lib/israel";
 import { createClient } from "@/lib/supabase/server";
@@ -26,7 +26,7 @@ export default async function TodayPage() {
       building: r.building,
       meta: label.text,
       late: label.late,
-      flag: r.flagHours ? `${r.flagHours} שעות ללא טיפול` : undefined,
+      flag: r.flagHours ? waitLabel(r.flagHours) : undefined,
       badge: r.kind === "maintenance"
         ? { list: "maint", value: section === "overdue" ? "באיחור" : "מתקרב" }
         : { list: "urgency", value: r.urgency ?? "חשוב" },
@@ -40,6 +40,7 @@ export default async function TodayPage() {
   const empty = !data.overdue.length && !data.soon.length && !data.faults.length;
   const dateText = new Intl.DateTimeFormat("he-IL", { weekday: "long", day: "numeric", month: "long", timeZone: "Asia/Jerusalem" }).format(now);
   const firstName = user.name.split(" ")[0];
+  const headline = urgentFaults.length > 0 ? t.today.urgentHeadline(urgentFaults.length) : data.counts.overdue > 0 ? t.today.overdueHeadline(data.counts.overdue) : t.today.empty;
 
   return (
     <main>
@@ -50,24 +51,16 @@ export default async function TodayPage() {
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#E3E8F2] text-sm font-bold text-navy">{user.name.slice(0, 1)}</div>
       </header>
 
-      <div className="px-5 pb-4 pt-1 lg:pt-6">
-        <h1 className="text-[28px] font-bold leading-[1.1]">{t.today.greeting(firstName)}</h1>
-        <p className="mt-0.5 text-[15px] text-muted">{dateText}</p>
-      </div>
-
-      <div className="grid grid-cols-3 gap-2.5 px-4 pb-5">
-        <div className="flex h-[76px] flex-col justify-between rounded-2xl bg-[#FCE4E1] px-3 py-2.5 text-[#B3261E]">
-          <div className="flex items-center gap-1 text-sm font-semibold"><Icon name="error" size={18} filled />{t.today.overdue}</div>
-          <div className="text-[28px] font-bold leading-none">{data.counts.overdue}</div>
-        </div>
-        <div className="flex h-[76px] flex-col justify-between rounded-2xl bg-[#E3E8F2] px-3 py-2.5 text-navy">
-          <div className="flex items-center gap-1 text-sm font-semibold"><Icon name="today" size={18} />{t.today.todayChip}</div>
-          <div className="text-[28px] font-bold leading-none">{data.counts.today}</div>
-        </div>
-        <div className="flex h-[76px] flex-col justify-between rounded-2xl bg-white px-3 py-2.5 shadow-[0_1px_2px_rgba(27,42,74,.06),0_4px_14px_rgba(27,42,74,.05)]">
-          <div className="flex items-center gap-1 text-sm font-semibold"><Icon name="inbox" size={18} />{t.today.open}</div>
-          <div className="text-[28px] font-bold leading-none">{data.counts.openFaults}</div>
-        </div>
+      <div className="px-5 pb-5 pt-1 lg:pt-6">
+        <p className="text-[15px] text-muted">{t.today.greeting(firstName)} · {dateText}</p>
+        <h1 className="mt-1 text-[32px] font-bold leading-[1.1]">{headline}</h1>
+        {!empty && (
+          <p className="mt-2 flex flex-wrap gap-x-4 text-[15px] text-muted">
+            <span><b className="font-bold text-ink">{data.counts.overdue}</b> {t.today.overdue}</span>
+            <span><b className="font-bold text-ink">{data.counts.openFaults}</b> {t.today.faults}</span>
+            {data.counts.today > 0 && <span><b className="font-bold text-ink">{data.counts.today}</b> {t.today.todayChip}</span>}
+          </p>
+        )}
       </div>
 
       {empty ? (
