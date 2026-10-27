@@ -30,7 +30,7 @@ Nothing said "building" or "Israel". The managers could not tell it apart from a
 2. **Badges show exceptions only.** The default urgency has no badge. `חשוב מאוד`, `דחוף` and `סכנה` keep a badge and get a colored edge mark on the row. Status and maintenance badges are text only.
 3. **Wait time in plain text.** The amber chip is now one red line, in days after 48 hours (`5 ימים ללא טיפול`).
 4. **A headline, not tiles.** The Today screen now opens with the one thing that matters: `3 תקלות דחופות מחכות לטיפול`. Counts sit in one quiet line below. The greeting moved to a small line above.
-5. **Serif page titles.** Frank Ruhl Libre for `h1`, Heebo for everything else. This gives a civic, ledger feel without hurting body legibility.
+5. **Titles.** A serif title (Frank Ruhl Libre) was tried and removed after review. Titles use Heebo 800 with tight tracking.
 6. **Flat cards.** Hairline borders replace the floating shadows.
 7. **Calm "no data".** The maintenance grid shows a hollow dot for missing data. Only real states (ok, soon, overdue) use color, so alerts stand out.
 
