@@ -2,11 +2,17 @@
 
 :root {
   --navy: #1B2A4A;
-  --ink: #1A2238;
+  /* The blue of the logo. Used for active navigation, links and charts. */
+  --brand: #2D67C4;
+  --brand-soft: #EAF1FC;
+  --ink: #172033;
   --muted: #5B6478;
-  --bg: #F7F5F0;
+  --bg: #F4F6FA;
   --card: #FFFFFF;
+  --line: #E4E8EF;
   --amber: #F2A541;
+  /* One card shadow for the whole app: a hairline lift, no floating. */
+  --card-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.03);
   /* Critically damped feel: fast start, soft landing. Used for UI that is not driven by a gesture. */
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   /* Material: translucent chrome with content scrolling underneath. */
@@ -17,6 +23,9 @@
 
 @theme inline {
   --color-navy: var(--navy);
+  --color-brand: var(--brand);
+  --color-brand-soft: var(--brand-soft);
+  --color-line: var(--line);
   --color-ink: var(--ink);
   --color-muted: var(--muted);
   --color-bg: var(--bg);
@@ -46,7 +55,7 @@ h2 { letter-spacing: -0.01em; }
 }
 .press:active:not(:disabled), button:active:not(:disabled) { transform: scale(0.97); transition-duration: 80ms; }
 .press-row { transition: background-color 200ms var(--ease-out); }
-.press-row:active { background-color: #F4F1EA; transition-duration: 0ms; }
+.press-row:active { background-color: #EEF2F8; transition-duration: 0ms; }
 
 /* One focus ring for keyboard users, none on pointer press. */
 :focus-visible { outline: 2px solid var(--navy); outline-offset: 2px; border-radius: 8px; }
@@ -95,4 +104,12 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline: non
 }
 @media (prefers-contrast: more) {
   :root { --hairline: rgba(27, 42, 74, 0.4); --muted: #3F485A; }
+}
+
+/* One card style for the whole app: white, hairline border, a light lift. */
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--card-shadow);
 }

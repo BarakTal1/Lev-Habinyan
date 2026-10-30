@@ -25,8 +25,8 @@ const MAINT: Record<string, Raw> = {
   "תקין": { bg: "#E3F4EA", fg: "#1F7A47", icon: "check_circle" },
   "מתקרב": { bg: "#FDF0DC", fg: "#8A5300", icon: "schedule" },
   "באיחור": { bg: "#FCE4E1", fg: "#B3261E", icon: "error" },
-  "אין נתונים": { bg: "#F1EFEA", fg: "#5B6478", icon: "help" },
-  "לא רלוונטי": { bg: "#F7F5F0", fg: "#8A909C", icon: "remove" },
+  "אין נתונים": { bg: "#EEF1F5", fg: "#5B6478", icon: "help" },
+  "לא רלוונטי": { bg: "#F4F6FA", fg: "#8A909C", icon: "remove" },
 };
 const TIER: Record<string, Raw> = {
   "קבוע": { bg: "#EEF0F3", fg: "#334055", icon: "event_repeat" },

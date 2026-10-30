@@ -11,6 +11,7 @@ const NAMES = [
   "calendar_month","groups","engineering","settings","upload_file","photo_camera","attach_file",
   "edit","logout","plumbing","elevator","fire_extinguisher","door_sliding","inbox","content_paste",
   "event","filter_list","person","list_alt","description","open_in_new","info","inventory_2",
+  "space_dashboard","payments","bar_chart","notifications","trending_up","pending_actions","receipt_long","folder_open",
 ];
 
 const dir = "node_modules/@material-symbols/svg-400/rounded/";

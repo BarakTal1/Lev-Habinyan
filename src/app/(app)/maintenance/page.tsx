@@ -22,7 +22,7 @@ export default async function PortfolioPage() {
         })}
       </div>
       {rows.length === 0 ? <p className="py-10 text-center text-muted">{t.maint.noBuildings}</p> : (
-        <ScrollCue hint={t.maint.scrollHint} className="overflow-x-auto rounded-2xl bg-white border border-[var(--hairline)]">
+        <ScrollCue hint={t.maint.scrollHint} className="overflow-x-auto rounded-2xl bg-white border border-line">
           <table className="w-full border-collapse text-sm">
             <thead>
               <tr>

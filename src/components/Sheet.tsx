@@ -50,12 +50,12 @@ export function Sheet({ open, onClose, title, children, footer }: { open: boolea
         <div className="flex justify-center pb-1 pt-2.5 lg:hidden"><div className="h-[5px] w-9 rounded-full bg-[#D6D1C7]" /></div>
         <div className="flex items-center px-5 pb-2 pt-1">
           <h2 className="flex-1 text-[19px] font-bold tracking-[-0.015em]">{title}</h2>
-          <button type="button" onClick={close} aria-label={t.common.close} className="press flex h-10 w-10 items-center justify-center rounded-full bg-[#F1EFEA] text-muted">
+          <button type="button" onClick={close} aria-label={t.common.close} className="press flex h-10 w-10 items-center justify-center rounded-full bg-[#EEF1F5] text-muted">
             <Icon name="close" size={20} />
           </button>
         </div>
         <div className="flex-1 overflow-y-auto overscroll-contain px-5 pb-4">{children}</div>
-        {footer && <div className="border-t border-[var(--hairline)] p-4 pb-[max(16px,env(safe-area-inset-bottom))]">{footer}</div>}
+        {footer && <div className="border-t border-line p-4 pb-[max(16px,env(safe-area-inset-bottom))]">{footer}</div>}
       </div>
     </div>
   );

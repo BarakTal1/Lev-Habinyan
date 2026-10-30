@@ -27,7 +27,7 @@ export function ImportWizard() {
       </label>
 
       {preview && !result && (
-        <section className="flex flex-col gap-3 rounded-2xl bg-white p-4">
+        <section className="flex flex-col gap-3 card p-4">
           <h2 className="text-[17px] font-bold">{t.import.preview}</h2>
           {preview.buildings.length === 0 && <p className="text-muted">{t.import.empty}</p>}
           <ul className="flex flex-col gap-1">
@@ -49,7 +49,7 @@ export function ImportWizard() {
       )}
 
       {result && (
-        <section className="flex flex-col gap-2 rounded-2xl bg-white p-4" role="status">
+        <section className="flex flex-col gap-2 card p-4" role="status">
           <h2 className="text-[17px] font-bold">{t.import.done}</h2>
           <p>{t.import.result(result.buildings, result.created, result.items)}</p>
           <Link href="/maintenance" className="flex h-12 items-center justify-center rounded-xl border border-navy font-semibold text-navy">{t.import.toCalendar}</Link>

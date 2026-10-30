@@ -11,7 +11,7 @@ export default async function SettingsPage() {
     getSetting(db, "email_reminders", false),
     db.from("profile").select("id, email, person:person_id(name)").order("email"),
   ]);
-  const card = "flex flex-col gap-3 rounded-2xl bg-white p-4 border border-[var(--hairline)]";
+  const card = "flex flex-col gap-3 card p-4";
   return (
     <main className="mx-auto flex max-w-xl flex-col gap-4 p-4">
       <h1 className="px-1 pt-2 text-[26px] font-bold">{t.settings.title}</h1>
@@ -32,7 +32,7 @@ export default async function SettingsPage() {
           <button className="h-12 rounded-xl border border-navy px-5 font-semibold text-navy">{t.common.save}</button>
         </form>
       </section>
-      {!demoModeEnabled() && <form action={signOut}><button className="h-12 w-full rounded-xl border border-[#DAD5CB] bg-white font-semibold">{t.settings.signOut}</button></form>}
+      {!demoModeEnabled() && <form action={signOut}><button className="h-12 w-full rounded-xl border border-[#D8DEE8] bg-white font-semibold">{t.settings.signOut}</button></form>}
     </main>
   );
 }

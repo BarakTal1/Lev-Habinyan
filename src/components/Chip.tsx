@@ -6,7 +6,7 @@ export function Chip({ selected, onClick, children, type = "button" }: { selecte
       type={type}
       onClick={onClick}
       aria-pressed={selected}
-      className={`press h-10 whitespace-nowrap rounded-full px-3.5 text-[15px] ${selected ? "bg-navy font-semibold text-white" : "border border-[#DAD5CB] bg-white"}`}
+      className={`press h-10 whitespace-nowrap rounded-full px-3.5 text-[15px] ${selected ? "bg-navy font-semibold text-white" : "border border-[#D8DEE8] bg-white"}`}
     >
       {children}
     </button>

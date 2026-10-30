@@ -31,9 +31,9 @@ export function CalendarView({ month, today, events, origin, children }: { month
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-2 px-1">
-        <Link href={`/calendar?m=${shiftMonth(month, -1)}`} aria-label={t.cal.prev} className="press flex h-12 w-12 items-center justify-center rounded-xl border border-[#DAD5CB] bg-white"><Icon name="chevron_left" size={22} /></Link>
+        <Link href={`/calendar?m=${shiftMonth(month, -1)}`} aria-label={t.cal.prev} className="press flex h-12 w-12 items-center justify-center rounded-xl border border-[#D8DEE8] bg-white"><Icon name="chevron_left" size={22} /></Link>
         <h2 className="min-w-[8.5rem] text-center text-xl font-bold">{monthLabel(month)}</h2>
-        <Link href={`/calendar?m=${shiftMonth(month, 1)}`} aria-label={t.cal.next} className="press flex h-12 w-12 items-center justify-center rounded-xl border border-[#DAD5CB] bg-white"><Icon name="chevron_left" size={22} className="rotate-180" /></Link>
+        <Link href={`/calendar?m=${shiftMonth(month, 1)}`} aria-label={t.cal.next} className="press flex h-12 w-12 items-center justify-center rounded-xl border border-[#D8DEE8] bg-white"><Icon name="chevron_left" size={22} className="rotate-180" /></Link>
         {!today.startsWith(month) && <Link href="/calendar" className="press flex h-12 items-center rounded-xl px-3 font-semibold text-navy">{t.cal.today}</Link>}
         <span className="flex-1" />
         {children}
@@ -47,13 +47,13 @@ export function CalendarView({ month, today, events, origin, children }: { month
             {t.cal.kinds[k]}
           </button>
         ))}
-        <select aria-label={t.cal.allBuildings} value={building} onChange={(e) => setBuilding(e.target.value)} className="h-9 rounded-full border border-[#DAD5CB] bg-white px-3 text-sm">
+        <select aria-label={t.cal.allBuildings} value={building} onChange={(e) => setBuilding(e.target.value)} className="h-9 rounded-full border border-[#D8DEE8] bg-white px-3 text-sm">
           <option value="">{t.cal.allBuildings}</option>
           {buildings.map((b) => <option key={b} value={b}>{b}</option>)}
         </select>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-[var(--hairline)] bg-white">
+      <div className="overflow-hidden rounded-2xl border border-line bg-white">
         <div className="grid grid-cols-7 border-b border-[#F3F0EA] text-center text-[13px] font-semibold text-muted">
           {t.cal.weekdays.map((d) => <div key={d} className="py-2">{d}</div>)}
         </div>
@@ -68,7 +68,7 @@ export function CalendarView({ month, today, events, origin, children }: { month
               return (
                 <button key={d} type="button" onClick={() => setSelected(d)} aria-pressed={isSel}
                   aria-label={`${dayLabel(d)}${list.length ? `, ${list.length} אירועים` : ""}`}
-                  className={`press-row relative flex min-h-[56px] flex-col items-center gap-1 border-s border-[#F3F0EA] p-1 first:border-s-0 lg:min-h-[96px] lg:items-stretch lg:p-1.5 ${inMonth ? "" : "bg-[#FBFAF6] text-[#A9AEB8]"} ${isSel ? "bg-[#E3E8F2]" : ""}`}>
+                  className={`press-row relative flex min-h-[56px] flex-col items-center gap-1 border-s border-[#F3F0EA] p-1 first:border-s-0 lg:min-h-[96px] lg:items-stretch lg:p-1.5 ${inMonth ? "" : "bg-[#FBFAF6] text-[#A9AEB8]"} ${isSel ? "bg-[#EAF1FC]" : ""}`}>
                   <span className={`flex h-7 w-7 items-center justify-center self-center rounded-full text-[15px] font-semibold lg:self-start ${isToday ? "bg-navy text-white" : ""}`}>{Number(d.slice(8))}</span>
                   <span className="flex items-center gap-0.5 lg:hidden">
                     {kindsHere.map((k) => <span key={k} aria-hidden className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: COLOR[k] }} />)}
@@ -91,10 +91,10 @@ export function CalendarView({ month, today, events, origin, children }: { month
         {dayEvents.length === 0 ? (
           <p className="rounded-2xl border border-dashed border-[#CFC9BD] p-5 text-center text-muted">{t.cal.noEvents}</p>
         ) : (
-          <ul className="flex flex-col gap-px overflow-hidden rounded-2xl border border-[var(--hairline)] bg-[#EFEBE3]">
+          <ul className="flex flex-col gap-px overflow-hidden rounded-2xl border border-line bg-[#E8ECF2]">
             {dayEvents.map((e) => (
               <li key={e.id} className="flex items-center gap-3 bg-white p-3">
-                {e.building ? <Plaque name={e.building} /> : <span aria-hidden className="h-11 w-11 flex-none rounded-[10px] border border-[var(--hairline)]" />}
+                {e.building ? <Plaque name={e.building} /> : <span aria-hidden className="h-11 w-11 flex-none rounded-[10px] border border-line" />}
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5 text-[13px] font-semibold" style={{ color: COLOR[e.kind] }}>
                     <span aria-hidden className="h-2 w-2 rounded-full" style={{ backgroundColor: COLOR[e.kind] }} />

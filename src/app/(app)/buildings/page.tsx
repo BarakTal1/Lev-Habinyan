@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Badge } from "@/components/Badge";
 import { Icon } from "@/components/Icon";
+import { PageHeader } from "@/components/PageHeader";
 import { Plaque } from "@/components/Plaque";
 import { Field, inputCls } from "@/components/Field";
 import { listBuildingCards } from "@/lib/db/buildings";
@@ -13,11 +14,11 @@ const STATE_TO_LABEL = MAINT_LABEL;
 export default async function BuildingsPage() {
   const cards = await listBuildingCards(await createClient());
   return (
-    <main className="mx-auto max-w-3xl p-4">
-      <h1 className="px-1 pb-3 pt-2 text-[26px] font-bold">{t.buildings.title}</h1>
-      <div className="grid gap-3 sm:grid-cols-2">
+    <main className="mx-auto max-w-[1280px]">
+      <PageHeader title={t.buildings.title} sub={`${cards.length} ${t.buildings.title}`} />
+      <div className="grid gap-3 px-4 sm:grid-cols-2 lg:gap-4 lg:px-8 xl:grid-cols-3">
         {cards.map((c) => (
-          <Link key={c.id} href={`/buildings/${c.id}`} className="flex flex-col gap-2 rounded-2xl bg-white p-4 border border-[var(--hairline)]">
+          <Link key={c.id} href={`/buildings/${c.id}`} className="card press-row flex flex-col gap-3 p-4 hover:border-[#CED6E2]">
             <div className="flex items-center gap-2">
               <Plaque name={c.name} size="md" />
               <div className="min-w-0 flex-1">
@@ -33,7 +34,7 @@ export default async function BuildingsPage() {
           </Link>
         ))}
       </div>
-      <details className="mt-4 rounded-2xl bg-white p-4">
+      <details className="card mx-4 mt-4 p-4 lg:mx-8">
         <summary className="flex h-10 cursor-pointer items-center gap-1 font-semibold text-navy"><Icon name="add" size={20} />{t.buildings.add}</summary>
         <form action={createBuildingAction} className="mt-3 flex flex-col gap-3">
           <Field label={t.buildings.name}><input name="name" required dir="rtl" className={inputCls} /></Field>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Fab } from "@/components/Fab";
 import { Icon } from "@/components/Icon";
+import { PageHeader } from "@/components/PageHeader";
 import { Row } from "@/components/Row";
 import { requireUser } from "@/lib/auth";
 import { listAssignees, listBuildings } from "@/lib/db/people";
@@ -29,29 +30,29 @@ export default async function TicketsPage({ searchParams }: { searchParams: Prom
   };
   const [rows, buildings, assignees] = await Promise.all([listTickets(db, filters, user.personId), listBuildings(db), listAssignees(db)]);
   const now = new Date();
-  const chip = (active: boolean) => `press flex h-10 flex-none items-center whitespace-nowrap rounded-full px-3.5 text-[15px] ${active ? "bg-navy font-semibold text-white" : "border border-[#DAD5CB] bg-white"}`;
-  const sel = "h-12 w-full rounded-xl bg-[#F7F5F0] px-3 text-base outline-none transition-shadow duration-150 focus:ring-4 focus:ring-navy/10";
+  const chip = (active: boolean) => `press flex h-10 flex-none items-center whitespace-nowrap rounded-full px-3.5 text-[15px] ${active ? "bg-navy font-semibold text-white" : "border border-[#D8DEE8] bg-white"}`;
+  const sel = "h-12 w-full rounded-xl bg-[#F4F6FA] px-3 text-base outline-none transition-shadow duration-150 focus:ring-4 focus:ring-navy/10";
 
   return (
-    <main>
-      <h1 className="px-5 pb-3 pt-5 text-[28px] font-bold leading-[1.1]">{t.tickets.title}</h1>
-      <form action="/tickets" className="flex gap-2 px-4 pb-3">
+    <main className="mx-auto max-w-[1280px]">
+      <PageHeader title={t.tickets.title} sub={`${rows.length} ${sp.closed ? t.tickets.closed : t.tickets.open}`} />
+      <form action="/tickets" className="flex gap-2 px-4 pb-3 lg:px-8">
         {sp.kind && <input type="hidden" name="kind" value={sp.kind} />}
         {sp.mine && <input type="hidden" name="mine" value={sp.mine} />}
         {sp.closed && <input type="hidden" name="closed" value={sp.closed} />}
-        <input name="q" defaultValue={sp.q ?? ""} dir="rtl" placeholder={t.tickets.search} className="h-12 flex-1 rounded-xl bg-white px-3.5 text-base shadow-[0_1px_2px_rgba(27,42,74,.06)] outline-none transition-shadow duration-150 placeholder:text-muted/70 focus:ring-4 focus:ring-navy/10" />
+        <input name="q" defaultValue={sp.q ?? ""} dir="rtl" placeholder={t.tickets.search} className="h-12 flex-1 rounded-xl border border-line bg-white px-3.5 text-base shadow-[var(--card-shadow)] outline-none transition-shadow duration-150 placeholder:text-muted/70 focus:ring-4 focus:ring-navy/10" />
         <button className="flex h-12 w-12 items-center justify-center rounded-xl bg-navy text-white" aria-label={t.tickets.search}><Icon name="search" size={22} /></button>
       </form>
-      <div className="no-scrollbar flex gap-2 overflow-x-auto overscroll-x-contain px-4 pb-3">
+      <div className="no-scrollbar flex gap-2 overflow-x-auto overscroll-x-contain px-4 pb-3 lg:px-8">
         <Link href={href(sp, { kind: undefined, mine: undefined })} className={chip(!sp.kind && !sp.mine)}>{t.tickets.all}</Link>
         <Link href={href(sp, { kind: "fault" })} className={chip(sp.kind === "fault")}>{t.tickets.faults}</Link>
         <Link href={href(sp, { kind: "task" })} className={chip(sp.kind === "task")}>{t.tickets.tasks}</Link>
         <Link href={href(sp, { mine: sp.mine ? undefined : "1" })} className={chip(sp.mine === "1")}>{t.tickets.mine}</Link>
         <Link href={href(sp, { closed: sp.closed ? undefined : "1" })} className={chip(sp.closed === "1")}>{t.tickets.closed}</Link>
       </div>
-      <details className="px-4 pb-3">
+      <details className="px-4 pb-3 lg:px-8">
         <summary className="press flex h-10 w-fit cursor-pointer select-none items-center gap-1 text-[15px] font-semibold text-navy"><Icon name="filter_list" size={20} />{t.tickets.filter}</summary>
-        <form action="/tickets" className="rise-in mt-2 flex flex-col gap-2 rounded-2xl bg-white p-3 border border-[var(--hairline)]">
+        <form action="/tickets" className="rise-in mt-2 flex flex-col gap-2 card p-3">
           {sp.kind && <input type="hidden" name="kind" value={sp.kind} />}
           {sp.mine && <input type="hidden" name="mine" value={sp.mine} />}
           <select name="building" defaultValue={sp.building ?? ""} className={sel}><option value="">{t.tickets.building}</option>{buildings.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}</select>
@@ -65,7 +66,13 @@ export default async function TicketsPage({ searchParams }: { searchParams: Prom
       {rows.length === 0 ? (
         <p className="px-4 py-16 text-center text-lg font-medium text-muted">{t.tickets.empty}</p>
       ) : (
-        <div className="mx-4 flex flex-col gap-px overflow-hidden rounded-2xl bg-[#EFEBE3] border border-[var(--hairline)]">
+        <div className="mx-4 flex flex-col gap-px overflow-hidden rounded-2xl border border-line bg-line shadow-[var(--card-shadow)] lg:mx-8">
+          <div aria-hidden="true" className="hidden h-10 items-center gap-3 bg-[#F8FAFC] pe-3.5 ps-3 text-[13px] font-semibold text-muted lg:flex">
+            <span className="flex-1 ps-[88px]">{t.tickets.titleField}</span>
+            <span className="w-40 flex-none">{t.tickets.assignee}</span>
+            <span className="w-24 flex-none">{t.tickets.dueAt}</span>
+            <span className="w-28 flex-none text-end">{t.tickets.urgency}</span>
+          </div>
           {rows.map((r) => {
             const flag = hoursWithoutAction({ kind: r.kind, status: r.status, created_at: r.created_at, first_action_at: r.first_action_at }, now);
             return (

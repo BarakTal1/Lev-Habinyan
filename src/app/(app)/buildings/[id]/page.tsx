@@ -13,7 +13,7 @@ import { addResidentAction, archiveResidentAction, uploadBuildingDocumentAction 
 
 const TABS = ["overview", "residents", "suppliers", "maintenance", "documents"] as const;
 type Tab = (typeof TABS)[number];
-const card = "rounded-2xl bg-white p-4 border border-[var(--hairline)]";
+const card = "card p-4";
 const iconBtn = "flex h-12 w-12 items-center justify-center rounded-[14px]";
 
 export default async function BuildingPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ tab?: string }> }) {
@@ -36,7 +36,7 @@ export default async function BuildingPage({ params, searchParams }: { params: P
       <nav className="flex gap-2 overflow-x-auto" aria-label="tabs">
         {TABS.map((k) => (
           <Link key={k} href={`/buildings/${id}?tab=${k}`} aria-current={tab === k ? "page" : undefined}
-            className={`flex h-10 items-center whitespace-nowrap rounded-full px-3.5 text-[15px] ${tab === k ? "bg-navy font-semibold text-white" : "border border-[#DAD5CB] bg-white"}`}>
+            className={`flex h-10 items-center whitespace-nowrap rounded-full px-3.5 text-[15px] ${tab === k ? "bg-navy font-semibold text-white" : "border border-[#D8DEE8] bg-white"}`}>
             {t.buildings.tabs[k]}
           </Link>
         ))}
@@ -68,14 +68,14 @@ export default async function BuildingPage({ params, searchParams }: { params: P
             </form>
           </details>
           {b.residents.length === 0 ? <p className="py-10 text-center text-muted">{t.buildings.noResidents}</p> : (
-            <div className="flex flex-col gap-px overflow-hidden rounded-2xl bg-[#EFEBE3]">
+            <div className="flex flex-col gap-px overflow-hidden rounded-2xl bg-[#E8ECF2]">
               {b.residents.map((r) => (
                 <div key={r.person_id + r.unit_id} className="flex min-h-[72px] items-center gap-2 bg-white py-2 pe-3 ps-2">
                   <div className="min-w-0 flex-1 ps-2">
-                    <div dir="rtl" className="text-base font-semibold">{r.name}{r.is_committee && <span className="ms-2 rounded-md bg-[#E3E8F2] px-1.5 text-[13px] text-navy">{t.buildings.committee}</span>}</div>
+                    <div dir="rtl" className="text-base font-semibold">{r.name}{r.is_committee && <span className="ms-2 rounded-md bg-[#EAF1FC] px-1.5 text-[13px] text-navy">{t.buildings.committee}</span>}</div>
                     <div className="text-sm text-muted">{t.buildings.unit} <LtrText>{r.unit}</LtrText> · {r.relation === "tenant" ? t.buildings.tenant : t.buildings.owner}{r.phone && <> · <LtrText>{r.phone}</LtrText></>}</div>
                   </div>
-                  {telLink(r.phone) && <a href={telLink(r.phone)!} aria-label={t.buildings.call} className={`${iconBtn} bg-[#E3E8F2] text-navy`}><Icon name="call" size={22} filled /></a>}
+                  {telLink(r.phone) && <a href={telLink(r.phone)!} aria-label={t.buildings.call} className={`${iconBtn} bg-[#EAF1FC] text-navy`}><Icon name="call" size={22} filled /></a>}
                   {waLink(r.phone) && <a href={waLink(r.phone)!} aria-label={t.buildings.chat} className={`${iconBtn} bg-[#E3F4EA] text-[#1E6B45]`}><Icon name="chat" size={22} /></a>}
                   <ConfirmForm action={archiveResidentAction.bind(null, id, r.person_id)} message={`${t.buildings.archiveConfirm} ${r.name}?`}><button aria-label={t.buildings.archive} className={`${iconBtn} text-muted`}><Icon name="close" size={20} /></button></ConfirmForm>
                 </div>
@@ -86,11 +86,11 @@ export default async function BuildingPage({ params, searchParams }: { params: P
       )}
 
       {tab === "suppliers" && (b.suppliers.length === 0 ? <p className="py-10 text-center text-muted">{t.buildings.noSuppliers}</p> : (
-        <div className="flex flex-col gap-px overflow-hidden rounded-2xl bg-[#EFEBE3]">
+        <div className="flex flex-col gap-px overflow-hidden rounded-2xl bg-[#E8ECF2]">
           {b.suppliers.map((s) => (
             <div key={s.id} className="flex min-h-[68px] items-center gap-2 bg-white px-4">
               <div className="flex-1"><div dir="rtl" className="font-semibold">{s.name}</div><div className="text-sm text-muted">{s.category}</div></div>
-              {telLink(s.phone) && <a href={telLink(s.phone)!} aria-label={t.buildings.call} className={`${iconBtn} bg-[#E3E8F2] text-navy`}><Icon name="call" size={22} filled /></a>}
+              {telLink(s.phone) && <a href={telLink(s.phone)!} aria-label={t.buildings.call} className={`${iconBtn} bg-[#EAF1FC] text-navy`}><Icon name="call" size={22} filled /></a>}
             </div>
           ))}
         </div>

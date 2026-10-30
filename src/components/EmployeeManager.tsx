@@ -15,15 +15,15 @@ export function EmployeeManager({ rows }: { rows: EmployeeRow[] }) {
   return (
     <>
       {rows.length === 0 && <p className="py-10 text-center text-muted">{t.people.emptyEmployees}</p>}
-      <div className="flex flex-col gap-px overflow-hidden rounded-2xl bg-[#EFEBE3] border border-[var(--hairline)]">
+      <div className="flex flex-col gap-px overflow-hidden rounded-2xl border border-line bg-line shadow-[var(--card-shadow)]">
         {rows.map((r) => (
           <div key={r.id} className="flex min-h-[72px] items-center gap-2 bg-white py-2 pe-3 ps-2">
-            <div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-[#E3E8F2] text-sm font-bold text-navy">{r.name.slice(0, 2)}</div>
+            <div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-[#EAF1FC] text-sm font-bold text-navy">{r.name.slice(0, 2)}</div>
             <button type="button" onClick={() => setEditing(r)} className="min-w-0 flex-1 text-start">
               <div dir="rtl" className="text-base font-semibold">{r.name}</div>
               <div className="text-sm text-muted">{[r.job_role, r.area].filter(Boolean).join(" · ")}</div>
             </button>
-            {telLink(r.phone) && <a href={telLink(r.phone)!} aria-label={t.people.call} className="flex h-12 w-12 items-center justify-center rounded-[14px] bg-[#E3E8F2] text-navy"><Icon name="call" size={22} filled /></a>}
+            {telLink(r.phone) && <a href={telLink(r.phone)!} aria-label={t.people.call} className="flex h-12 w-12 items-center justify-center rounded-[14px] bg-[#EAF1FC] text-navy"><Icon name="call" size={22} filled /></a>}
           </div>
         ))}
       </div>

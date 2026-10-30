@@ -29,7 +29,7 @@ export function Row({ kind, title, building, meta, late, badge, flag, trailing, 
       {building ? (
         <Plaque name={building} />
       ) : (
-        <div className="flex h-11 w-11 flex-none items-center justify-center rounded-[10px] border border-[var(--hairline)] text-muted">
+        <div className="flex h-11 w-11 flex-none items-center justify-center rounded-[10px] border border-line text-muted">
           <Icon name={KIND_ICON[kind]} size={20} />
         </div>
       )}
@@ -44,10 +44,15 @@ export function Row({ kind, title, building, meta, late, badge, flag, trailing, 
       {extra && (
         <>
           <div className="hidden w-40 flex-none text-sm lg:block">{extra.assignee ?? <span className="text-muted">לא שויך</span>}</div>
-          <div className="hidden w-24 flex-none text-sm lg:block" dir="ltr">{extra.due ?? ""}</div>
+          <div className="hidden w-24 flex-none text-sm lg:block"><span dir="ltr">{extra.due ?? ""}</span></div>
         </>
       )}
-      {showBadge && <Badge list={badge.list} value={badge.value} />}
+      {extra ? (
+        // In the table layout the badge has its own column, so the columns line up when a row has no badge.
+        <div className="flex flex-none justify-end lg:w-28">{showBadge && <Badge list={badge.list} value={badge.value} />}</div>
+      ) : (
+        showBadge && <Badge list={badge.list} value={badge.value} />
+      )}
     </>
   );
   const cls = "press-row flex min-h-[72px] items-center gap-3 bg-white py-2.5 pe-3.5 ps-3";

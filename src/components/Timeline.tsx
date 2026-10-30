@@ -17,7 +17,7 @@ export function Timeline({ events }: { events: TicketDetail["events"] }) {
   return (
     <ol className="flex flex-col gap-3">
       {[...events].reverse().map((e) => (
-        <li key={e.id} className="rounded-2xl bg-white p-3.5 shadow-[0_1px_2px_rgba(27,42,74,.06)]">
+        <li key={e.id} className="card p-3.5">
           <div dir="rtl" className="text-base">{describe(e)}</div>
           <div className="mt-0.5 text-sm text-muted">{e.actor_name ?? "—"} · <span dir="ltr">{formatDate(new Date(e.created_at).toLocaleDateString("en-CA", { timeZone: "Asia/Jerusalem" }))} {new Date(e.created_at).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jerusalem" })}</span></div>
         </li>

@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { buildToday, type MaintItemRow, type TicketRow, type TodayData } from "@/lib/domain/today";
+import { buildTrend, type TrendWeek } from "@/lib/domain/dashboard";
 
 type Joined = { name: string; archived_at: string | null } | null;
 
@@ -26,4 +27,16 @@ export async function loadToday(db: SupabaseClient, now: Date = new Date()): Pro
     .map(({ building, ...r }) => ({ ...r, kind: r.kind as "fault" | "task", building_name: building?.name ?? null }));
 
   return buildToday({ items: itemRows, tickets: ticketRows, now });
+}
+
+/** Faults that were opened or closed in the last weeks, for the dashboard trend chart. */
+export async function loadTrend(db: SupabaseClient, now: Date = new Date(), weeks = 8): Promise<TrendWeek[]> {
+  const since = new Date(now.getTime() - (weeks * 7 + 1) * 86_400_000).toISOString();
+  const { data, error } = await db.from("ticket")
+    .select("created_at, closed_at")
+    .eq("kind", "fault")
+    .is("archived_at", null)
+    .or(`created_at.gte.${since},closed_at.gte.${since}`);
+  if (error) throw error;
+  return buildTrend(data ?? [], now, weeks);
 }

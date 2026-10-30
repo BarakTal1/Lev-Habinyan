@@ -96,7 +96,7 @@ export function NewTicketForm({ buildings, assignees }: { buildings: BuildingOpt
       )}
 
       {error && <p className="text-[#B3261E]" role="alert">{error}</p>}
-      <div className="material fixed inset-x-0 bottom-0 z-40 border-t border-[var(--hairline)] p-4 pb-[max(16px,env(safe-area-inset-bottom))]">
+      <div className="material fixed inset-x-0 bottom-0 z-40 border-t border-line p-4 pb-[max(16px,env(safe-area-inset-bottom))]">
         <div className="mx-auto max-w-xl">
         <button type="button" onClick={save} disabled={!canSave || pending} className="h-14 w-full rounded-2xl bg-navy text-[17px] font-bold text-white disabled:opacity-40">
           {t.common.save}

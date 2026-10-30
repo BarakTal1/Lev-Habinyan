@@ -16,7 +16,7 @@ export function StatusControl({ id, status }: { id: string; status: string }) {
       <button type="button" disabled={pending} onClick={() => go(next)} className="press h-14 w-full rounded-2xl bg-navy text-[17px] font-bold text-white disabled:opacity-50">
         {t.tickets.nextStatus}: {next}
       </button>
-      <select value={status} disabled={pending} onChange={(e) => go(e.target.value)} aria-label={t.tickets.status} className="h-12 rounded-xl bg-[#F7F5F0] px-3 text-base outline-none transition-shadow duration-150 focus:ring-4 focus:ring-navy/10">
+      <select value={status} disabled={pending} onChange={(e) => go(e.target.value)} aria-label={t.tickets.status} className="h-12 rounded-xl bg-[#F4F6FA] px-3 text-base outline-none transition-shadow duration-150 focus:ring-4 focus:ring-navy/10">
         {STATUSES.map((s) => <option key={s}>{s}</option>)}
       </select>
     </div>

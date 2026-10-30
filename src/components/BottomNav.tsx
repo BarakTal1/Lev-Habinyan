@@ -7,7 +7,7 @@ import { NAV, isActive } from "./nav-items";
 export function BottomNav() {
   const pathname = usePathname();
   return (
-    <nav className="material fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-[var(--hairline)] pb-[env(safe-area-inset-bottom)] shadow-[inset_0_1px_0_var(--material-edge)] lg:hidden">
+    <nav className="material fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-line pb-[env(safe-area-inset-bottom)] shadow-[inset_0_1px_0_var(--material-edge)] lg:hidden">
       {NAV.map((n) => {
         const active = isActive(pathname, n.href);
         return (

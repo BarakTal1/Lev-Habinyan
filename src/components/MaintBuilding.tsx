@@ -21,7 +21,7 @@ export function MaintBuilding({ buildingId, rows, suppliers, today }: { building
 
   return (
     <>
-      <div className="flex flex-col gap-px overflow-hidden rounded-2xl bg-[#EFEBE3] border border-[var(--hairline)]">
+      <div className="flex flex-col gap-px overflow-hidden rounded-2xl border border-line bg-line shadow-[var(--card-shadow)]">
         {rows.map((r) => (
           <button key={r.id} type="button" onClick={() => setOpenId(r.id)} className="press-row flex min-h-[72px] items-center gap-3 bg-white py-2.5 pe-3.5 ps-3 text-start">
             <div className="min-w-0 flex-1">
@@ -55,7 +55,7 @@ export function MaintBuilding({ buildingId, rows, suppliers, today }: { building
               <button disabled={pending} className="h-12 rounded-xl bg-navy font-semibold text-white disabled:opacity-50">{t.maint.markDone}</button>
             </form>
 
-            <form action={(fd) => start(async () => { await updateItemAction(buildingId, item.id, fd); close(); })} className="flex flex-col gap-3 border-t border-[#EFEBE3] pt-4" key={item.id}>
+            <form action={(fd) => start(async () => { await updateItemAction(buildingId, item.id, fd); close(); })} className="flex flex-col gap-3 border-t border-[#E8ECF2] pt-4" key={item.id}>
               <h3 className="font-bold">{t.maint.frequency}</h3>
               <div className="flex items-center gap-2">
                 <span>{t.maint.every}</span>
@@ -75,7 +75,7 @@ export function MaintBuilding({ buildingId, rows, suppliers, today }: { building
               <button disabled={pending} className="h-12 rounded-xl border border-navy font-semibold text-navy disabled:opacity-50">{t.maint.saveSettings}</button>
             </form>
 
-            <div className="flex flex-col gap-2 border-t border-[#EFEBE3] pt-4">
+            <div className="flex flex-col gap-2 border-t border-[#E8ECF2] pt-4">
               <button type="button" disabled={pending} onClick={() => start(async () => { const r = await createTaskFromItemAction(buildingId, item.id); setTaskId(r.ticketId); })}
                 className="h-12 rounded-xl border border-navy font-semibold text-navy disabled:opacity-50">{t.maint.createTask}</button>
               {taskId && <Link href={`/tickets/${taskId}`} className="text-center text-navy underline">{t.maint.taskCreated}</Link>}

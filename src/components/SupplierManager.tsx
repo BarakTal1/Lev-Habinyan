@@ -20,7 +20,7 @@ export function SupplierManager({ groups }: { groups: SupplierGroup[] }) {
         {groups.map((g) => (
           <section key={g.category}>
             <h2 className="px-1 pb-2 text-lg font-bold">{g.category}</h2>
-            <div className="flex flex-col gap-px overflow-hidden rounded-2xl bg-[#EFEBE3] border border-[var(--hairline)]">
+            <div className="flex flex-col gap-px overflow-hidden rounded-2xl border border-line bg-line shadow-[var(--card-shadow)]">
               {g.items.map((r) => (
                 <div key={r.id} className="flex min-h-[72px] items-center gap-2 bg-white py-2 pe-3 ps-2">
                   <button type="button" onClick={() => setEditing(r)} className="min-w-0 flex-1 ps-2 text-start">
@@ -31,7 +31,7 @@ export function SupplierManager({ groups }: { groups: SupplierGroup[] }) {
                       {r.area && <span>{r.area}</span>}
                     </div>
                   </button>
-                  {telLink(r.phone) && <a href={telLink(r.phone)!} aria-label={t.people.call} className="flex h-12 w-12 items-center justify-center rounded-[14px] bg-[#E3E8F2] text-navy"><Icon name="call" size={22} filled /></a>}
+                  {telLink(r.phone) && <a href={telLink(r.phone)!} aria-label={t.people.call} className="flex h-12 w-12 items-center justify-center rounded-[14px] bg-[#EAF1FC] text-navy"><Icon name="call" size={22} filled /></a>}
                 </div>
               ))}
             </div>

@@ -19,4 +19,4 @@ export function Field({ label, children, group }: { label: string; children: Rea
   );
 }
 
-export const inputCls = "h-12 w-full rounded-xl border border-[#DAD5CB] bg-white px-3 text-base outline-none transition-shadow duration-150 focus:border-navy/40 focus:ring-4 focus:ring-navy/10";
+export const inputCls = "h-12 w-full rounded-xl border border-[#D8DEE8] bg-white px-3 text-base outline-none transition-shadow duration-150 focus:border-navy/40 focus:ring-4 focus:ring-navy/10";
