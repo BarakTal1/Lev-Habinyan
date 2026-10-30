@@ -6,7 +6,9 @@ import { StatCard } from "@/components/StatCard";
 import { TodaySection, type SectionRow } from "@/components/TodaySection";
 import { Fab } from "@/components/Fab";
 import { requireUser } from "@/lib/auth";
+import { loadLedger } from "@/lib/db/ledger";
 import { loadToday, loadTrend } from "@/lib/db/today";
+import { formatILS } from "@/lib/domain/money";
 import { openByBuilding } from "@/lib/domain/dashboard";
 import type { TodayRow } from "@/lib/domain/today";
 import { ageLabel, dueLabel, waitLabel } from "@/lib/format";
@@ -31,7 +33,7 @@ export default async function TodayPage() {
   const now = new Date();
   const today = todayIL(now);
   const db = await createClient();
-  const [data, trend] = await Promise.all([loadToday(db, now), loadTrend(db, now)]);
+  const [data, trend, ledger] = await Promise.all([loadToday(db, now), loadTrend(db, now), loadLedger(db, { today })]);
 
   const toRow = (r: TodayRow, section: "overdue" | "soon" | "faults"): SectionRow => {
     const isFault = r.kind === "fault" && section === "faults";
@@ -75,11 +77,12 @@ export default async function TodayPage() {
         <h1 className="mt-1 text-[28px] font-bold leading-[1.15] lg:text-[30px]">{headline}</h1>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 px-4 pb-4 lg:grid-cols-4 lg:gap-4 lg:px-8">
+      <div className="grid grid-cols-2 gap-3 px-4 pb-4 lg:grid-cols-5 lg:gap-4 lg:px-8">
         <StatCard label={s.open} value={data.counts.openFaults} icon="report" hint={s.openHint} href="/tickets?kind=fault" />
         <StatCard label={s.urgent} value={urgentFaults.length} icon="warning" tone={urgentFaults.length ? "danger" : "ok"} hint={s.urgentHint} />
         <StatCard label={s.overdue} value={data.counts.overdue} icon="schedule" tone={data.counts.overdue ? "warn" : "ok"} hint={s.overdueHint} />
         <StatCard label={s.soon} value={data.soon.length} icon="event" hint={s.soonHint} href="/calendar" />
+        <StatCard label={t.ledger.totalDebt} value={formatILS(ledger.totals.debt)} icon="payments" tone={ledger.totals.debt > 0 ? "danger" : "ok"} hint={`${ledger.totals.debtors} ${t.ledger.debtors}`} href="/payments" />
       </div>
 
       <div className="grid gap-3 px-4 pb-6 lg:grid-cols-3 lg:gap-4 lg:px-8">

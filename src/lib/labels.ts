@@ -114,7 +114,10 @@ export const t = {
     failed: "הייבוא נכשל. נסו שוב.",
   },
   ledger: {
-    title: "גבייה", debt: "חוב פתוח", paidThisMonth: "שולם החודש", ofDue: (due: string) => `מתוך ${due} לחודש זה`, debtors: "דירות בחוב",
+    title: "גבייה", totalDebt: "חוב כולל", collected: "נגבה החודש", expected: "צפוי החודש", allBuildings: "כל הבניינים", show: "הצגה", export: "ייצוא לאקסל",
+    noDebtors: "אין חובות פתוחים", unmatchedTitle: "תשלומים לא משויכים", unmatchedHelp: "תשלומים מקובץ שלא נמצאה להם דירה. בחרו דירה ושייכו.", rawUnit: "דירה בקובץ", link: "שיוך", pickUnit: "בחרו דירה",
+    cols: { building: "בניין", unit: "דירה", payer: "משלם", phone: "טלפון", months: "חודשים", since: "חוב מחודש", lastPaid: "תשלום אחרון", balance: "יתרה" },
+    debt: "חוב פתוח", paidThisMonth: "שולם החודש", ofDue: (due: string) => `מתוך ${due} לחודש זה`, debtors: "דירות בחוב",
     unit: (n: string) => `דירה ${n}`, noPayer: "ללא משלם", fee: "דמי ועד", credit: "זכות", monthsOwed: (n: number) => (n === 1 ? "חודש אחד בחוב" : `${n} חודשים בחוב`),
     noUnits: "אין דירות בבניין. הוסיפו דיירים כדי ליצור דירות.",
     setFee: "קביעת דמי ועד", allUnits: "כל הדירות", feeAmount: "סכום לחודש", fromMonth: "מחודש", toMonth: "עד חודש", saveFee: "שמירת דמי ועד",

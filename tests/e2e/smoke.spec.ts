@@ -165,8 +165,8 @@ test("mobile: edit a building, then archive it", async ({ page }) => {
   await expect(page.getByRole("main").getByText(renamed)).toHaveCount(0);
 });
 
-test("mobile: set a monthly fee and record a payment", async ({ page }) => {
-  await signIn(page);
+/** Creates a building with one resident in unit 1 and sets a fee of 350 for this month on the payments tab. Returns the building name. */
+async function buildingWithFee(page: import("@playwright/test").Page): Promise<string> {
   await page.goto("/buildings");
   await page.getByText("הוספת בניין").click();
   const name = `גבייה ${Date.now()}`;
@@ -179,19 +179,32 @@ test("mobile: set a monthly fee and record a payment", async ({ page }) => {
   await page.locator('input[name="phone"]').fill("052-0000777");
   await page.locator('input[name="unit"]').fill("1");
   await page.getByRole("button", { name: "שמירה" }).click();
-
   await page.getByRole("navigation", { name: "tabs" }).getByRole("link", { name: "תשלומים" }).click();
   await page.getByText("קביעת דמי ועד").click();
   await page.getByLabel("סכום לחודש").fill("350");
   await page.getByRole("button", { name: "שמירת דמי ועד" }).click();
-  const row = page.getByRole("button", { name: /דירה 1/ });
-  await expect(row).toContainText("₪350");
+  await expect(page.getByRole("button", { name: /דירה 1/ })).toContainText("₪350");
+  return name;
+}
 
+test("mobile: set a monthly fee and record a payment", async ({ page }) => {
+  await signIn(page);
+  await buildingWithFee(page);
+  const row = page.getByRole("button", { name: /דירה 1/ });
   await row.click();
   const dialog = page.getByRole("dialog");
   await expect(dialog.getByLabel("סכום")).toHaveValue("350");
   await dialog.getByRole("button", { name: "רישום תשלום" }).click();
   await expect(page.getByRole("button", { name: /דירה 1/ })).toContainText("₪0");
+});
+
+test("a debtor appears on the payments page", async ({ page }) => {
+  await signIn(page);
+  const name = await buildingWithFee(page);
+  await page.goto("/payments");
+  const debtor = page.getByRole("listitem").filter({ hasText: name });
+  await expect(debtor).toContainText("₪350");
+  await expect(page.getByRole("link", { name: "ייצוא לאקסל" })).toHaveAttribute("href", /\/payments\/export/);
 });
 
 test("import a payments CSV twice", async ({ page }) => {

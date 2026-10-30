@@ -75,3 +75,21 @@ export function buildLedger(charges: LedgerCharge[], payments: LedgerPayment[], 
   for (const [id, { c, p }] of byUnit) out.set(id, unitLedger(id, c, p, today));
   return out;
 }
+
+export type DebtorCsvRow = {
+  buildingName: string; unit: string; payerName: string | null; payerPhone: string | null;
+  balance: number; monthsOwed: number; oldestOpen: string | null; lastPaidAt: string | null;
+};
+
+const csvCell = (v: string) => (/[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v);
+const dmy = (iso: string | null) => (iso ? `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}` : "");
+
+/** The debtor list as CSV for Excel: a byte order mark for Hebrew, the balance as a plain number in shekels. */
+export function debtorsCsv(rows: DebtorCsvRow[]): string {
+  const header = ["בניין", "דירה", "משלם", "טלפון", "יתרה (₪)", "חודשים בחוב", "חוב מחודש", "תשלום אחרון"];
+  const lines = rows.map((r) => [
+    r.buildingName, r.unit, r.payerName ?? "", r.payerPhone ?? "", (r.balance / 100).toFixed(2), String(r.monthsOwed),
+    r.oldestOpen ? `${r.oldestOpen.slice(5, 7)}/${r.oldestOpen.slice(0, 4)}` : "", dmy(r.lastPaidAt),
+  ].map(csvCell).join(","));
+  return "﻿" + [header.join(","), ...lines].join("\n") + "\n";
+}
