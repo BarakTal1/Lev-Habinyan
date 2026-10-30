@@ -76,6 +76,34 @@ describe("tenant details", () => {
     expect(await previewApartments(db, buildingId, grid)).toMatchObject({ unitsAdded: 0, unitsChanged: 0, peopleAdded: 0, peopleChanged: 0 });
   });
 
+  it("a phone match with a different name changes nothing and is reported", async () => {
+    const grid = [["דירה", "בעלים", "טלפון בעלים"], ["1", "רחל", "052-2222222"]];
+    const p = await previewApartments(db, buildingId, grid);
+    expect(p).toMatchObject({ peopleAdded: 0, peopleChanged: 0 });
+    expect(p.problems).toContainEqual({ row: 2, column: "בעלים", reason: "אותו טלפון כמו אורי כהן, שם אחר. לא עודכן" });
+    await applyApartments(db, buildingId, grid, today);
+    const names = (await getBuilding(db, buildingId))!.residents.map((r) => r.name);
+    expect(names).toContain("אורי כהן");
+    expect(names).not.toContain("רחל");
+  });
+
+  it("matches a phone written with 972 and a name with extra spaces", async () => {
+    const p = await previewApartments(db, buildingId, [["דירה", "בעלים", "טלפון בעלים"], ["1", "אורי  כהן", "+972-52-2222222"]]);
+    expect(p).toMatchObject({ peopleAdded: 0, peopleChanged: 0, problems: [] });
+  });
+
+  it("counts only fees that change, and writes nothing when the fee is the same", async () => {
+    const same = await previewApartments(db, buildingId, [["דירה", "דמי ועד"], ["7", "400"]], today);
+    expect(same.fees).toBe(0);
+    const changed = await previewApartments(db, buildingId, [["דירה", "דמי ועד"], ["7", "450"]], today);
+    expect(changed.fees).toBe(1);
+  });
+
+  it("reports a stored owner who is not in the file", async () => {
+    const p = await previewApartments(db, buildingId, [["דירה", "בעלים", "טלפון בעלים"], ["7", "דנה", "050-7777777"]]);
+    expect(p.problems).toContainEqual({ row: 2, column: "בעלים", reason: "הבעלים הרשומים (מיכל) לא בקובץ" });
+  });
+
   it("an empty cell in the file never clears a stored value", async () => {
     await applyApartments(db, buildingId, [["דירה", "בעלים", "טלפון בעלים"], ["1", "אורי כהן", ""]], today);
     const b = (await getBuilding(db, buildingId))!;

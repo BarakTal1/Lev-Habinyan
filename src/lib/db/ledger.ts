@@ -115,7 +115,8 @@ export async function loadLedger(db: SupabaseClient, opts: { buildingId?: string
   const ledger = buildLedger(charges, pays, opts.today);
 
   const rows: DebtorRow[] = units.map((u) => {
-    const people = u.people.filter((p) => p.person && !p.person.archived_at);
+    // A fixed order, so the same apartment always shows the same payer.
+    const people = u.people.filter((p) => p.person && !p.person.archived_at).sort((x, y) => x.person!.id.localeCompare(y.person!.id));
     // The payer is a person in the paying role; the apartment's primary contact wins when several share that role.
     const inRole = (rel: string) => people.filter((p) => p.relation === rel);
     const pick = (list: typeof people) => list.find((p) => p.person!.id === u.primary_contact_id) ?? list[0] ?? null;

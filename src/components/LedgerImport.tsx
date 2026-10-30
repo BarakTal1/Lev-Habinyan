@@ -113,7 +113,7 @@ export function LedgerImport({ kind, buildings, year }: { kind: Kind; buildings:
       {aptPreview && (
         <section className="card flex flex-col gap-3 p-4">
           <h2 className="text-[17px] font-bold">{t.import.preview}</h2>
-          <p className="text-[15px]">{L.aptCounts(aptPreview.unitsAdded, aptPreview.unitsChanged, aptPreview.peopleAdded, aptPreview.peopleChanged)}</p>
+          <p className="text-[15px]">{L.aptCounts(aptPreview.unitsAdded, aptPreview.unitsChanged, aptPreview.peopleAdded, aptPreview.peopleChanged, aptPreview.fees)}</p>
           {aptPreview.problems.length > 0 && (
             <div className="rounded-xl bg-[#FDF0DC] p-3 text-[#7A4A00]">
               <h3 className="font-bold">{t.import.problems}</h3>
