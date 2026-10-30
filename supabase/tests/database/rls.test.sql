@@ -1,5 +1,5 @@
 begin;
-select plan(38);
+select plan(50);
 
 -- Rows in every table, created as the database owner, so "sees nothing" is a real result.
 insert into person (id, name, role) values ('00000000-0000-0000-0000-0000000000a1', 'בודק', 'founder');
@@ -17,6 +17,11 @@ insert into maintenance_log (item_id, done_at) values ('00000000-0000-0000-0000-
 insert into setting (key, value) values ('rls-test', 'true');
 insert into reminder_log (item_id, kind, due_date) values ('00000000-0000-0000-0000-0000000000e1', 'due', current_date);
 insert into storage.objects (bucket_id, name, owner) values ('attachments', 'rls-test.png', null);
+insert into consent (phone, person_id, text_version) values ('972500000001', '00000000-0000-0000-0000-0000000000a1', 'v1');
+insert into wa_conversation (phone, step) values ('972500000001', 'menu');
+insert into message_log (direction, phone, wa_message_id, body) values ('in', '972500000001', 'wamid.rls-test', 'שלום');
+insert into proposal_log (ticket_id, proposed) values ('00000000-0000-0000-0000-0000000000c9', '{}');
+insert into alert (ticket_id, channel, to_phone) values ('00000000-0000-0000-0000-0000000000c9', 'sms', '972500000002');
 update unit set floor = '2', payer = 'owner' where id = '00000000-0000-0000-0000-0000000000d1';
 insert into tariff (unit_id, month, amount_agorot) values ('00000000-0000-0000-0000-0000000000d1', '2026-10-01', 35000);
 insert into special_charge (id, building_id, name, due_date) values ('00000000-0000-0000-0000-0000000000f1', '00000000-0000-0000-0000-0000000000b1', 'שיפוץ לובי', '2026-11-01');
@@ -29,6 +34,12 @@ set local role authenticated;
 select set_config('request.jwt.claims', '{"role":"authenticated","email":"allowed@test.local"}', true);
 select is((select count(*) from building where id = '00000000-0000-0000-0000-0000000000b1')::int, 1, 'allowed user reads the test building');
 select lives_ok($$insert into building (name) values ('חדש')$$, 'allowed user inserts a building');
+select is((select count(*) from consent)::int, 1, 'allowed user reads consent');
+select is((select count(*) from wa_conversation)::int, 1, 'allowed user reads the conversation');
+select is((select count(*) from message_log)::int, 1, 'allowed user reads the message log');
+select is((select count(*) from proposal_log)::int, 1, 'allowed user reads the proposal log');
+select is((select count(*) from alert)::int, 1, 'allowed user reads alerts');
+select is((select count(*) from wa_template)::int, 4, 'allowed user reads the four seeded templates');
 select is((select count(*) from tariff where unit_id = '00000000-0000-0000-0000-0000000000d1')::int, 1, 'allowed user reads the tariff');
 select is((select count(*) from special_charge where id = '00000000-0000-0000-0000-0000000000f1')::int, 1, 'allowed user reads the special charge');
 select is((select count(*) from special_charge_line where special_charge_id = '00000000-0000-0000-0000-0000000000f1')::int, 1, 'allowed user reads the charge line');
@@ -56,6 +67,12 @@ select is((select count(*) from attachment)::int, 0, 'stranger reads no attachme
 select is((select count(*) from maintenance_log)::int, 0, 'stranger reads no maintenance_log');
 select is((select count(*) from setting)::int, 0, 'stranger reads no setting');
 select is((select count(*) from reminder_log)::int, 0, 'stranger reads no reminder_log');
+select is((select count(*) from consent)::int, 0, 'stranger reads no consent');
+select is((select count(*) from wa_conversation)::int, 0, 'stranger reads no conversation');
+select is((select count(*) from message_log)::int, 0, 'stranger reads no message log');
+select is((select count(*) from proposal_log)::int, 0, 'stranger reads no proposal log');
+select is((select count(*) from alert)::int, 0, 'stranger reads no alerts');
+select is((select count(*) from wa_template)::int, 0, 'stranger reads no templates');
 select is((select count(*) from tariff)::int, 0, 'stranger reads no tariff');
 select is((select count(*) from special_charge)::int, 0, 'stranger reads no special_charge');
 select is((select count(*) from special_charge_line)::int, 0, 'stranger reads no special_charge_line');
