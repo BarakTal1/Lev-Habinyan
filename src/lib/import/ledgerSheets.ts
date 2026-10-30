@@ -34,6 +34,12 @@ export function parseTariffSheet(grid: string[][]): { rows: TariffRow[]; problem
   const months = header.map((h, i) => (i === unitCol ? null : parseMonth(h)));
   const rows: TariffRow[] = [];
   const problems: Problem[] = [];
+  if (!months.some(Boolean)) return { rows, problems: [{ row: 1, column: "חודש", reason: "חסרה עמודת חודש" }] };
+  // A column whose header is not a month but holds amounts is probably a month we cannot read. Say so instead of dropping it.
+  header.forEach((h, i) => {
+    if (i === unitCol || months[i]) return;
+    if (grid.slice(1).some((r) => (r[i] ?? "").trim() !== "" && parseAmount(r[i]) !== null)) problems.push({ row: 1, column: h, reason: "כותרת לא מובנת כחודש" });
+  });
   grid.slice(1).forEach((cells, k) => {
     const row = k + 2;
     const unit = normUnit(cells[unitCol] ?? "");

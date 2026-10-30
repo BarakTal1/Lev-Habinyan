@@ -50,3 +50,19 @@ describe("parsePaymentsSheet", () => {
     expect(r.problems.map((p) => p.column)).toEqual(["דירה", "תאריך תשלום"]);
   });
 });
+
+describe("parseTariffSheet: columns that are not months", () => {
+  it("reports a header that is not a month when its column has amounts", () => {
+    const r = parseTariffSheet([["דירה", "ינואר", "02/2026"], ["3", "350", "350"]]);
+    expect(r.rows).toHaveLength(1);
+    expect(r.problems).toEqual([{ row: 1, column: "ינואר", reason: "כותרת לא מובנת כחודש" }]);
+  });
+  it("does not report a text column such as the tenant name", () => {
+    const r = parseTariffSheet([["דירה", "שם דייר", "02/2026"], ["3", "כהן", "350"]]);
+    expect(r.problems).toEqual([]);
+  });
+  it("reports a sheet with no month column", () => {
+    const r = parseTariffSheet([["דירה", "שם"], ["3", "כהן"]]);
+    expect(r.problems).toEqual([{ row: 1, column: "חודש", reason: "חסרה עמודת חודש" }]);
+  });
+});

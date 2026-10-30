@@ -52,6 +52,15 @@ function unitLedger(unitId: string, charges: LedgerCharge[], payments: LedgerPay
 
   const dueTotal = due.reduce((s, c) => s + c.amount, 0);
   const paid = payments.reduce((s, p) => s + p.amount, 0);
+  // The open amounts must add up to the debt. A payment held for a future month leaves too much open:
+  // close the newest open months first. A refund leaves too little open: reopen the newest paid months first.
+  const target = Math.max(dueTotal - paid, 0);
+  let gap = open.reduce((s, x) => s + x, 0) - target;
+  for (let i = open.length - 1; i >= 0 && gap !== 0; i--) {
+    const step = gap > 0 ? Math.min(open[i], gap) : -Math.min(due[i].amount - open[i], -gap);
+    open[i] -= step;
+    gap -= step;
+  }
   const firstOpen = open.findIndex((x) => x > 0);
   const positive = payments.filter((p) => p.amount > 0).map((p) => p.paidAt).sort();
   return {

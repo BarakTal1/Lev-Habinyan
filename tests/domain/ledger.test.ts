@@ -73,6 +73,22 @@ describe("buildLedger", () => {
   it("a payment for a month not yet due waits for that month", () => {
     const u = buildLedger(fees, [pay(35000, { month: "2026-11-01" })], today).get("u1")!;
     expect(u.balance).toBe(35000);
+    expect(u.monthsOwed).toBe(1);
+    expect(u.oldestOpen).toBe("2026-09-01");
+  });
+});
+
+describe("buildLedger: months owed follow the balance", () => {
+  it("a refund of a month-tagged payment reopens the debt", () => {
+    const u = buildLedger(fees, [pay(35000, { month: "2026-10-01" }), pay(-35000, { paidAt: "2026-10-07" })], today).get("u1")!;
+    expect(u.balance).toBe(70000);
     expect(u.monthsOwed).toBe(2);
+    expect(u.oldestOpen).toBe("2026-09-01");
+  });
+  it("a prepayment for a future month leaves no months owed when the balance is zero", () => {
+    const u = buildLedger(fees, [pay(35000), pay(35000, { month: "2026-11-01" })], today).get("u1")!;
+    expect(u.balance).toBe(0);
+    expect(u.monthsOwed).toBe(0);
+    expect(u.oldestOpen).toBeNull();
   });
 });

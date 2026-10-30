@@ -90,6 +90,28 @@ describe("ledger database layer", () => {
     expect(again).toMatchObject({ added: 0, changed: 1, unchanged: 0 });
   });
 
+  it("does not import the same file again under the other source", async () => {
+    const grid = [["דירה", "סכום", "תאריך תשלום", "אסמכתא"], ["3", "120", "08/10/2026", "X-1"]];
+    await applyImport(db, profileId, "payments", buildingId, `${tag}-s.csv`, grid, "excel");
+    const other = await previewImport(db, "payments", buildingId, grid, "bllink_import");
+    expect(other).toMatchObject({ added: 0, unchanged: 1 });
+  });
+
+  it("imports a file with 600 payment rows, twice, without failing", async () => {
+    const grid = [["דירה", "סכום", "תאריך תשלום", "אסמכתא"], ...Array.from({ length: 600 }, (_, i) => ["3", "1", "09/10/2026", `big-${i}`])];
+    const first = await applyImport(db, profileId, "payments", buildingId, `${tag}-big.csv`, grid, "excel");
+    expect(first.added).toBe(600);
+    const again = await previewImport(db, "payments", buildingId, grid, "excel");
+    expect(again).toMatchObject({ added: 0, unchanged: 600 });
+  });
+
+  it("reads more than 1000 tariff rows", async () => {
+    // 1100 past months for unit 3: from 1930-01 on. Every month is due.
+    const rows = Array.from({ length: 1100 }, (_, i) => ({ unit_id: u3, month: `${1930 + Math.floor(i / 12)}-${String((i % 12) + 1).padStart(2, "0")}-01`, amount_agorot: 100 }));
+    for (let i = 0; i < rows.length; i += 500) await admin.from("tariff").insert(rows.slice(i, i + 500));
+    expect((await row(u3))?.due).toBe(110000);
+  });
+
   it("leaves archived units out of the ledger", async () => {
     await admin.from("unit").update({ archived_at: new Date().toISOString() }).eq("id", u2);
     expect(await row(u2)).toBeUndefined();

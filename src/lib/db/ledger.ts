@@ -17,6 +17,24 @@ const must = <T>(r: { data: T; error: { message: string } | null }): NonNullable
   return r.data as NonNullable<T>;
 };
 
+// PostgREST returns at most 1000 rows per request (Supabase max_rows). Every list read pages through all rows.
+const PAGE = 1000;
+// Long id lists go in chunks, so the request URL stays short.
+const CHUNK = 100;
+
+type Page<T> = PromiseLike<{ data: T[] | null; error: { message: string } | null }>;
+
+async function fetchAll<T>(page: (from: number, to: number) => Page<T>): Promise<T[]> {
+  const out: T[] = [];
+  for (let from = 0; ; from += PAGE) {
+    const r = await page(from, from + PAGE - 1);
+    if (r.error) throw new Error(r.error.message);
+    const rows = r.data ?? [];
+    out.push(...rows);
+    if (rows.length < PAGE) return out;
+  }
+}
+
 /** Each first-of-month date from `from` to `to`, both included. */
 function monthsBetween(from: string, to: string): string[] {
   const out: string[] = [];
@@ -57,26 +75,43 @@ export async function linkPayment(db: SupabaseClient, paymentId: string, unitId:
 type UnitRow = { id: string; number: string; payer: string | null; building_id: string; building: { name: string; archived_at: string | null } | null; people: { relation: string; person: { name: string; phone: string | null; archived_at: string | null } | null }[] };
 
 export async function loadLedger(db: SupabaseClient, opts: { buildingId?: string; today: string }): Promise<{ rows: DebtorRow[]; totals: LedgerTotals }> {
-  let uq = db.from("unit")
-    .select("id, number, payer, building_id, building:building_id(name, archived_at), people:unit_person(relation, person:person_id(name, phone, archived_at))")
-    .is("archived_at", null);
-  if (opts.buildingId) uq = uq.eq("building_id", opts.buildingId);
-  const units = (must(await uq) as unknown as UnitRow[]).filter((u) => u.building && !u.building.archived_at);
-  const ids = units.map((u) => u.id);
-  if (ids.length === 0) return { rows: [], totals: { due: 0, paid: 0, debt: 0, debtors: 0, thisMonthDue: 0, thisMonthPaid: 0 } };
+  const b = opts.buildingId;
+  const units = (await fetchAll<UnitRow>((from, to) => {
+    let q = db.from("unit")
+      .select("id, number, payer, building_id, building:building_id(name, archived_at), people:unit_person(relation, person:person_id(name, phone, archived_at))")
+      .is("archived_at", null).order("id").range(from, to);
+    if (b) q = q.eq("building_id", b);
+    return q as unknown as Page<UnitRow>;
+  })).filter((u) => u.building && !u.building.archived_at);
+  const live = new Set(units.map((u) => u.id));
+  if (live.size === 0) return { rows: [], totals: { due: 0, paid: 0, debt: 0, debtors: 0, thisMonthDue: 0, thisMonthPaid: 0 } };
 
+  // Filter by building in the database (not by a list of unit ids), then keep live units only.
+  type Line = { unit_id: string; amount_agorot: number; charge: { name: string; due_date: string; archived_at: string | null } | null };
   const [tariffs, lines, payments] = await Promise.all([
-    db.from("tariff").select("unit_id, month, amount_agorot").in("unit_id", ids),
-    db.from("special_charge_line").select("unit_id, amount_agorot, charge:special_charge_id(name, due_date, archived_at)").in("unit_id", ids),
-    db.from("payment").select("unit_id, amount_agorot, paid_at, month").in("unit_id", ids).is("archived_at", null),
+    fetchAll<{ unit_id: string; month: string; amount_agorot: number }>((from, to) => {
+      let q = db.from("tariff").select("unit_id, month, amount_agorot, unit:unit_id!inner(building_id)").order("unit_id").order("month").range(from, to);
+      if (b) q = q.eq("unit.building_id", b);
+      return q as unknown as Page<{ unit_id: string; month: string; amount_agorot: number }>;
+    }),
+    fetchAll<Line>((from, to) => {
+      let q = db.from("special_charge_line").select("unit_id, amount_agorot, charge:special_charge_id!inner(name, due_date, archived_at, building_id)").order("special_charge_id").order("unit_id").range(from, to);
+      if (b) q = q.eq("charge.building_id", b);
+      return q as unknown as Page<Line>;
+    }),
+    fetchAll<{ unit_id: string; amount_agorot: number; paid_at: string; month: string | null }>((from, to) => {
+      let q = db.from("payment").select("unit_id, amount_agorot, paid_at, month").not("unit_id", "is", null).is("archived_at", null).order("id").range(from, to);
+      if (b) q = q.eq("building_id", b);
+      return q as unknown as Page<{ unit_id: string; amount_agorot: number; paid_at: string; month: string | null }>;
+    }),
   ]);
   const charges: LedgerCharge[] = [
-    ...tariffCharges(must(tariffs)),
-    ...(must(lines) as unknown as { unit_id: string; amount_agorot: number; charge: { name: string; due_date: string; archived_at: string | null } | null }[])
-      .filter((l) => l.charge && !l.charge.archived_at)
+    ...tariffCharges(tariffs.filter((t) => live.has(t.unit_id))),
+    ...lines
+      .filter((l) => live.has(l.unit_id) && l.charge && !l.charge.archived_at)
       .map((l) => ({ unitId: l.unit_id, due: l.charge!.due_date, amount: l.amount_agorot, label: l.charge!.name })),
   ];
-  const pays: LedgerPayment[] = must(payments).map((p) => ({ unitId: p.unit_id as string, amount: p.amount_agorot, paidAt: p.paid_at, month: p.month }));
+  const pays: LedgerPayment[] = payments.filter((p) => live.has(p.unit_id)).map((p) => ({ unitId: p.unit_id, amount: p.amount_agorot, paidAt: p.paid_at, month: p.month }));
   const ledger = buildLedger(charges, pays, opts.today);
 
   const rows: DebtorRow[] = units.map((u) => {
@@ -100,9 +135,12 @@ export async function loadLedger(db: SupabaseClient, opts: { buildingId?: string
 }
 
 export async function loadUnmatched(db: SupabaseClient, buildingId?: string): Promise<UnmatchedPayment[]> {
-  let q = db.from("payment").select("id, building_id, amount_agorot, paid_at, method, raw, building:building_id(name)").is("unit_id", null).is("archived_at", null).order("paid_at");
-  if (buildingId) q = q.eq("building_id", buildingId);
-  return (must(await q) as unknown as { id: string; building_id: string; amount_agorot: number; paid_at: string; method: Method; raw: { unit?: string } | null; building: { name: string } | null }[])
+  type Row = { id: string; building_id: string; amount_agorot: number; paid_at: string; method: Method; raw: { unit?: string } | null; building: { name: string } | null };
+  return (await fetchAll<Row>((from, to) => {
+    let q = db.from("payment").select("id, building_id, amount_agorot, paid_at, method, raw, building:building_id(name)").is("unit_id", null).is("archived_at", null).order("paid_at").order("id").range(from, to);
+    if (buildingId) q = q.eq("building_id", buildingId);
+    return q as unknown as Page<Row>;
+  }))
     .map((p) => ({ id: p.id, buildingId: p.building_id, buildingName: p.building?.name ?? "", amount: p.amount_agorot, paidAt: p.paid_at, rawUnit: p.raw?.unit ?? "", method: p.method }));
 }
 
@@ -125,15 +163,15 @@ async function externalIds(buildingId: string, rows: PaymentRow[]): Promise<stri
 type Plan = { preview: ImportPreview; write: () => Promise<void> };
 
 async function planImport(db: SupabaseClient, kind: ImportKind, buildingId: string, grid: string[][], source: ImportSource, batch?: () => Promise<string>): Promise<Plan> {
-  const units = must(await db.from("unit").select("id, number").eq("building_id", buildingId).is("archived_at", null));
+  const units = await fetchAll<{ id: string; number: string }>((from, to) => db.from("unit").select("id, number").eq("building_id", buildingId).is("archived_at", null).order("id").range(from, to));
   const unitId = new Map(units.map((u) => [normUnit(u.number), u.id as string]));
 
   if (kind === "tariffs") {
     const { rows, problems } = parseTariffSheet(grid);
     const known = rows.filter((r) => unitId.has(r.unit));
     const unmatched = rows.filter((r) => !unitId.has(r.unit)).map((r) => ({ row: r.row, unit: r.unit }));
-    const ids = [...new Set(known.map((r) => unitId.get(r.unit)!))];
-    const existing = ids.length ? must(await db.from("tariff").select("unit_id, month, amount_agorot").in("unit_id", ids)) : [];
+    const existing = await fetchAll<{ unit_id: string; month: string; amount_agorot: number }>((from, to) =>
+      db.from("tariff").select("unit_id, month, amount_agorot, unit:unit_id!inner(building_id)").eq("unit.building_id", buildingId).order("unit_id").order("month").range(from, to) as unknown as Page<{ unit_id: string; month: string; amount_agorot: number }>);
     const cur = new Map(existing.map((t) => [`${t.unit_id}|${t.month}`, t.amount_agorot]));
     let added = 0, changed = 0, unchanged = 0;
     for (const r of known) {
@@ -152,8 +190,12 @@ async function planImport(db: SupabaseClient, kind: ImportKind, buildingId: stri
   const parsed = parsePaymentsSheet(grid);
   const rows = parsed.rows;
   const extIds = await externalIds(buildingId, rows);
-  const existing = extIds.length ? must(await db.from("payment").select("external_id").eq("source", source).in("external_id", extIds)) : [];
-  const have = new Set(existing.map((p) => p.external_id));
+  // A file counts as already imported under either import source, so one file under both tabs adds nothing twice.
+  const have = new Set<string>();
+  for (let i = 0; i < extIds.length; i += CHUNK) {
+    const r = must(await db.from("payment").select("external_id").in("source", ["excel", "bllink_import"]).in("external_id", extIds.slice(i, i + CHUNK)));
+    for (const p of r) have.add(p.external_id as string);
+  }
   const fresh = rows.map((r, i) => ({ r, ext: extIds[i] })).filter((x) => !have.has(x.ext));
   const unmatched = rows.filter((r) => !unitId.has(r.unit)).map((r) => ({ row: r.row, unit: r.unit }));
   return {
