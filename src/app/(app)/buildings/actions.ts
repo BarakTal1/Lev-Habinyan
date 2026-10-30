@@ -3,6 +3,10 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import * as b from "@/lib/db/buildings";
+import * as ledger from "@/lib/db/ledger";
+import type { Method } from "@/lib/domain/ledger";
+import { parseAmount } from "@/lib/domain/money";
+import { t } from "@/lib/labels";
 import { createClient } from "@/lib/supabase/server";
 
 export async function createBuildingAction(formData: FormData): Promise<void> {
@@ -59,4 +63,71 @@ export async function archiveBuildingAction(id: string): Promise<{ error: string
   revalidatePath("/buildings");
   revalidatePath("/");
   redirect("/buildings");
+}
+
+// Ledger. Each action returns an error key from t.ledger.errors, or nothing on success.
+type LedgerResult = { error?: keyof typeof t.ledger.errors };
+const METHODS: Method[] = ["card", "transfer", "check", "cash", "standing_order", "other"];
+const monthOf = (v: FormDataEntryValue | null) => (/^\d{4}-\d{2}$/.test(String(v ?? "")) ? `${v}-01` : null);
+const dateOf = (v: FormDataEntryValue | null) => (/^\d{4}-\d{2}-\d{2}$/.test(String(v ?? "")) ? String(v) : null);
+
+async function buildingUnitIds(buildingId: string): Promise<string[]> {
+  const { data, error } = await (await createClient()).from("unit").select("id").eq("building_id", buildingId).is("archived_at", null);
+  if (error) throw new Error(error.message);
+  return data.map((u) => u.id);
+}
+
+export async function setMonthlyFeeAction(buildingId: string, formData: FormData): Promise<LedgerResult> {
+  await requireUser();
+  const amount = parseAmount(String(formData.get("amount") ?? ""));
+  if (amount === null || amount < 0) return { error: "amount" };
+  const from = monthOf(formData.get("from")), to = monthOf(formData.get("to"));
+  if (!from || !to || from > to) return { error: "months" };
+  const unit = String(formData.get("unit") ?? "all");
+  const units = unit === "all" ? await buildingUnitIds(buildingId) : [unit];
+  if (units.length === 0) return { error: "units" };
+  try {
+    const db = await createClient();
+    for (const u of units) await ledger.setMonthlyFee(db, u, amount, from, to);
+  } catch { return { error: "failed" }; }
+  revalidatePath(`/buildings/${buildingId}`);
+  return {};
+}
+
+export async function addSpecialChargeAction(buildingId: string, formData: FormData): Promise<LedgerResult> {
+  const user = await requireUser();
+  const name = String(formData.get("name") ?? "").trim();
+  if (!name) return { error: "name" };
+  const dueDate = dateOf(formData.get("due"));
+  if (!dueDate) return { error: "date" };
+  const amount = parseAmount(String(formData.get("amount") ?? ""));
+  if (amount === null || amount <= 0) return { error: "amount" };
+  const units = formData.getAll("units").map(String);
+  if (units.length === 0) return { error: "units" };
+  try {
+    await ledger.addSpecialCharge(await createClient(), user.profileId, { buildingId, name, dueDate, lines: units.map((unitId) => ({ unitId, amount })) });
+  } catch { return { error: "failed" }; }
+  revalidatePath(`/buildings/${buildingId}`);
+  return {};
+}
+
+export async function recordPaymentAction(buildingId: string, unitId: string, formData: FormData): Promise<LedgerResult> {
+  const user = await requireUser();
+  const amount = parseAmount(String(formData.get("amount") ?? ""));
+  if (amount === null || amount === 0) return { error: "amount" };
+  const paidAt = dateOf(formData.get("paidAt"));
+  if (!paidAt) return { error: "date" };
+  const monthText = String(formData.get("month") ?? "");
+  const month = monthText ? monthOf(monthText) : null;
+  if (monthText && !month) return { error: "months" };
+  const method = String(formData.get("method") ?? "other") as Method;
+  try {
+    await ledger.recordPayment(await createClient(), user.profileId, {
+      buildingId, unitId, amount, paidAt, month, method: METHODS.includes(method) ? method : "other", note: String(formData.get("note") ?? "").trim() || undefined,
+    });
+  } catch { return { error: "failed" }; }
+  revalidatePath(`/buildings/${buildingId}`);
+  revalidatePath("/payments");
+  revalidatePath("/");
+  return {};
 }

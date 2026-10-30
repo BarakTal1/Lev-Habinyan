@@ -17,9 +17,13 @@ import { telLink, waLink } from "@/lib/phone";
 import { createClient } from "@/lib/supabase/server";
 import { ConfirmForm } from "@/components/ConfirmForm";
 import { EditBuildingSheet } from "@/components/EditBuildingSheet";
+import { ChargeForm, FeeForm, UnitLedgerList } from "@/components/LedgerForms";
+import { loadLedger } from "@/lib/db/ledger";
+import { formatILS } from "@/lib/domain/money";
+import { todayIL } from "@/lib/israel";
 import { addResidentAction, archiveResidentAction, uploadBuildingDocumentAction } from "../actions";
 
-const TABS = ["overview", "residents", "suppliers", "maintenance", "documents"] as const;
+const TABS = ["overview", "payments", "residents", "suppliers", "maintenance", "documents"] as const;
 type Tab = (typeof TABS)[number];
 const card = "card p-4";
 const list = "flex flex-col gap-px overflow-hidden rounded-2xl border border-line bg-line shadow-[var(--card-shadow)]";
@@ -40,6 +44,12 @@ export default async function BuildingPage({ params, searchParams }: { params: P
     ? await Promise.all([listTickets(db, { building: id }, null), loadBuildingMaintenance(db, id)])
     : [[], []];
   const now = new Date();
+  const today = todayIL(now);
+  // The payments tab needs the ledger and this month's fee for each apartment.
+  const ledger = tab === "payments" ? await loadLedger(db, { buildingId: id, today }) : null;
+  const fees = ledger && ledger.rows.length
+    ? new Map((await db.from("tariff").select("unit_id, amount_agorot").eq("month", today.slice(0, 8) + "01").in("unit_id", ledger.rows.map((r) => r.unitId))).data?.map((f) => [f.unit_id, f.amount_agorot]) ?? [])
+    : new Map<string, number>();
   const overdueMaint = maint.filter((m) => m.state === "overdue").length;
   const nextMaint = maint
     .filter((m) => m.applicable && m.next_due_at)
@@ -121,6 +131,23 @@ export default async function BuildingPage({ params, searchParams }: { params: P
                 <p dir="rtl" className="whitespace-pre-line">{b.notes}</p>
               </section>
             )}
+          </>
+        )}
+
+        {tab === "payments" && ledger && (
+          <>
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 lg:gap-4">
+              <StatCard label={t.ledger.debt} value={formatILS(ledger.totals.debt)} icon="payments" tone={ledger.totals.debt > 0 ? "danger" : "ok"} />
+              <StatCard label={t.ledger.paidThisMonth} value={formatILS(ledger.totals.thisMonthPaid)} icon="receipt_long" hint={t.ledger.ofDue(formatILS(ledger.totals.thisMonthDue))} />
+              <StatCard label={t.ledger.debtors} value={ledger.totals.debtors} icon="groups" tone={ledger.totals.debtors ? "warn" : "ok"} />
+            </div>
+            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start">
+              <UnitLedgerList buildingId={id} today={today} units={ledger.rows.map((r) => ({ unitId: r.unitId, unit: r.unit, payerName: r.payerName, fee: fees.get(r.unitId) ?? null, balance: r.balance, monthsOwed: r.monthsOwed }))} />
+              <div className="flex flex-col gap-4">
+                <FeeForm buildingId={id} today={today} units={ledger.rows.map((r) => ({ unitId: r.unitId, unit: r.unit }))} />
+                <ChargeForm buildingId={id} units={ledger.rows.map((r) => ({ unitId: r.unitId, unit: r.unit }))} />
+              </div>
+            </div>
           </>
         )}
 

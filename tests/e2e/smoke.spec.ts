@@ -164,3 +164,32 @@ test("mobile: edit a building, then archive it", async ({ page }) => {
   await expect(page).toHaveURL(/\/buildings$/);
   await expect(page.getByRole("main").getByText(renamed)).toHaveCount(0);
 });
+
+test("mobile: set a monthly fee and record a payment", async ({ page }) => {
+  await signIn(page);
+  await page.goto("/buildings");
+  await page.getByText("הוספת בניין").click();
+  const name = `גבייה ${Date.now()}`;
+  await page.locator('input[name="name"]').fill(name);
+  await page.getByRole("button", { name: "שמירה" }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(name);
+  await page.getByRole("navigation", { name: "tabs" }).getByRole("link", { name: "דיירים" }).click();
+  await page.getByText("הוספת דייר").click();
+  await page.locator('input[name="name"]').fill(`משלם ${Date.now()}`);
+  await page.locator('input[name="phone"]').fill("052-0000777");
+  await page.locator('input[name="unit"]').fill("1");
+  await page.getByRole("button", { name: "שמירה" }).click();
+
+  await page.getByRole("navigation", { name: "tabs" }).getByRole("link", { name: "תשלומים" }).click();
+  await page.getByText("קביעת דמי ועד").click();
+  await page.getByLabel("סכום לחודש").fill("350");
+  await page.getByRole("button", { name: "שמירת דמי ועד" }).click();
+  const row = page.getByRole("button", { name: /דירה 1/ });
+  await expect(row).toContainText("₪350");
+
+  await row.click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.getByLabel("סכום")).toHaveValue("350");
+  await dialog.getByRole("button", { name: "רישום תשלום" }).click();
+  await expect(page.getByRole("button", { name: /דירה 1/ })).toContainText("₪0");
+});
