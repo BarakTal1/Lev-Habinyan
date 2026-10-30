@@ -44,10 +44,12 @@ export async function listBuildingCards(db: SupabaseClient, now: Date = new Date
   }));
 }
 
-export type Resident = { person_id: string; unit_id: string; unit: string; name: string; phone: string | null; relation: string; is_committee: boolean };
+export type Resident = { person_id: string; unit_id: string; unit: string; name: string; phone: string | null; email: string | null; relation: string; is_committee: boolean };
+export type Apartment = { id: string; number: string; floor: string | null; payer: "owner" | "tenant" | null; primary_contact_id: string | null };
 export type BuildingDetail = {
   id: string; name: string; city: string | null; address: string | null; notes: string | null; units: number;
   residents: Resident[];
+  apartments: Apartment[];
   suppliers: { id: string; name: string; phone: string | null; category: string }[];
   documents: { id: string; url: string | null; kind: string; created_at: string }[];
   open_tickets: number;
@@ -57,20 +59,20 @@ export async function getBuilding(db: SupabaseClient, id: string): Promise<Build
   const b = await db.from("building").select("id, name, city, address, notes").eq("id", id).is("archived_at", null).maybeSingle();
   if (b.error) throw new Error(b.error.message);
   if (!b.data) return null;
-  const units = await db.from("unit").select("id, number").eq("building_id", id).is("archived_at", null);
+  const units = await db.from("unit").select("id, number, floor, payer, primary_contact_id").eq("building_id", id).is("archived_at", null);
   const unitIds = must(units).map((u) => u.id);
   const [ups, items, docs, tickets] = await Promise.all([
     unitIds.length === 0
       ? Promise.resolve({ data: [], error: null })
-      : db.from("unit_person").select("unit_id, relation, is_committee, person:person_id(id, name, phone, archived_at), unit:unit_id(number, building_id)").in("unit_id", unitIds),
+      : db.from("unit_person").select("unit_id, relation, is_committee, person:person_id(id, name, phone, email, archived_at), unit:unit_id(number, building_id)").in("unit_id", unitIds),
     db.from("maintenance_item").select("supplier:supplier_id(id, name, phone, archived_at, supplier_profile(category))").eq("building_id", id).not("supplier_id", "is", null),
     db.from("attachment").select("id, kind, storage_path, created_at").eq("building_id", id).is("archived_at", null).order("created_at", { ascending: false }),
     db.from("ticket").select("id", { count: "exact", head: true }).eq("building_id", id).is("archived_at", null).not("status", "in", "(בוצע,בוטל)"),
   ]);
-  type UP = { unit_id: string; relation: string; is_committee: boolean; person: { id: string; name: string; phone: string | null; archived_at: string | null } | null; unit: { number: string; building_id: string } | null };
+  type UP = { unit_id: string; relation: string; is_committee: boolean; person: { id: string; name: string; phone: string | null; email: string | null; archived_at: string | null } | null; unit: { number: string; building_id: string } | null };
   const residents: Resident[] = (must(ups) as unknown as UP[])
     .filter((r) => r.unit?.building_id === id && r.person && !r.person.archived_at)
-    .map((r) => ({ person_id: r.person!.id, unit_id: r.unit_id, unit: r.unit!.number, name: r.person!.name, phone: r.person!.phone, relation: r.relation, is_committee: r.is_committee }))
+    .map((r) => ({ person_id: r.person!.id, unit_id: r.unit_id, unit: r.unit!.number, name: r.person!.name, phone: r.person!.phone, email: r.person!.email, relation: r.relation, is_committee: r.is_committee }))
     .sort((a, c) => a.unit.localeCompare(c.unit, undefined, { numeric: true }));
   const seen = new Set<string>();
   const suppliers: BuildingDetail["suppliers"] = [];
@@ -86,7 +88,8 @@ export async function getBuilding(db: SupabaseClient, id: string): Promise<Build
     url: (await db.storage.from("attachments").createSignedUrl(d.storage_path, 3600)).data?.signedUrl ?? null,
   })));
   return {
-    ...b.data, units: must(units).length, residents, suppliers, documents, open_tickets: tickets.count ?? 0,
+    ...b.data, units: must(units).length, residents,
+    apartments: (must(units) as Apartment[]).sort((a, c) => a.number.localeCompare(c.number, undefined, { numeric: true })), suppliers, documents, open_tickets: tickets.count ?? 0,
   };
 }
 
@@ -117,12 +120,12 @@ export async function addUnit(db: SupabaseClient, buildingId: string, number: st
   return must(await db.from("unit").insert({ building_id: buildingId, number }).select("id").single()).id;
 }
 
-export type AddResidentInput = { building_id: string; unit_number: string; name: string; phone: string; relation: "owner" | "tenant"; is_committee?: boolean };
+export type AddResidentInput = { building_id: string; unit_number: string; name: string; phone: string; email?: string | null; relation: "owner" | "tenant"; is_committee?: boolean };
 
 /** Adds a resident to a unit. Creates the unit when it does not exist. Returns the person id. */
 export async function addResident(db: SupabaseClient, input: AddResidentInput): Promise<string> {
   const unitId = await addUnit(db, input.building_id, input.unit_number);
-  const person = must(await db.from("person").insert({ name: input.name, phone: input.phone, role: input.is_committee ? "committee" : "resident" }).select("id").single());
+  const person = must(await db.from("person").insert({ name: input.name, phone: input.phone, email: input.email || null, role: input.is_committee ? "committee" : "resident" }).select("id").single());
   must(await db.from("unit_person").insert({ unit_id: unitId, person_id: person.id, relation: input.relation, is_committee: input.is_committee ?? false }).select("unit_id").single());
   return person.id;
 }

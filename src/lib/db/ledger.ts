@@ -72,13 +72,13 @@ export async function linkPayment(db: SupabaseClient, paymentId: string, unitId:
   must(await db.from("payment").update({ unit_id: unitId }).eq("id", paymentId).select("id").single());
 }
 
-type UnitRow = { id: string; number: string; payer: string | null; building_id: string; building: { name: string; archived_at: string | null } | null; people: { relation: string; person: { name: string; phone: string | null; archived_at: string | null } | null }[] };
+type UnitRow = { id: string; number: string; payer: string | null; primary_contact_id: string | null; building_id: string; building: { name: string; archived_at: string | null } | null; people: { relation: string; person: { id: string; name: string; phone: string | null; archived_at: string | null } | null }[] };
 
 export async function loadLedger(db: SupabaseClient, opts: { buildingId?: string; today: string }): Promise<{ rows: DebtorRow[]; totals: LedgerTotals }> {
   const b = opts.buildingId;
   const units = (await fetchAll<UnitRow>((from, to) => {
     let q = db.from("unit")
-      .select("id, number, payer, building_id, building:building_id(name, archived_at), people:unit_person(relation, person:person_id(name, phone, archived_at))")
+      .select("id, number, payer, primary_contact_id, building_id, building:building_id(name, archived_at), people:unit_person(relation, person:person_id(id, name, phone, archived_at))")
       .is("archived_at", null).order("id").range(from, to);
     if (b) q = q.eq("building_id", b);
     return q as unknown as Page<UnitRow>;
@@ -116,7 +116,10 @@ export async function loadLedger(db: SupabaseClient, opts: { buildingId?: string
 
   const rows: DebtorRow[] = units.map((u) => {
     const people = u.people.filter((p) => p.person && !p.person.archived_at);
-    const payer = people.find((p) => p.relation === (u.payer ?? "owner")) ?? people.find((p) => p.relation === "owner") ?? null;
+    // The payer is a person in the paying role; the apartment's primary contact wins when several share that role.
+    const inRole = (rel: string) => people.filter((p) => p.relation === rel);
+    const pick = (list: typeof people) => list.find((p) => p.person!.id === u.primary_contact_id) ?? list[0] ?? null;
+    const payer = pick(inRole(u.payer ?? "owner")) ?? pick(inRole("owner"));
     const l = ledger.get(u.id) ?? { unitId: u.id, due: 0, paid: 0, balance: 0, monthsOwed: 0, oldestOpen: null, lastPaidAt: null };
     return { ...l, buildingId: u.building_id, buildingName: u.building!.name, unit: u.number, payerName: payer?.person?.name ?? null, payerPhone: payer?.person?.phone ?? null };
   });
