@@ -1,5 +1,5 @@
 begin;
-select plan(27);
+select plan(38);
 
 -- Rows in every table, created as the database owner, so "sees nothing" is a real result.
 insert into person (id, name, role) values ('00000000-0000-0000-0000-0000000000a1', 'בודק', 'founder');
@@ -17,12 +17,23 @@ insert into maintenance_log (item_id, done_at) values ('00000000-0000-0000-0000-
 insert into setting (key, value) values ('rls-test', 'true');
 insert into reminder_log (item_id, kind, due_date) values ('00000000-0000-0000-0000-0000000000e1', 'due', current_date);
 insert into storage.objects (bucket_id, name, owner) values ('attachments', 'rls-test.png', null);
+update unit set floor = '2', payer = 'owner' where id = '00000000-0000-0000-0000-0000000000d1';
+insert into tariff (unit_id, month, amount_agorot) values ('00000000-0000-0000-0000-0000000000d1', '2026-10-01', 35000);
+insert into special_charge (id, building_id, name, due_date) values ('00000000-0000-0000-0000-0000000000f1', '00000000-0000-0000-0000-0000000000b1', 'שיפוץ לובי', '2026-11-01');
+insert into special_charge_line (special_charge_id, unit_id, amount_agorot) values ('00000000-0000-0000-0000-0000000000f1', '00000000-0000-0000-0000-0000000000d1', 50000);
+insert into import_batch (id, kind, file_name) values ('00000000-0000-0000-0000-0000000000f2', 'payments', 'test.csv');
+insert into payment (building_id, unit_id, amount_agorot, paid_at, method, source) values ('00000000-0000-0000-0000-0000000000b1', '00000000-0000-0000-0000-0000000000d1', 35000, '2026-10-05', 'card', 'manual');
 
 -- allowed user
 set local role authenticated;
 select set_config('request.jwt.claims', '{"role":"authenticated","email":"allowed@test.local"}', true);
 select is((select count(*) from building where id = '00000000-0000-0000-0000-0000000000b1')::int, 1, 'allowed user reads the test building');
 select lives_ok($$insert into building (name) values ('חדש')$$, 'allowed user inserts a building');
+select is((select count(*) from tariff where unit_id = '00000000-0000-0000-0000-0000000000d1')::int, 1, 'allowed user reads the tariff');
+select is((select count(*) from special_charge where id = '00000000-0000-0000-0000-0000000000f1')::int, 1, 'allowed user reads the special charge');
+select is((select count(*) from special_charge_line where special_charge_id = '00000000-0000-0000-0000-0000000000f1')::int, 1, 'allowed user reads the charge line');
+select is((select count(*) from import_batch where id = '00000000-0000-0000-0000-0000000000f2')::int, 1, 'allowed user reads the import batch');
+select is((select count(*) from payment where unit_id = '00000000-0000-0000-0000-0000000000d1')::int, 1, 'allowed user reads the payment');
 select cmp_ok((select count(*) from storage.objects where bucket_id = 'attachments' and name = 'rls-test.png')::int, '=', 1, 'allowed user sees the storage object');
 
 -- a mixed-case email still matches the allowlist
@@ -45,6 +56,12 @@ select is((select count(*) from attachment)::int, 0, 'stranger reads no attachme
 select is((select count(*) from maintenance_log)::int, 0, 'stranger reads no maintenance_log');
 select is((select count(*) from setting)::int, 0, 'stranger reads no setting');
 select is((select count(*) from reminder_log)::int, 0, 'stranger reads no reminder_log');
+select is((select count(*) from tariff)::int, 0, 'stranger reads no tariff');
+select is((select count(*) from special_charge)::int, 0, 'stranger reads no special_charge');
+select is((select count(*) from special_charge_line)::int, 0, 'stranger reads no special_charge_line');
+select is((select count(*) from import_batch)::int, 0, 'stranger reads no import_batch');
+select is((select count(*) from payment)::int, 0, 'stranger reads no payment');
+select throws_ok($$insert into payment (building_id, amount_agorot, paid_at, method, source) values ('00000000-0000-0000-0000-0000000000b1', 100, current_date, 'cash', 'manual')$$, '42501', null, 'stranger cannot insert a payment');
 select is((select count(*) from storage.objects where bucket_id = 'attachments')::int, 0, 'stranger sees no stored files');
 select throws_ok($$insert into building (name) values ('פריצה')$$, '42501', null, 'stranger cannot insert');
 select throws_ok($$insert into storage.objects (bucket_id, name) values ('attachments', 'hack.png')$$, '42501', null, 'stranger cannot upload');
