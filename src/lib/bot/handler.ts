@@ -15,9 +15,11 @@ import { bot } from "./texts";
 import type { Draft, Inbound, InboundMessage, Out, StepContext } from "./types";
 
 /** Everything the handler needs from outside. The webhook passes the real ones; tests pass a simulator and a fake alert. */
-export type Deps = { db: SupabaseClient; channel: Channel; now: () => Date; propose: ProposeFn; alert: (ticketId: string) => Promise<void> };
+export type Deps = { db: SupabaseClient; channel: Channel; now: () => Date; propose: ProposeFn; alert: (ticketId: string) => Promise<{ delivered: boolean }> };
 
 const DUPLICATE_WINDOW_MS = 7 * 24 * 3600_000;
+/** A redelivered message is handled again only when the first try left it unprocessed for this long. */
+const STALE_AFTER_MS = 30_000;
 const CLOSED = "(בוצע,בוטל)";
 const DONE_REPLY = /^done_(yes|no):(\d+)$/;
 const STATE_RANK: Record<string, number> = { queued: 0, sent: 1, delivered: 2, read: 3 };
@@ -134,15 +136,23 @@ async function createTicketFromDraft(deps: Deps, phone: string, draft: Draft, pe
     responsibility: proposed.responsibility, building_id: person.buildingId, unit_id: draft.where === "unit" ? person.unitId : null,
     reporter_id: person.id, original_message: draft.text ?? null, resident_approved: person.approved, duplicate_of_id: duplicate?.id ?? null,
   }).select("id, number").single());
-  must(await db.from("ticket_event").insert({ ticket_id: ticket.id, type: "created", actor: null, payload: { kind: "fault", source: "whatsapp" } }).select("id"));
-  must(await db.from("proposal_log").insert({ ticket_id: ticket.id, proposed: { ...proposed, urgency, danger: Boolean(draft.danger) } }).select("id"));
+  // The ticket exists now. Nothing below may fail the message, or a second confirm would make a second ticket.
+  // The alert comes first: it must not wait for photo downloads.
+  let alerted = false;
+  if (draft.danger) {
+    try { alerted = (await deps.alert(ticket.id)).delivered; } catch (e) { logError("danger alert", e); }
+  }
+  const bestEffort = async (what: string, run: () => PromiseLike<{ error: { message: string } | null }>) => {
+    try { const r = await run(); if (r.error) throw new Error(r.error.message); } catch (e) { logError(what, e); }
+  };
+  await bestEffort("created event", () => db.from("ticket_event").insert({ ticket_id: ticket.id, type: "created", actor: null, payload: { kind: "fault", source: "whatsapp" } }));
+  await bestEffort("proposal log", () => db.from("proposal_log").insert({ ticket_id: ticket.id, proposed: { ...proposed, urgency, danger: Boolean(draft.danger) } }));
   for (const id of draft.photoMediaIds) await attachMedia(deps, ticket.id, id, "photo");
   for (const id of draft.audioMediaIds) await attachMedia(deps, ticket.id, id, "document");
 
-  if (draft.danger) await deps.alert(ticket.id).catch((e) => logError("danger alert", e));
   const out: Out[] = [{ type: "text", body: bot.ticketCreated(Number(ticket.number)) }];
   if (duplicate) out.push({ type: "text", body: bot.alreadyOpen(duplicate.number, duplicate.status) });
-  if (draft.danger) out.push({ type: "text", body: bot.dangerReply(emergencyNumber) });
+  if (draft.danger) out.push({ type: "text", body: bot.dangerReply(emergencyNumber, alerted) });
   return out;
 }
 
@@ -152,19 +162,36 @@ export async function handleInbound(deps: Deps, msg: InboundMessage): Promise<vo
   const phone = normalizePhone(msg.phone);
   if (!phone) return;
 
-  // The unique wa_message_id makes a retried webhook a no-op.
+  // The unique wa_message_id makes a retried webhook a no-op, unless the first try died before it finished (processed_at stays null).
   const logged = await db.from("message_log").insert({ direction: "in", phone, wa_message_id: msg.waMessageId, body: inboundBody(msg.content), payload: msg.content, created_at: msg.at }).select("id").single();
+  let inboundId: string;
   if (logged.error) {
-    if (logged.error.code === "23505") return;
-    throw new Error(logged.error.message);
+    if (logged.error.code !== "23505") throw new Error(logged.error.message);
+    const old = must(await db.from("message_log").select("id, processed_at, received_at").eq("wa_message_id", msg.waMessageId).single());
+    if (old.processed_at || deps.now().getTime() - new Date(old.received_at).getTime() < STALE_AFTER_MS) return;
+    inboundId = old.id;
+  } else {
+    inboundId = logged.data.id as string;
   }
-  const inboundId = logged.data.id as string;
 
+  try {
+    await processInbound(deps, phone, msg, inboundId);
+    must(await db.from("message_log").update({ processed_at: deps.now().toISOString() }).eq("id", inboundId).select("id"));
+  } catch (e) {
+    // The message stays unprocessed and the chat step is not saved, so the resident can tap again.
+    logError("handling failed", e);
+    await sendGuarded(deps, phone, { type: "text", body: bot.error }, { reply: true });
+  }
+}
+
+async function processInbound(deps: Deps, phone: string, msg: InboundMessage, inboundId: string): Promise<void> {
+  const { db } = deps;
   const now = deps.now();
   let person = await findPersonByPhone(db, phone);
 
+  // The done buttons are not a consent: after "stop" an old button goes through the normal flow, which asks for consent.
   const done = msg.content.kind === "button" ? DONE_REPLY.exec(msg.content.id) : null;
-  if (done && person && (await answerDone(deps, phone, person, done[1] as "yes" | "no", Number(done[2])))) return;
+  if (done && person?.consented && (await answerDone(deps, phone, person, done[1] as "yes" | "no", Number(done[2])))) return;
 
   const [state, buildings, settings] = await Promise.all([loadConversation(db, phone, now), listBuildingsForBot(db), getSettings(db)]);
   const ctx: StepContext = {
@@ -178,25 +205,18 @@ export async function handleInbound(deps: Deps, msg: InboundMessage): Promise<vo
   const result = nextStep(ctx, msg.content);
 
   const extra: Out[] = [];
-  try {
-    for (const e of result.effects) {
-      if (e.type === "save_consent") await recordConsent(db, phone, person?.id ?? null);
-      else if (e.type === "opt_out") await recordOptOut(db, phone);
-      else if (e.type === "register_unknown") {
-        await registerUnknown(db, phone, e.draft);
-        person = await findPersonByPhone(db, phone);
-      } else if (e.type === "agent_request") {
-        must(await db.from("message_log").update({ needs_agent: true }).eq("id", inboundId).select("id"));
-      } else if (e.type === "create_ticket") {
-        if (!person) throw new Error("ticket without a resident");
-        extra.push(...(await createTicketFromDraft(deps, phone, e.draft, person, settings.emergencyNumber)));
-      }
+  for (const e of result.effects) {
+    if (e.type === "save_consent") await recordConsent(db, phone, person?.id ?? null);
+    else if (e.type === "opt_out") await recordOptOut(db, phone);
+    else if (e.type === "register_unknown") {
+      await registerUnknown(db, phone, e.draft);
+      person = await findPersonByPhone(db, phone);
+    } else if (e.type === "agent_request") {
+      must(await db.from("message_log").update({ needs_agent: true }).eq("id", inboundId).select("id"));
+    } else if (e.type === "create_ticket") {
+      if (!person) throw new Error("ticket without a resident");
+      extra.push(...(await createTicketFromDraft(deps, phone, e.draft, person, settings.emergencyNumber)));
     }
-  } catch (e) {
-    // The step is not saved, so the resident can tap again.
-    logError("effect failed", e);
-    await sendGuarded(deps, phone, { type: "text", body: bot.error }, { reply: true });
-    return;
   }
 
   await saveConversation(db, phone, result.state, now);

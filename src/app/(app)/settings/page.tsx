@@ -10,9 +10,10 @@ import { setEmailRemindersAction } from "../people-actions";
 
 export default async function SettingsPage() {
   const db = await createClient();
-  const [on, bot, profiles] = await Promise.all([
+  const [on, bot, storedOncall, profiles] = await Promise.all([
     getSetting(db, "email_reminders", false),
     getSettings(db),
+    getSetting<string[] | null>(db, "oncall_phones", null),
     db.from("profile").select("id, email, person:person_id(name)").order("email"),
   ]);
   const card = "flex flex-col gap-3 card p-4";
@@ -38,7 +39,7 @@ export default async function SettingsPage() {
       <section className={card}>
         <h2 className="text-[17px] font-bold">{t.botSettings.title}</h2>
         <p className="text-sm text-muted">{t.botSettings.help}</p>
-        <BotSettingsForm initial={{ hours: bot.hours, emergencyNumber: bot.emergencyNumber, oncallPhones: bot.oncallPhones }} />
+        <BotSettingsForm initial={{ hours: bot.hours, emergencyNumber: bot.emergencyNumber, oncallPhones: storedOncall ?? [] }} fallbackPhones={bot.oncallPhones} />
       </section>
       {!demoModeEnabled() && <form action={signOut}><button className="h-12 w-full rounded-xl border border-[#D8DEE8] bg-white font-semibold">{t.settings.signOut}</button></form>}
     </Page>

@@ -5,8 +5,9 @@ import { adminClient } from "./helpers/db";
 import { SimulatorChannel } from "@/lib/bot/channel";
 import { normalizePhone } from "@/lib/bot/phone";
 import {
-  approveResident, countAgentChats, countPendingResidents, listAgentChats, listPendingResidents, rejectResident, replyInChat,
+  approveResident, countAgentChats, countPendingResidents, listAgentChats, listPendingResidents, listUnalertedDanger, rejectResident, replyInChat,
 } from "@/lib/db/inbox";
+import { recordConsent, recordOptOut } from "@/lib/bot/db";
 
 const tag = `t-inbox-${Date.now()}`;
 const rand = () => String(Math.floor(10000 + Math.random() * 89999));
@@ -98,6 +99,23 @@ describe("pending residents", () => {
     expect((await listPendingResidents(db)).map((r) => r.personId)).not.toContain(p.id);
   });
 
+  it("rejecting archives the apartment the stranger invented, but not one with other people or data", async () => {
+    const empty = await newUnit("18");
+    const stranger = await person(empty, { approvedAt: null });
+    const shared = await newUnit("19");
+    await person(shared, { approvedAt: new Date().toISOString() });
+    const second = await person(shared, { approvedAt: null });
+    const billed = await newUnit("20");
+    const third = await person(billed, { approvedAt: null });
+    await db.from("tariff").insert({ unit_id: billed, month: "2026-10-01", amount_agorot: 35000 });
+    await rejectResident(db, stranger.id); await rejectResident(db, second.id); await rejectResident(db, third.id);
+    const archived = async (id: string) => (await db.from("unit").select("archived_at").eq("id", id).single()).data!.archived_at;
+    expect(await archived(empty)).not.toBeNull();
+    expect(await archived(shared)).toBeNull();
+    expect(await archived(billed)).toBeNull();
+    await db.from("tariff").delete().eq("unit_id", billed);
+  });
+
   it("the count matches the list", async () => {
     expect(await countPendingResidents(db)).toBe((await listPendingResidents(db)).length);
   });
@@ -140,6 +158,19 @@ describe("agent chats", () => {
     expect((await db.from("message_log").select("delivery_state, body").eq("phone", normalizePhone(phone)!).eq("direction", "out")).data).toEqual([{ delivery_state: "sent", body: "שלום, אני מחזיר לך תשובה" }]);
   });
 
+  it("stop clears the request, and a founder cannot answer a number that opted out", async () => {
+    const u = await newUnit("21");
+    const p = await person(u, { approvedAt: new Date().toISOString() });
+    await recordConsent(db, p.phone, p.id);
+    await chatRow(p.phone, hoursAgo(1));
+    expect((await listAgentChats(db, now)).some((c) => c.phone === normalizePhone(p.phone))).toBe(true);
+    await recordOptOut(db, p.phone);
+    expect((await listAgentChats(db, now)).some((c) => c.phone === normalizePhone(p.phone))).toBe(false);
+    await chatRow(p.phone, hoursAgo(0.5), true);
+    await expect(replyInChat(db, channel, p.phone, "שלום", now)).rejects.toThrow(/opted out/);
+    expect(channel.sent).toHaveLength(0);
+  });
+
   it("refuses an empty reply", async () => {
     const phone = `05296${rand()}`; phones.push(phone);
     await chatRow(phone, hoursAgo(1));
@@ -148,5 +179,34 @@ describe("agent chats", () => {
 
   it("the count matches the list", async () => {
     expect(await countAgentChats(db)).toBe((await listAgentChats(db, new Date())).length);
+  });
+});
+
+describe("danger tickets nobody was alerted about", () => {
+  const danger = async (over: Record<string, unknown> = {}) => {
+    const t = (await db.from("ticket").insert({ kind: "fault", category: "חשמל", title: `${tag} סכנה`, urgency: "סכנה", building_id: buildingId, ...over }).select("id").single()).data!;
+    return t.id as string;
+  };
+  const alertRow = (ticketId: string, state: string) => db.from("alert").insert({ ticket_id: ticketId, channel: "sms", to_phone: "972500000000", delivery_state: state });
+  const ids = async () => (await listUnalertedDanger(db)).map((t) => t.id);
+  const made: string[] = [];
+  afterAll(async () => {
+    await db.from("alert").delete().in("ticket_id", made);
+    await db.from("ticket").delete().in("id", made);
+  });
+
+  it("lists an open danger ticket with no alert, and one whose alerts all failed", async () => {
+    const none = await danger(), failed = await danger();
+    made.push(none, failed);
+    await alertRow(failed, "failed");
+    expect(await ids()).toEqual(expect.arrayContaining([none, failed]));
+  });
+
+  it("does not list a ticket with a delivered alert, a founder action, a lower urgency, or a closed ticket", async () => {
+    const sent = await danger(), acted = await danger({ first_action_at: new Date().toISOString() }), low = await danger({ urgency: "דחוף" }), closed = await danger({ status: "בוצע" });
+    made.push(sent, acted, low, closed);
+    await alertRow(sent, "failed"); await alertRow(sent, "sent");
+    const listed = await ids();
+    for (const id of [sent, acted, low, closed]) expect(listed).not.toContain(id);
   });
 });

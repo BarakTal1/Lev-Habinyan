@@ -64,6 +64,24 @@ describe("findPersonByPhone", () => {
     expect(await findPersonByPhone(db, p)).toMatchObject({ unitId: unitB, buildingId: buildingB, approved: true });
   });
 
+  it("finds a person whose phone was typed with 00972 or with a 0 after +972", async () => {
+    const p = newPhone();
+    const person = (await db.from("person").insert({ name: `${tag} פורמט`, phone: `+972 0${p.slice(1, 3)}-${p.slice(3)}`, role: "resident" }).select("id").single()).data!.id;
+    await link(unitA, person, new Date().toISOString());
+    expect((await findPersonByPhone(db, p))?.id).toBe(person);
+    expect((await findPersonByPhone(db, `00972${p.slice(1)}`))?.id).toBe(person);
+  });
+
+  it("the stored phone_norm equals normalizePhone for every kind of input", async () => {
+    const tail = rand();
+    const inputs = ["052-1234567", "+972 52 1234567", "972521234567", "00972521234567", "+972 052-123 4567", "03-1234567", "٠٥٢١٢٣٤٥٦٧", "abc", "", "0", "00", "(052) 123.4567"];
+    for (const [i, phone] of inputs.entries()) {
+      const id = (await db.from("person").insert({ name: `${tag} נורמל ${i} ${tail}`, phone, role: "resident", archived_at: new Date().toISOString() }).select("id, phone_norm").single()).data!;
+      expect({ phone, stored: id.phone_norm }).toEqual({ phone, stored: normalizePhone(phone) });
+      await db.from("person").delete().eq("id", id.id);
+    }
+  });
+
   it("skips archived people", async () => {
     const p = newPhone();
     await db.from("person").insert({ name: `${tag} ארכיון`, phone: p, role: "resident", archived_at: new Date().toISOString() });
@@ -136,6 +154,23 @@ describe("registerUnknown", () => {
     expect(links!.find((l) => l.person_id === first.personId)!.relation).toBe("tenant");
     expect(links!.find((l) => l.person_id === second.personId)!.is_committee).toBe(true);
     expect(await findPersonByPhone(db, p1)).toMatchObject({ id: first.personId, approved: false });
+  });
+
+  it("registers the same number twice without a second person or a second link", async () => {
+    const p = newPhone();
+    const first = await registerUnknown(db, p, draft({ unitNumber: "52" }));
+    const second = await registerUnknown(db, p, draft({ unitNumber: "52" }));
+    expect(second.personId).toBe(first.personId);
+    expect((await db.from("person").select("id").eq("phone_norm", normalizePhone(p)!)).data).toHaveLength(1);
+    expect((await db.from("unit_person").select("person_id").eq("person_id", first.personId)).data).toHaveLength(1);
+  });
+
+  it("completes a registration that stopped after the person was created", async () => {
+    const p = newPhone();
+    const orphan = (await db.from("person").insert({ name: `${tag} יתום`, phone: p, role: "resident" }).select("id").single()).data!.id;
+    const r = await registerUnknown(db, p, draft({ unitNumber: "53" }));
+    expect(r.personId).toBe(orphan);
+    expect((await db.from("unit_person").select("approved_at").eq("person_id", orphan)).data).toEqual([{ approved_at: null }]);
   });
 
   it("creates a unit that does not exist", async () => {

@@ -76,11 +76,22 @@ describe("sendDangerAlert", () => {
     await Promise.all(PHONES.map((p) => inbound(p, minutes(-5))));
     const channel = new SimulatorChannel(), sms = new FakeSms({ fail: true });
     const id = await dangerTicket();
-    await expect(sendDangerAlert(db, channel, sms, id, undefined, t0)).resolves.toBeUndefined();
+    await expect(sendDangerAlert(db, channel, sms, id, undefined, t0)).resolves.toEqual({ delivered: true });
     expect(channel.sent).toHaveLength(2);
     const r = await rows(id);
     expect(r.filter((x) => x.channel === "sms").every((x) => x.delivery_state === "failed")).toBe(true);
     expect(r.filter((x) => x.channel === "whatsapp").every((x) => x.delivery_state === "sent")).toBe(true);
+  });
+
+  it("says it delivered nothing when every channel failed", async () => {
+    await inbound(PHONES[0], minutes(-60 * 25)); // outside the window
+    const id = await dangerTicket();
+    expect(await sendDangerAlert(db, new SimulatorChannel(), new FakeSms({ fail: true }), id, undefined, t0)).toEqual({ delivered: false });
+  });
+
+  it("says it delivered when only the SMS went out", async () => {
+    const id = await dangerTicket();
+    expect(await sendDangerAlert(db, new SimulatorChannel(), new FakeSms(), id, undefined, t0)).toEqual({ delivered: true });
   });
 
   it("a WhatsApp error still sends the SMS", async () => {
@@ -98,7 +109,7 @@ describe("sendDangerAlert", () => {
     await db.from("setting").upsert({ key: "oncall_phones", value: [] });
     const sms = new FakeSms();
     const id = await dangerTicket();
-    await sendDangerAlert(db, new SimulatorChannel(), sms, id, undefined, t0);
+    expect(await sendDangerAlert(db, new SimulatorChannel(), sms, id, undefined, t0)).toEqual({ delivered: false });
     expect(sms.sent).toHaveLength(0);
     expect(await rows(id)).toHaveLength(0);
   });

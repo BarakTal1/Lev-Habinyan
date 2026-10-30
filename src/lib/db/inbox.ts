@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Channel } from "@/lib/bot/channel";
-import { lastInboundAt } from "@/lib/bot/db";
+import { isOptedOut, lastInboundAt } from "@/lib/bot/db";
 import { sendGuarded } from "@/lib/bot/handler";
 import { normalizePhone } from "@/lib/bot/phone";
 import { isInsideWindow } from "@/lib/bot/templates";
@@ -55,7 +55,21 @@ export async function approveResident(db: SupabaseClient, personId: string, unit
 
 /** Rejects the resident: the person is archived, and the tickets stay, still flagged "not approved". */
 export async function rejectResident(db: SupabaseClient, personId: string): Promise<void> {
-  must(await db.from("person").update({ archived_at: new Date().toISOString() }).eq("id", personId).select("id").single());
+  const now = new Date().toISOString();
+  const links = must(await db.from("unit_person").select("unit_id").eq("person_id", personId).is("approved_at", null));
+  must(await db.from("person").update({ archived_at: now }).eq("id", personId).select("id").single());
+  // An apartment the stranger invented stays in the register as an empty row. Archive it when nothing else uses it.
+  for (const { unit_id } of links) {
+    const [people, tariffs, payments, tickets] = await Promise.all([
+      db.from("unit_person").select("person_id, person:person_id!inner(archived_at)").eq("unit_id", unit_id).neq("person_id", personId).is("person.archived_at", null),
+      db.from("tariff").select("unit_id").eq("unit_id", unit_id).limit(1),
+      db.from("payment").select("unit_id").eq("unit_id", unit_id).limit(1),
+      db.from("ticket").select("id").eq("unit_id", unit_id).limit(1),
+    ]);
+    if ([people, tariffs, payments, tickets].every((r) => (must(r as { data: unknown[] | null; error: { message: string } | null }) as unknown[]).length === 0)) {
+      must(await db.from("unit").update({ archived_at: now }).eq("id", unit_id).is("archived_at", null).select("id"));
+    }
+  }
 }
 
 /** Chats where the resident asked for a person: one row for each number, newest first, with the 24-hour window state. */
@@ -88,8 +102,21 @@ export async function replyInChat(db: SupabaseClient, channel: Channel, phone: s
   if (!body) throw new Error("empty reply");
   const n = normalizePhone(phone);
   if (!n) throw new Error("bad phone");
+  if (await isOptedOut(db, n)) throw new Error("this number opted out");
   if (!isInsideWindow(await lastInboundAt(db, n), now)) throw new Error("outside the 24-hour window");
   const r = await sendGuarded({ db, channel }, n, { type: "text", body }, { reply: true });
   if (!r.sent) throw new Error("send failed");
   must(await db.from("message_log").update({ needs_agent: false }).eq("phone", n).eq("needs_agent", true).select("id"));
+}
+
+export type UnalertedDanger = { id: string; number: number; title: string; buildingName: string | null };
+
+/** Open danger tickets that no founder has touched and for which no alert message went out. Today shows them in red. */
+export async function listUnalertedDanger(db: SupabaseClient): Promise<UnalertedDanger[]> {
+  const rows = must(await db.from("ticket").select("id, number, title, building:building_id(name), alerts:alert(delivery_state)")
+    .eq("urgency", "סכנה").is("first_action_at", null).is("archived_at", null).not("status", "in", "(בוצע,בוטל)").order("created_at")) as unknown as
+    { id: string; number: number; title: string; building: { name: string } | null; alerts: { delivery_state: string }[] }[];
+  return rows
+    .filter((t) => !t.alerts.some((a) => a.delivery_state === "sent"))
+    .map((t) => ({ id: t.id, number: Number(t.number), title: t.title, buildingName: t.building?.name ?? null }));
 }

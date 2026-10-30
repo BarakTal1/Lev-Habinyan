@@ -16,27 +16,29 @@ const must = <T>(r: { data: T; error: { message: string } | null }): NonNullable
 
 /**
  * Tells the on-call founders about a danger ticket, by WhatsApp and SMS, and records one alert row for each channel and phone.
- * A failure in one channel never stops the other. WhatsApp reaches a founder only inside the 24-hour window (no template for alerts in version 1), so SMS is the guaranteed channel.
+ * Returns delivered: true when at least one message went out. A failure in one channel never stops the other. WhatsApp reaches a founder only inside the 24-hour window (no template for alerts in version 1), so SMS is the guaranteed channel.
  */
-export async function sendDangerAlert(db: SupabaseClient, channel: Channel, sms: SmsSender, ticketId: string, repeatOf?: string, now: Date = new Date()): Promise<void> {
+export async function sendDangerAlert(db: SupabaseClient, channel: Channel, sms: SmsSender, ticketId: string, repeatOf?: string, now: Date = new Date()): Promise<{ delivered: boolean }> {
   const ticket = must(await db.from("ticket").select("id, title, building:building_id(name)").eq("id", ticketId).single()) as unknown as { id: string; title: string; building: { name: string } | null };
   const { oncallPhones } = await getSettings(db);
   const body = bot.dangerAlert(ticket.title, ticket.building?.name ?? null, `${process.env.SITE_URL ?? ""}/tickets/${ticket.id}`);
 
-  const attempt = async (via: "sms" | "whatsapp", to: string, run: () => Promise<void>) => {
+  const attempt = async (via: "sms" | "whatsapp", to: string, run: () => Promise<void>): Promise<boolean> => {
     let state: "sent" | "failed" = "sent";
     try { await run(); } catch { state = "failed"; }
     must(await db.from("alert").insert({ ticket_id: ticketId, channel: via, to_phone: to, sent_at: now.toISOString(), delivery_state: state, repeat_of: repeatOf ?? null }).select("id"));
+    return state === "sent";
   };
 
   const phones = [...new Set(oncallPhones.map((p) => normalizePhone(p)).filter((p): p is string => p !== null))];
-  await Promise.all(phones.flatMap((to) => [
+  const results = await Promise.all(phones.flatMap((to) => [
     attempt("whatsapp", to, async () => {
       if (!isInsideWindow(await lastInboundAt(db, to), now)) throw new Error("outside the 24-hour window");
       await channel.send(to, { type: "text", body });
     }),
     attempt("sms", to, () => sms.send(to, body)),
   ]));
+  return { delivered: results.some(Boolean) };
 }
 
 /** Sends the alert again, once, for a danger ticket that nobody opened in 10 minutes. */

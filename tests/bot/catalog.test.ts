@@ -39,8 +39,8 @@ describe("bot texts", () => {
     expect(bot.ticketCreated(1042)).toBe("קיבלנו. מספר פנייה 1042. נעדכן אותך כאן בכל שינוי.");
   });
   it("tells the resident to call the emergency number only when one is set", () => {
-    expect(bot.dangerReply("050-1234567")).toContain("050-1234567");
-    expect(bot.dangerReply(null)).not.toMatch(/\d/);
+    expect(bot.dangerReply("050-1234567", true)).toContain("050-1234567");
+    expect(bot.dangerReply(null, true)).not.toMatch(/\d/);
   });
   it("sets the privacy version", () => expect(privacyVersion).toBe("v1"));
 });

@@ -89,6 +89,18 @@ export async function recordOptOut(db: SupabaseClient, phone: string): Promise<v
   const now = new Date().toISOString();
   must(await db.from("consent").update({ revoked_at: now }).eq("phone", n).is("revoked_at", null).select("id"));
   must(await db.from("person").update({ opted_out_at: now }).eq("phone_norm", n).select("id"));
+  // A resident who said stop must not stay in the founders' queue.
+  must(await db.from("message_log").update({ needs_agent: false }).eq("phone", n).eq("needs_agent", true).select("id"));
+}
+
+/** True when this number said "stop" and has not agreed again. */
+export async function isOptedOut(db: SupabaseClient, phone: string): Promise<boolean> {
+  const n = normalizePhone(phone);
+  if (!n) return false;
+  const people = must(await db.from("person").select("id").eq("phone_norm", n).not("opted_out_at", "is", null).limit(1));
+  if (people.length) return true;
+  const row = must(await db.from("consent").select("revoked_at").eq("phone", n).order("granted_at", { ascending: false }).limit(1));
+  return row.length > 0 && row[0].revoked_at !== null;
 }
 
 /** A resident who is not in the register claims an apartment. The link waits for a founder (approved_at stays null). */
@@ -99,11 +111,18 @@ export async function registerUnknown(db: SupabaseClient, phone: string, draft: 
   const unitId = units.find((u) => normUnit(u.number) === number)?.id
     ?? must(await db.from("unit").insert({ building_id: draft.buildingId, number }).select("id").single()).id;
   const committee = draft.relation === "committee";
-  const person = must(await db.from("person").insert({ name: draft.name, phone: toLocalPhone(phone), role: committee ? "committee" : "resident" }).select("id").single());
-  must(await db.from("unit_person").insert({
-    unit_id: unitId, person_id: person.id, relation: draft.relation === "tenant" ? "tenant" : "owner", is_committee: committee, approved_at: null,
-  }).select("unit_id").single());
-  return { personId: person.id };
+  // A retry, or a registration that stopped half way, finds the person it made before.
+  const n = phoneOrThrow(phone);
+  const existing = must(await db.from("person").select("id").eq("phone_norm", n).is("archived_at", null).order("created_at").limit(1));
+  const personId = existing[0]?.id
+    ?? must(await db.from("person").insert({ name: draft.name, phone: toLocalPhone(phone), role: committee ? "committee" : "resident" }).select("id").single()).id;
+  const linked = must(await db.from("unit_person").select("unit_id").eq("person_id", personId).eq("unit_id", unitId));
+  if (linked.length === 0) {
+    must(await db.from("unit_person").insert({
+      unit_id: unitId, person_id: personId, relation: draft.relation === "tenant" ? "tenant" : "owner", is_committee: committee, approved_at: null,
+    }).select("unit_id").single());
+  }
+  return { personId };
 }
 
 export async function listBuildingsForBot(db: SupabaseClient): Promise<StepContext["buildings"]> {

@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { adminClient } from "../helpers/db";
 import { handleInbound, handleStatus, sendGuarded, type Deps } from "@/lib/bot/handler";
@@ -31,7 +31,7 @@ beforeAll(async () => {
 beforeEach(() => {
   channel = new SimulatorChannel();
   alerts = [];
-  deps = { db, channel, now: () => new Date(), propose: proposeFields, alert: async (id) => { alerts.push(id); } };
+  deps = { db, channel, now: () => new Date(), propose: proposeFields, alert: async (id) => { alerts.push(id); return { delivered: true }; } };
 });
 
 afterAll(async () => {
@@ -195,6 +195,90 @@ describe("the message log keeps what was said", () => {
   });
 });
 
+const said = (chat: ReturnType<typeof resident>) => chat.sentToMe().map((o) => ("body" in o ? o.body : "")).join("\n");
+
+describe("danger alert and what the resident is told", () => {
+  it("raises the alert before it downloads any media", async () => {
+    const order: string[] = [];
+    deps.alert = async () => { order.push("alert"); return { delivered: true }; };
+    channel.fetchMedia = async () => { order.push("media"); return { bytes: jpeg, mime: "image/jpeg" }; };
+    const { chat } = await knownResident();
+    await report(chat, { where: "unit", type: "gate", danger: true, text: "פירצה", mediaId: "x" });
+    expect(order).toEqual(["alert", "media"]);
+  });
+
+  it("says the team was alerted only when an alert was delivered, and always gives the emergency number", async () => {
+    await db.from("setting").upsert({ key: "emergency_number", value: "100" });
+    try {
+      for (const delivered of [true, false]) {
+        deps.alert = async () => ({ delivered });
+        const { chat } = await knownResident();
+        await report(chat, { where: "unit", type: "gate", danger: true, text: "x" });
+        expect(said(chat).includes("הצוות קיבל התראה")).toBe(delivered);
+        expect(said(chat)).toContain("100");
+      }
+    } finally {
+      await db.from("setting").delete().eq("key", "emergency_number");
+    }
+  });
+
+  it("does not claim an alert when the alert itself throws", async () => {
+    deps.alert = async () => { throw new Error("down"); };
+    const { person, chat } = await knownResident();
+    await report(chat, { where: "unit", type: "gate", danger: true, text: "x" });
+    expect(await ticketsOf(person)).toHaveLength(1);
+    expect(said(chat).includes("הצוות קיבל התראה")).toBe(false);
+  });
+});
+
+describe("a failure while handling a message", () => {
+  const failingTable = (table: string) => {
+    const real = db.from.bind(db);
+    return vi.spyOn(db, "from").mockImplementation(((t: string) => { if (t === table) throw new Error("down"); return real(t); }) as never);
+  };
+
+  it("marks a handled message as processed", async () => {
+    const { phone, chat } = await knownResident();
+    await chat.say({ kind: "text", text: "שלום" }, `${tag}-done`);
+    expect((await db.from("message_log").select("processed_at").eq("wa_message_id", `${tag}-done`).single()).data!.processed_at).not.toBeNull();
+    expect(phone).toBeTruthy();
+  });
+
+  it("answers with the error text, and leaves the message unprocessed", async () => {
+    const { chat } = await knownResident();
+    const spy = failingTable("wa_conversation");
+    try { await chat.say({ kind: "text", text: "שלום" }, `${tag}-boom`); } finally { spy.mockRestore(); }
+    expect(chat.last()).toBe(bot.error);
+    expect((await db.from("message_log").select("processed_at").eq("wa_message_id", `${tag}-boom`).single()).data!.processed_at).toBeNull();
+  });
+
+  it("handles a redelivered message that was left unprocessed, after a short wait", async () => {
+    const { phone, chat } = await knownResident();
+    await db.from("message_log").insert({ direction: "in", phone: normalizePhone(phone)!, wa_message_id: `${tag}-stale`, body: "שלום", received_at: new Date(Date.now() - 5 * 60_000).toISOString() });
+    await chat.say({ kind: "text", text: "שלום" }, `${tag}-stale`);
+    expect(chat.sentToMe().length).toBeGreaterThan(0);
+    expect((await db.from("message_log").select("processed_at").eq("wa_message_id", `${tag}-stale`).single()).data!.processed_at).not.toBeNull();
+    expect((await db.from("message_log").select("id").eq("wa_message_id", `${tag}-stale`)).data).toHaveLength(1);
+  });
+
+  it("ignores a redelivered message that is still being handled", async () => {
+    const { phone, chat } = await knownResident();
+    await db.from("message_log").insert({ direction: "in", phone: normalizePhone(phone)!, wa_message_id: `${tag}-busy`, body: "שלום" });
+    await chat.say({ kind: "text", text: "שלום" }, `${tag}-busy`);
+    expect(chat.sentToMe()).toHaveLength(0);
+  });
+
+  it("creates one ticket even when its proposal log cannot be written, and a second confirm does not make another", async () => {
+    const { person, chat } = await knownResident();
+    const spy = failingTable("proposal_log");
+    try { await report(chat, { where: "unit", type: "gate", text: "השער" }); } finally { spy.mockRestore(); }
+    expect(await ticketsOf(person)).toHaveLength(1);
+    expect(said(chat)).toContain("קיבלנו. מספר פנייה");
+    await chat.btn("confirm");
+    expect(await ticketsOf(person)).toHaveLength(1);
+  });
+});
+
 describe("an unknown number", () => {
   it("identifies itself, waits for approval, and its ticket shows not approved", async () => {
     const phone = newPhone();
@@ -297,6 +381,18 @@ describe("the answer to ticket_done", () => {
     const after = (await db.from("ticket").select("status, closed_at").eq("id", t.id).single()).data!;
     expect(after).toEqual({ status: "נפתח מחדש", closed_at: null });
     expect(chat.last()).toBe(bot.reopened);
+  });
+
+  it("an old done button does not skip the consent check after stop", async () => {
+    const { person, chat } = await knownResident();
+    const t = await closedTicket(person);
+    await chat.text("שלום"); await chat.text("stop");
+    const before = channel.sent.length;
+    await chat.btn(`done_no:${t.number}`);
+    expect((await db.from("ticket").select("status").eq("id", t.id).single()).data!.status).toBe("בוצע");
+    const replies = channel.sent.slice(before).map((s) => s.out);
+    expect(replies).toHaveLength(1);
+    expect((replies[0] as Extract<Out, { type: "buttons" }>).buttons[0].id).toBe("consent");
   });
 
   it("does not reopen the ticket of another resident", async () => {

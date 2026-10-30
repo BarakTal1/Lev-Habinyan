@@ -8,7 +8,7 @@ import { Field, inputCls } from "./Field";
 const B = t.botSettings;
 
 /** Working hours, the emergency number and the on-call phones of the bot. */
-export function BotSettingsForm({ initial }: { initial: BotSettings }) {
+export function BotSettingsForm({ initial, fallbackPhones = [] }: { initial: BotSettings; fallbackPhones?: string[] }) {
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
   const [pending, start] = useTransition();
@@ -41,7 +41,7 @@ export function BotSettingsForm({ initial }: { initial: BotSettings }) {
         <span className="text-sm text-muted">{B.emergencyHelp}</span>
       </Field>
       <Field label={B.oncall}>
-        <textarea name="oncall" dir="ltr" rows={3} defaultValue={initial.oncallPhones.join("\n")} className={`${inputCls} h-auto py-2`} />
+        <textarea name="oncall" dir="ltr" rows={3} defaultValue={initial.oncallPhones.join("\n")} placeholder={fallbackPhones.join("\n")} className={`${inputCls} h-auto py-2`} />
         <span className="text-sm text-muted">{B.oncallHelp}</span>
       </Field>
       {error && <p role="alert" className="text-[#B3261E]">{error}</p>}
