@@ -110,9 +110,16 @@ export const t = {
     sendAndChange: "שלח הודעה ושנה סטטוס", changeOnly: "שנה סטטוס בלי הודעה", send: "שלח הודעה", cancel: "ביטול",
     askInfo: "בקש פרטים", question: "השאלה לדייר", sendQuestion: "שלח שאלה", needQuestion: "כתבו שאלה לדייר.",
     noContact: "אי אפשר לשלוח הודעה לדייר הזה: אין הסכמה או טלפון.", sendFailed: "ההודעה לא נשלחה. הסטטוס עודכן.",
-    noMessage: "ללא הודעה", fromResident: "דייר", fromWhatsapp: "וואטסאפ",
+    noMessage: "ללא הודעה", notApproved: "לא מאושר", pendingBadge: "ממתין לאישור", duplicateOf: (n: number) => `כפילות של פנייה ${n}`, unlinkDuplicate: "ניתוק הקישור", unlinked: "ניתק את הקישור לפנייה כפולה", voiceNote: "הקלטה", fromResident: "דייר", fromWhatsapp: "וואטסאפ",
     delivery: { queued: "בתור", sent: "נשלחה", delivered: "נמסרה", read: "נקראה", failed: "נכשלה" },
     visitWindowHours: 2,
+  },
+  inbox: {
+    title: "הודעות מדיירים", sub: "שיחות שבהן הדייר ביקש נציג", empty: "אין שיחות שמחכות לנציג.", reply: "תשובה", send: "שליחה",
+    locked: "עברו 24 שעות. בקשו מהדייר לכתוב שוב.", unknown: "מספר לא מוכר", failed: "השליחה נכשלה. נסו שוב.",
+    pendingTitle: "דיירים לאישור", pendingHelp: "דיירים שהציגו את עצמם בוואטסאפ ומחכים לאישור שלכם.", approve: "אישור", reject: "דחייה",
+    warnOther: "לדירה הזו כבר רשום דייר. לאשר בכל זאת?", rejectConfirm: "לדחות את הדייר? הפניות שלו יישארו.", ticketsOf: (n: string) => `פניות: ${n}`,
+    chatsCard: (n: number) => (n === 1 ? "שיחה אחת מחכה לנציג" : `${n} שיחות מחכות לנציג`),
   },
   tenants: {
     apartment: (n: string) => `דירה ${n}`, floor: "קומה", floorShort: (f: string) => `קומה ${f}`, payer: "מי משלם", payerShort: (p: string) => `משלם: ${p}`,

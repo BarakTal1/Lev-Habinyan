@@ -112,6 +112,19 @@ describe("ledger database layer", () => {
     expect((await row(u3))?.due).toBe(110000);
   });
 
+  it("does not show a resident who is waiting for approval as the payer", async () => {
+    const waiting = (await admin.from("person").insert({ name: `${tag} ממתין`, phone: "0521010101", role: "resident" }).select("id").single()).data!.id;
+    await admin.from("unit_person").insert({ unit_id: u3, person_id: waiting, relation: "owner", approved_at: null });
+    try {
+      expect((await row(u3))?.payerName).toBeNull();
+      await admin.from("unit_person").update({ approved_at: new Date().toISOString() }).eq("person_id", waiting);
+      expect((await row(u3))?.payerName).toBe(`${tag} ממתין`);
+    } finally {
+      await admin.from("unit_person").delete().eq("person_id", waiting);
+      await admin.from("person").delete().eq("id", waiting);
+    }
+  });
+
   it("leaves archived units out of the ledger", async () => {
     await admin.from("unit").update({ archived_at: new Date().toISOString() }).eq("id", u2);
     expect(await row(u2)).toBeUndefined();

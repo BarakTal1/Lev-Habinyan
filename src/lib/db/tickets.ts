@@ -153,22 +153,23 @@ export async function listTickets(db: SupabaseClient, f: TicketFilters, myPerson
 export type TicketDetail = TicketListRow & {
   description: string | null; original_message: string | null; scheduled_at: string | null; cost_amount: number | null; unit_id: string | null;
   events: { id: string; type: string; created_at: string; actor_name: string | null; payload: Record<string, unknown> }[];
-  attachments: { id: string; kind: string; url: string | null; created_at: string }[];
+  attachments: { id: string; kind: string; url: string | null; created_at: string; mime_type: string | null }[];
+  source: string; resident_approved: boolean; duplicate_of: { id: string; number: number } | null;
 };
 
 export async function getTicket(db: SupabaseClient, id: string): Promise<TicketDetail | null> {
   const r = await db.from("ticket")
-    .select("id, number, kind, title, urgency, status, category, due_at, created_at, first_action_at, building_id, assignee_id, description, original_message, scheduled_at, cost_amount, unit_id, building:building_id(name), assignee:assignee_id(name)")
+    .select("id, number, kind, title, urgency, status, category, due_at, created_at, first_action_at, building_id, assignee_id, description, original_message, scheduled_at, cost_amount, unit_id, source, resident_approved, duplicate:duplicate_of_id(id, number), building:building_id(name), assignee:assignee_id(name)")
     .eq("id", id).is("archived_at", null).maybeSingle();
   if (r.error) throw new Error(r.error.message);
   if (!r.data) return null;
   const [ev, att] = await Promise.all([
     db.from("ticket_event").select("id, type, created_at, payload, actor:actor(person:person_id(name))").eq("ticket_id", id).order("created_at", { ascending: true }),
-    db.from("attachment").select("id, kind, storage_path, created_at").eq("ticket_id", id).is("archived_at", null).order("created_at"),
+    db.from("attachment").select("id, kind, storage_path, created_at, mime_type").eq("ticket_id", id).is("archived_at", null).order("created_at"),
   ]);
   const attachments = await Promise.all((att.data ?? []).map(async (a) => {
     const s = await db.storage.from("attachments").createSignedUrl(a.storage_path, 3600);
-    return { id: a.id, kind: a.kind, url: s.data?.signedUrl ?? null, created_at: a.created_at };
+    return { id: a.id, kind: a.kind, url: s.data?.signedUrl ?? null, created_at: a.created_at, mime_type: a.mime_type };
   }));
   const d = r.data;
   // A message event points to its message_log row; the live delivery state (sent, delivered, read, failed) comes from there.
@@ -191,5 +192,7 @@ export async function getTicket(db: SupabaseClient, id: string): Promise<TicketD
       actor_name: ((e.actor as unknown as { person: { name: string } | null } | null)?.person?.name) ?? null,
     })),
     attachments,
+    source: d.source, resident_approved: d.resident_approved,
+    duplicate_of: (() => { const x = d.duplicate as unknown as { id: string; number: number | string } | null; return x ? { id: x.id, number: Number(x.number) } : null; })(),
   };
 }

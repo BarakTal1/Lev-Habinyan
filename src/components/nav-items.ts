@@ -18,7 +18,7 @@ type NavItem = { href: string; label: string; icon: string };
 
 /** The desktop side menu, in groups. The phone bar keeps the flat NAV list. */
 export const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
-  { title: "ראשי", items: [NAV[0], { href: "/payments", label: "גבייה", icon: "payments" }, NAV[1], NAV[2]] },
+  { title: "ראשי", items: [NAV[0], { href: "/payments", label: "גבייה", icon: "payments" }, NAV[1], { href: "/inbox", label: "הודעות מדיירים", icon: "chat" }, NAV[2]] },
   { title: "ניהול", items: [NAV[3], NAV_EXTRA[0], NAV_EXTRA[1], NAV_EXTRA[2]] },
   { title: "מערכת", items: [NAV_EXTRA[3], NAV_EXTRA[4]] },
 ];

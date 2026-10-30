@@ -14,7 +14,7 @@ import { RequestInfoSheet } from "@/components/RequestInfoSheet";
 import { formatDate, isoToIsraelLocal } from "@/lib/israel";
 import { KINDS, t } from "@/lib/labels";
 import { createClient } from "@/lib/supabase/server";
-import { addNoteAction, archiveTicketAction, saveCostAction, saveOriginalMessageAction, uploadAttachmentAction } from "../actions";
+import { addNoteAction, archiveTicketAction, unlinkDuplicateAction, saveCostAction, saveOriginalMessageAction, uploadAttachmentAction } from "../actions";
 
 const card = "flex flex-col gap-3 card p-4";
 const h = "text-[17px] font-bold tracking-[-0.01em]";
@@ -28,6 +28,7 @@ export default async function TicketPage({ params }: { params: Promise<{ id: str
   const resident = await getResident(db, id);
   const photos = ticket.attachments.filter((a) => a.kind === "photo");
   const invoices = ticket.attachments.filter((a) => a.kind === "invoice");
+  const voiceNotes = ticket.attachments.filter((a) => a.kind === "document" && a.mime_type?.startsWith("audio/") && a.url);
 
   return (
     <main className="mx-auto max-w-[1280px] px-4 pb-8 lg:px-8">
@@ -40,7 +41,16 @@ export default async function TicketPage({ params }: { params: Promise<{ id: str
           <span>{t.tickets.number} <span dir="ltr">{ticket.number}</span></span>
           {ticket.building_name && <span>· {ticket.building_name}</span>}
           <Badge list="urgency" value={ticket.urgency} />
+          {!ticket.resident_approved && <span className="inline-flex h-[26px] items-center rounded-lg bg-[#FDF0DC] px-2.5 text-[13px] font-semibold text-[#7A4A00]">{t.msg.notApproved}</span>}
         </div>
+        {ticket.duplicate_of && (
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            <Link href={`/tickets/${ticket.duplicate_of.id}`} className="font-semibold text-brand">{t.msg.duplicateOf(ticket.duplicate_of.number)}</Link>
+            <ConfirmForm action={unlinkDuplicateAction.bind(null, ticket.id)} message={t.msg.unlinkDuplicate + "?"}>
+              <button className="h-9 rounded-lg border border-line px-3 font-semibold text-muted">{t.msg.unlinkDuplicate}</button>
+            </ConfirmForm>
+          </div>
+        )}
         <div className="flex flex-wrap items-start gap-3">
           <h1 dir="rtl" className="min-w-0 basis-full text-[28px] font-bold leading-[1.15] lg:basis-0 lg:flex-1 lg:text-[30px]">{ticket.title}</h1>
           <div className="flex flex-wrap items-center gap-2">
@@ -86,6 +96,12 @@ export default async function TicketPage({ params }: { params: Promise<{ id: str
               <button className="h-12 rounded-xl border border-navy font-semibold text-navy">{t.tickets.saveMessage}</button>
             </form>
           </section>
+          {voiceNotes.length > 0 && (
+            <section className={card}>
+              <h2 className={h}>{t.msg.voiceNote}</h2>
+              {voiceNotes.map((a) => <audio key={a.id} controls preload="none" src={a.url!} className="w-full" />)}
+            </section>
+          )}
           <section className={card}>
             <h2 className={h}>{t.tickets.photos}</h2>
             <div className="flex flex-wrap gap-2">

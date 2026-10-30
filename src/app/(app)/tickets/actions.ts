@@ -6,7 +6,7 @@ import { getChannel } from "@/lib/bot/channel";
 import { changeStatus, previewForInfo, previewForStatus, previewForVisit, sendTicketMessage } from "@/lib/bot/send";
 import type { Preview } from "@/lib/bot/templates";
 import * as tickets from "@/lib/db/tickets";
-import { CATEGORIES, STATUSES, URGENCIES } from "@/lib/labels";
+import { CATEGORIES, STATUSES, URGENCIES, t } from "@/lib/labels";
 import { israelLocalToIso } from "@/lib/israel";
 import { createClient } from "@/lib/supabase/server";
 
@@ -79,6 +79,16 @@ export async function requestInfoAction(id: string, question: string): Promise<{
   const r = await sendTicketMessage(db, getChannel(), user.profileId, id, preview);
   refresh(id);
   return r;
+}
+
+/** Roy decides that a report linked as a duplicate is its own fault: the link is removed and the history says so. */
+export async function unlinkDuplicateAction(id: string): Promise<void> {
+  const user = await requireUser();
+  const db = await createClient();
+  const r = await db.from("ticket").update({ duplicate_of_id: null }).eq("id", id).select("id").single();
+  if (r.error) throw new Error(r.error.message);
+  await tickets.addNote(db, user.profileId, id, t.msg.unlinked);
+  refresh(id);
 }
 
 export async function assignAction(id: string, personId: string | null): Promise<void> {
