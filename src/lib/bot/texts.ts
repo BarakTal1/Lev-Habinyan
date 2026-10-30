@@ -51,6 +51,8 @@ export const bot = {
     emergencyNumber
       ? `זה נשמע מסוכן. הצוות קיבל התראה עכשיו. התקשרו מיד למספר ${emergencyNumber}.`
       : "זה נשמע מסוכן. הצוות קיבל התראה עכשיו.",
+  doneThanks: "תודה על העדכון! שמחים שהכול תקין.",
+  reopened: "מצטערים. פתחנו את הפנייה מחדש ונחזור אליך בהקדם.",
   alreadyOpen: (n: number, status: string) => `יש כבר פנייה פתוחה על זה (${n}). סטטוס: ${status}.`,
   noOpenTickets: "אין לך פניות פתוחות כרגע.",
   openTicketLine: (n: number, typeLabel: string, status: string, visit: string | null) =>

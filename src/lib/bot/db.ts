@@ -10,7 +10,7 @@ import type { ChatState, Draft, StepContext } from "./types";
 // Every phone goes through normalizePhone, so 052-…, +972 52… and 97252… are one number.
 
 export type WorkingHours = { days: number[]; from: string; to: string };
-export type BotPerson = { id: string; name: string; consented: boolean; optedOut: boolean; unitId: string | null; buildingId: string | null };
+export type BotPerson = { id: string; name: string; consented: boolean; optedOut: boolean; unitId: string | null; buildingId: string | null; approved: boolean };
 
 const CHAT_TTL_MS = 24 * 3600_000;
 const OPEN_TICKETS_LIMIT = 20;
@@ -52,7 +52,7 @@ export async function findPersonByPhone(db: SupabaseClient, phone: string): Prom
   return {
     id: best.p.id, name: best.p.name, optedOut: best.p.opted_out_at !== null,
     consented: best.p.opted_out_at === null && (await isConsented(db, n)),
-    unitId: best.link?.unit_id ?? null, buildingId: best.link?.unit?.building_id ?? null,
+    unitId: best.link?.unit_id ?? null, buildingId: best.link?.unit?.building_id ?? null, approved: Boolean(best.link?.approved_at),
   };
 }
 

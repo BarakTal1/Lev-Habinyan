@@ -61,7 +61,7 @@ describe("findPersonByPhone", () => {
     const { data } = await db.from("person").insert({ name: `${tag} רון`, phone: p, role: "resident" }).select("id").single();
     await link(unitA, data!.id, "2026-01-01T00:00:00Z");
     await link(unitB, data!.id, "2026-06-01T00:00:00Z");
-    expect(await findPersonByPhone(db, p)).toMatchObject({ unitId: unitB, buildingId: buildingB });
+    expect(await findPersonByPhone(db, p)).toMatchObject({ unitId: unitB, buildingId: buildingB, approved: true });
   });
 
   it("skips archived people", async () => {
@@ -135,7 +135,7 @@ describe("registerUnknown", () => {
     expect(links!.every((l) => l.approved_at === null)).toBe(true);
     expect(links!.find((l) => l.person_id === first.personId)!.relation).toBe("tenant");
     expect(links!.find((l) => l.person_id === second.personId)!.is_committee).toBe(true);
-    expect((await findPersonByPhone(db, p1))?.id).toBe(first.personId);
+    expect(await findPersonByPhone(db, p1)).toMatchObject({ id: first.personId, approved: false });
   });
 
   it("creates a unit that does not exist", async () => {
