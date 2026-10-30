@@ -17,3 +17,13 @@ describe("normalizePhone", () => {
     expect(normalizePhone("abc")).toBeNull();
   });
 });
+
+import { toLocalPhone } from "@/lib/bot/phone";
+
+describe("toLocalPhone", () => {
+  it("writes a 972 number in the local form people type", () => {
+    expect(toLocalPhone("972521234567")).toBe("0521234567");
+    expect(toLocalPhone("0521234567")).toBe("0521234567");
+    expect(toLocalPhone("+972 52-123-4567")).toBe("0521234567");
+  });
+});
