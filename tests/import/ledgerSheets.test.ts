@@ -6,8 +6,8 @@ describe("parseTariffSheet", () => {
     const r = parseTariffSheet([["דירה", "שם דייר", "01/2026", "02/2026"], ["3", "כהן", "350", "350"]]);
     expect(r.problems).toEqual([]);
     expect(r.rows).toEqual([
-      { unit: "3", month: "2026-01-01", amount: 35000 },
-      { unit: "3", month: "2026-02-01", amount: 35000 },
+      { row: 2, unit: "3", month: "2026-01-01", amount: 35000 },
+      { row: 2, unit: "3", month: "2026-02-01", amount: 35000 },
     ]);
   });
   it("skips an empty month cell and reports a bad amount", () => {
@@ -28,7 +28,7 @@ describe("parsePaymentsSheet", () => {
   it("reads a payment row", () => {
     const r = parsePaymentsSheet([header, ["03", "₪350", "05/10/2026", "10/2026", "אשראי", "A-17"]]);
     expect(r.problems).toEqual([]);
-    expect(r.rows).toEqual([{ unit: "3", amount: 35000, paidAt: "2026-10-05", month: "2026-10-01", method: "card", reference: "A-17" }]);
+    expect(r.rows).toEqual([{ row: 2, unit: "3", amount: 35000, paidAt: "2026-10-05", month: "2026-10-01", method: "card", reference: "A-17" }]);
   });
   it("maps payment methods and allows empty optional cells", () => {
     const r = parsePaymentsSheet([["דירה", "סכום", "תאריך", "אמצעי תשלום"], ["1", "100", "1/10/2026", "העברה בנקאית"], ["2", "100", "1/10/2026", "צ'ק"], ["3", "100", "1/10/2026", "משהו"]]);

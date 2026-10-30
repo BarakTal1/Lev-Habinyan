@@ -10,8 +10,8 @@ import { normUnit, parseDate, parseMonth } from "./sheet";
  * Rows are numbered as in the spreadsheet: the header is row 1.
  */
 
-export type TariffRow = { unit: string; month: string; amount: number };
-export type PaymentRow = { unit: string; amount: number; paidAt: string; month: string | null; method: Method; reference: string | null };
+export type TariffRow = { row: number; unit: string; month: string; amount: number };
+export type PaymentRow = { row: number; unit: string; amount: number; paidAt: string; month: string | null; method: Method; reference: string | null };
 
 const UNIT = ["דירה", "מס' דירה", "מס׳ דירה", "מספר דירה"];
 const AMOUNT = ["סכום", "סכום ששולם"];
@@ -43,7 +43,7 @@ export function parseTariffSheet(grid: string[][]): { rows: TariffRow[]; problem
       if (!month || cell === "") return;
       const amount = parseAmount(cell);
       if (amount === null || amount < 0) problems.push({ row, column: header[i], reason: "סכום לא תקין" });
-      else rows.push({ unit, month, amount });
+      else rows.push({ row, unit, month, amount });
     });
   });
   return { rows, problems };
@@ -75,7 +75,7 @@ export function parsePaymentsSheet(grid: string[][]): { rows: PaymentRow[]; prob
     if (monthText && !month) problems.push({ row, column: "חודש", reason: "חודש לא תקין" });
     if (problems.length > before) return;
     rows.push({
-      unit, amount: amount!, paidAt: paidAt!, month,
+      row, unit, amount: amount!, paidAt: paidAt!, month,
       method: METHODS[cell(cells, col.method)] ?? "other",
       reference: cell(cells, col.reference) || null,
     });
