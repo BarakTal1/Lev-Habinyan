@@ -5,6 +5,8 @@ import { applyImport as applyControlSheet } from "@/lib/import/apply";
 import { applyImport, previewImport, type ImportKind, type ImportPreview, type ImportSource } from "@/lib/db/ledger";
 import { parseControlSheet, summarizeImport, type Problem } from "@/lib/import/controlSheet";
 import { createClient } from "@/lib/supabase/server";
+import { applyApartments, previewApartments, type ApartmentsPreview } from "@/lib/db/tenants";
+import { todayIL } from "@/lib/israel";
 
 export type Preview = { buildings: { name: string; isNew: boolean }[]; items: number; problems: Problem[] };
 
@@ -41,6 +43,24 @@ export async function applyLedgerImportAction(kind: ImportKind, buildingId: stri
   const user = await requireUser();
   checkLedgerInput(kind, source, grid);
   const r = await applyImport(await createClient(), user.profileId, kind, buildingId, fileName.slice(0, 200), grid, source);
+  for (const p of ["/", `/buildings/${buildingId}`, "/payments"]) revalidatePath(p);
+  return r;
+}
+
+function checkGrid(grid: string[][]) {
+  if (!Array.isArray(grid) || !grid.every((r) => Array.isArray(r) && r.every((c) => typeof c === "string"))) throw new Error("bad grid");
+}
+
+export async function previewApartmentsAction(buildingId: string, grid: string[][]): Promise<ApartmentsPreview> {
+  await requireUser();
+  checkGrid(grid);
+  return previewApartments(await createClient(), buildingId, grid);
+}
+
+export async function applyApartmentsAction(buildingId: string, grid: string[][]): Promise<ApartmentsPreview> {
+  await requireUser();
+  checkGrid(grid);
+  const r = await applyApartments(await createClient(), buildingId, grid, todayIL(new Date()));
   for (const p of ["/", `/buildings/${buildingId}`, "/payments"]) revalidatePath(p);
   return r;
 }

@@ -250,3 +250,23 @@ test("apartment details: the renter pays, and the payments tab shows the renter"
   await page.getByRole("navigation", { name: "tabs" }).getByRole("link", { name: "תשלומים" }).click();
   await expect(page.getByRole("button", { name: /דירה 1/ })).toContainText(renter);
 });
+
+test("import the apartments file", async ({ page }) => {
+  await signIn(page);
+  await page.goto("/import");
+  await page.getByRole("navigation", { name: "סוג ייבוא" }).getByRole("link", { name: "דיירים" }).click();
+  await page.getByLabel("בניין").selectOption({ label: "סוקולוב 24" });
+  const unit = `9${Date.now() % 100000}`;
+  const owner = `בעלים ${unit}`;
+  const csv = `﻿דירה,קומה,בעלים,טלפון בעלים,משלם,דמי ועד\n${unit},5,${owner},052-0000999,בעלים,420\n`;
+  await page.locator('input[type="file"]').setInputFiles({ name: "apartments.csv", mimeType: "text/csv", buffer: Buffer.from(csv, "utf8") });
+  await expect(page.getByText("1 דירות חדשות")).toBeVisible();
+  await page.getByRole("button", { name: "אישור וייבוא" }).click();
+  await expect(page.getByText("הייבוא הסתיים")).toBeVisible();
+  await page.goto("/buildings");
+  await page.getByRole("link", { name: /סוקולוב 24/ }).click();
+  await page.getByRole("navigation", { name: "tabs" }).getByRole("link", { name: "דיירים" }).click();
+  const card = page.getByRole("region", { name: `דירה ${unit}` });
+  await expect(card).toContainText(owner);
+  await expect(card).toContainText("קומה 5");
+});

@@ -7,7 +7,7 @@ import { todayIL } from "@/lib/israel";
 import { t } from "@/lib/labels";
 import { createClient } from "@/lib/supabase/server";
 
-const KINDS = ["maintenance", "tariffs", "payments"] as const;
+const KINDS = ["maintenance", "apartments", "tariffs", "payments"] as const;
 type Kind = (typeof KINDS)[number];
 
 export default async function ImportPage({ searchParams }: { searchParams: Promise<{ kind?: string }> }) {
