@@ -1,5 +1,6 @@
 import { addFrequency, type FreqUnit } from "@/lib/domain/maintenance";
 import { SYSTEMS, type System } from "@/lib/labels";
+import { isoDate, splitCsv } from "./sheet";
 
 /**
  * Parser for the founders' control sheet ("בקרה תחזוקת בניינים").
@@ -31,33 +32,6 @@ const FREQ: Record<string, [FreqUnit, number]> = {
   "כל יום": ["day", 1], "כל שבוע": ["week", 1], "כל חודש": ["month", 1], "כל שנה": ["year", 1],
 };
 const UNIT_WORDS: Record<string, FreqUnit> = { "ימים": "day", "שבועות": "week", "חודשים": "month", "שנים": "year" };
-
-function splitCsv(text: string, delimiter: string): string[][] {
-  const rows: string[][] = [];
-  let row: string[] = [], cur = "", quoted = false;
-  for (let i = 0; i < text.length; i++) {
-    const ch = text[i];
-    if (quoted) {
-      if (ch === '"' && text[i + 1] === '"') { cur += '"'; i++; }
-      else if (ch === '"') quoted = false;
-      else cur += ch;
-    } else if (ch === '"') quoted = true;
-    else if (ch === delimiter) { row.push(cur); cur = ""; }
-    else if (ch === "\n" || ch === "\r") {
-      if (ch === "\r" && text[i + 1] === "\n") i++;
-      row.push(cur); rows.push(row); row = []; cur = "";
-    } else cur += ch;
-  }
-  row.push(cur); rows.push(row);
-  return rows;
-}
-
-function isoDate(d: number, m: number, y: number): string | null {
-  const year = y < 100 ? 2000 + y : y;
-  const dt = new Date(Date.UTC(year, m - 1, d));
-  if (dt.getUTCFullYear() !== year || dt.getUTCMonth() !== m - 1 || dt.getUTCDate() !== d) return null;
-  return dt.toISOString().slice(0, 10);
-}
 
 type Cell = { applicable: boolean; frequency_unit?: FreqUnit; frequency_count?: number; last_done_at?: string } | { problem: string };
 

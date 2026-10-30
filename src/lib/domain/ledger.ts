@@ -1,5 +1,7 @@
 // Balance of each apartment, from raw charges and payments. The database stores facts; this file decides who owes what.
 
+export type Method = "card" | "transfer" | "check" | "cash" | "standing_order" | "other";
+
 export type LedgerCharge = { unitId: string; due: string; amount: number; label: string };
 export type LedgerPayment = { unitId: string; amount: number; paidAt: string; month: string | null };
 export type UnitLedger = {
