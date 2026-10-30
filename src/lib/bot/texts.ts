@@ -46,6 +46,7 @@ export const bot = {
   fixType: "סוג",
   fixText: "תיאור",
   ticketCreated: (n: number) => `קיבלנו. מספר פנייה ${n}. נעדכן אותך כאן בכל שינוי.`,
+  dangerAlert: (title: string, building: string | null, link: string) => `סכנה: ${title}${building ? ` · ${building}` : ""}. פתחו את הפנייה: ${link}`,
   dangerReply: (emergencyNumber: string | null) =>
     emergencyNumber
       ? `זה נשמע מסוכן. הצוות קיבל התראה עכשיו. התקשרו מיד למספר ${emergencyNumber}.`
