@@ -3,7 +3,9 @@ import { useState, useTransition } from "react";
 import { Field, inputCls } from "./Field";
 import { Icon } from "./Icon";
 import { Sheet } from "./Sheet";
-import { updateTicketAction } from "@/app/(app)/tickets/actions";
+import { previewVisitAction, sendVisitAction, updateTicketAction } from "@/app/(app)/tickets/actions";
+import type { Preview } from "@/lib/bot/templates";
+import { MessagePreviewSheet } from "./MessagePreviewSheet";
 import type { BuildingOption } from "@/lib/db/people";
 import { CATEGORIES, URGENCIES, t } from "@/lib/labels";
 
@@ -12,10 +14,11 @@ export type EditableTicket = {
   scheduled_local: string; description: string | null;
 };
 
-export function EditTicketSheet({ ticket, buildings }: { ticket: EditableTicket; buildings: BuildingOption[] }) {
+export function EditTicketSheet({ ticket, buildings, residentName }: { ticket: EditableTicket; buildings: BuildingOption[]; residentName?: string | null }) {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
+  const [visit, setVisit] = useState<Preview | null>(null);
   return (
     <>
       <button type="button" onClick={() => setOpen(true)} className="flex h-12 items-center gap-1 rounded-xl border border-navy px-4 font-semibold text-navy"><Icon name="edit" size={20} />{t.tickets.edit}</button>
@@ -23,7 +26,13 @@ export function EditTicketSheet({ ticket, buildings }: { ticket: EditableTicket;
         <form
           action={(fd) => start(async () => {
             setError("");
-            try { await updateTicketAction(ticket.id, fd); setOpen(false); } catch { setError("השמירה נכשלה. בדקו את הנתונים ונסו שוב."); }
+            try {
+              await updateTicketAction(ticket.id, fd);
+              setOpen(false);
+              // A new visit time: show the message to the resident, if there is one to send.
+              const newVisit = String(fd.get("scheduled_at") ?? "");
+              if (residentName && newVisit && newVisit !== ticket.scheduled_local) setVisit(await previewVisitAction(ticket.id));
+            } catch { setError("השמירה נכשלה. בדקו את הנתונים ונסו שוב."); }
           })}
           className="flex flex-col gap-3 pb-4"
         >
@@ -43,6 +52,15 @@ export function EditTicketSheet({ ticket, buildings }: { ticket: EditableTicket;
           <button disabled={pending} className="h-12 rounded-xl bg-navy font-semibold text-white disabled:opacity-50">{t.common.save}</button>
         </form>
       </Sheet>
+      <MessagePreviewSheet
+        open={visit !== null}
+        preview={visit}
+        residentName={residentName ?? ""}
+        sendLabel={t.msg.send}
+        busy={pending}
+        onSend={(text) => start(async () => { await sendVisitAction(ticket.id, text); setVisit(null); })}
+        onClose={() => setVisit(null)}
+      />
     </>
   );
 }

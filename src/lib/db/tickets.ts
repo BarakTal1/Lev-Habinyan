@@ -60,12 +60,13 @@ export async function createTicket(db: SupabaseClient, profileId: string, input:
   return { id: data.id, number: Number(data.number) };
 }
 
-export async function setStatus(db: SupabaseClient, profileId: string, id: string, status: string): Promise<void> {
+/** `extra` is added to the status event, for example { skippedMessage: true } when a founder chose not to message the resident. */
+export async function setStatus(db: SupabaseClient, profileId: string, id: string, status: string, extra: Record<string, unknown> = {}): Promise<void> {
   const cur = must(await db.from("ticket").select("status").eq("id", id).single());
   if (cur.status === status) return;
   const closed_at = status === "בוצע" ? new Date().toISOString() : null;
   must(await db.from("ticket").update({ status, closed_at }).eq("id", id).select("id").single());
-  await event(db, id, "status", profileId, { from: cur.status, to: status });
+  await event(db, id, "status", profileId, { from: cur.status, to: status, ...extra });
 }
 
 export async function assign(db: SupabaseClient, profileId: string, id: string, personId: string | null): Promise<void> {
@@ -170,6 +171,10 @@ export async function getTicket(db: SupabaseClient, id: string): Promise<TicketD
     return { id: a.id, kind: a.kind, url: s.data?.signedUrl ?? null, created_at: a.created_at };
   }));
   const d = r.data;
+  // A message event points to its message_log row; the live delivery state (sent, delivered, read, failed) comes from there.
+  const logIds = (ev.data ?? []).filter((e) => e.type === "message").map((e) => (e.payload as { logId?: string }).logId).filter((x): x is string => Boolean(x));
+  const logs = logIds.length ? (await db.from("message_log").select("id, delivery_state, error").in("id", logIds)).data ?? [] : [];
+  const logById = new Map(logs.map((l) => [l.id, l]));
   return {
     id: d.id, number: Number(d.number), kind: d.kind as TicketKind, title: d.title, urgency: d.urgency, status: d.status, category: d.category,
     due_at: d.due_at, created_at: d.created_at, first_action_at: d.first_action_at, building_id: d.building_id, assignee_id: d.assignee_id,
@@ -177,7 +182,12 @@ export async function getTicket(db: SupabaseClient, id: string): Promise<TicketD
     building_name: (d.building as unknown as { name: string } | null)?.name ?? null,
     assignee_name: (d.assignee as unknown as { name: string } | null)?.name ?? null,
     events: (ev.data ?? []).map((e) => ({
-      id: e.id, type: e.type, created_at: e.created_at, payload: e.payload as Record<string, unknown>,
+      id: e.id, type: e.type, created_at: e.created_at,
+      payload: (() => {
+        const p = e.payload as Record<string, unknown>;
+        const l = typeof p.logId === "string" ? logById.get(p.logId) : undefined;
+        return l ? { ...p, delivery_state: l.delivery_state, delivery_error: l.error } : p;
+      })(),
       actor_name: ((e.actor as unknown as { person: { name: string } | null } | null)?.person?.name) ?? null,
     })),
     attachments,

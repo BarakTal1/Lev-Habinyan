@@ -72,7 +72,7 @@ export const t = {
     status: "סטטוס", nextStatus: "העברה ל", notes: "הערות", addNote: "הוספת הערה", timeline: "היסטוריה", photos: "תמונות", addPhoto: "הוספת תמונה",
     cost: "עלות (₪)", invoice: "חשבונית", addInvoice: "הוספת חשבונית", saved: "נשמר", number: "מס׳",
     edit: "עריכה", archive: "העברה לארכיון", archiveConfirm: "להעביר את הכרטיס לארכיון? הוא יוסתר מכל הרשימות.", visit: "ביקור", visitTime: "מועד ביקור", closed: "סגורות", unit: "דירה (מספר)",
-    ev: { created: "נוצר", status: "סטטוס", assignment: "שיוך", note: "הערה", edit: "עריכה", photo: "קובץ" },
+    ev: { message: "הודעה", created: "נוצר", status: "סטטוס", assignment: "שיוך", note: "הערה", edit: "עריכה", photo: "קובץ" },
   },
   buildings: {
     title: "בניינים", add: "הוספת בניין", name: "שם הבניין", city: "עיר", address: "כתובת", units: "דירות", openTickets: "תקלות ומשימות פתוחות",
@@ -103,6 +103,16 @@ export const t = {
     title: "ייבוא ראשוני", help: "העלו את גיליון הבקרה כקובץ CSV. שורה לכל בניין, עמודה לכל מערכת. נציג תצוגה מקדימה לפני השמירה.", choose: "בחירת קובץ",
     preview: "תצוגה מקדימה", newBuilding: "בניין חדש", existing: "קיים", problems: "תאים שלא הובנו (לא ייובאו)", confirm: "אישור וייבוא", done: "הייבוא הסתיים",
     result: (b: number, c: number, i: number) => `${b} בניינים (${c} חדשים), ${i} פריטי תחזוקה`, toCalendar: "ליומן התחזוקה", row: "שורה", empty: "לא נמצאו שורות בקובץ",
+  },
+  msg: {
+    previewTitle: "הודעה לדייר", to: "אל", template: "תבנית", yourText: "נוסח ההודעה",
+    locked: "עברו 24 שעות מההודעה האחרונה של הדייר. אפשר לשלוח רק את הנוסח המאושר.",
+    sendAndChange: "שלח הודעה ושנה סטטוס", changeOnly: "שנה סטטוס בלי הודעה", send: "שלח הודעה", cancel: "ביטול",
+    askInfo: "בקש פרטים", question: "השאלה לדייר", sendQuestion: "שלח שאלה", needQuestion: "כתבו שאלה לדייר.",
+    noContact: "אי אפשר לשלוח הודעה לדייר הזה: אין הסכמה או טלפון.", sendFailed: "ההודעה לא נשלחה. הסטטוס עודכן.",
+    noMessage: "ללא הודעה", fromResident: "דייר", fromWhatsapp: "וואטסאפ",
+    delivery: { queued: "בתור", sent: "נשלחה", delivered: "נמסרה", read: "נקראה", failed: "נכשלה" },
+    visitWindowHours: 2,
   },
   tenants: {
     apartment: (n: string) => `דירה ${n}`, floor: "קומה", floorShort: (f: string) => `קומה ${f}`, payer: "מי משלם", payerShort: (p: string) => `משלם: ${p}`,

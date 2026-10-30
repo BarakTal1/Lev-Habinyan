@@ -2,6 +2,9 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
+import { getChannel } from "@/lib/bot/channel";
+import { changeStatus, previewForInfo, previewForStatus, previewForVisit, sendTicketMessage } from "@/lib/bot/send";
+import type { Preview } from "@/lib/bot/templates";
 import * as tickets from "@/lib/db/tickets";
 import { CATEGORIES, STATUSES, URGENCIES } from "@/lib/labels";
 import { israelLocalToIso } from "@/lib/israel";
@@ -27,11 +30,55 @@ export async function createTicketAction(input: tickets.CreateTicketInput): Prom
   return r;
 }
 
-export async function setStatusAction(id: string, status: string): Promise<void> {
+const MAX_MESSAGE = 1000;
+const cleanText = (v: unknown) => (typeof v === "string" ? v.slice(0, MAX_MESSAGE) : undefined);
+
+/** The message that goes with a status change, or null. The browser asks first, then calls setStatusAction. */
+export async function previewStatusAction(id: string, status: string): Promise<Preview | null> {
+  await requireUser();
+  if (!(STATUSES as readonly string[]).includes(status)) throw new Error("bad status");
+  return previewForStatus(await createClient(), id, status);
+}
+
+/**
+ * Changes the status. With `send`, the resident gets the message too (the server builds it; the browser sends at most an edited text).
+ * The status changes even when the send fails.
+ */
+export async function setStatusAction(id: string, status: string, send?: { text?: string }): Promise<{ delivery: "sent" | "failed" | null }> {
   const user = await requireUser();
   if (!(STATUSES as readonly string[]).includes(status)) throw new Error("bad status");
-  await tickets.setStatus(await createClient(), user.profileId, id, status);
+  const r = await changeStatus(await createClient(), getChannel(), user.profileId, id, status, { send: send ? { text: cleanText(send.text) } : undefined });
   refresh(id);
+  return r;
+}
+
+/** The visit message, built from the saved visit time. */
+export async function previewVisitAction(id: string): Promise<Preview | null> {
+  await requireUser();
+  return previewForVisit(await createClient(), id);
+}
+
+export async function sendVisitAction(id: string, text?: string): Promise<{ delivery: "sent" | "failed" | null }> {
+  const user = await requireUser();
+  const db = await createClient();
+  const preview = await previewForVisit(db, id);
+  if (!preview) return { delivery: null };
+  const r = await sendTicketMessage(db, getChannel(), user.profileId, id, preview, cleanText(text));
+  refresh(id);
+  return r;
+}
+
+/** A question to the resident about the ticket. */
+export async function requestInfoAction(id: string, question: string): Promise<{ delivery: "sent" | "failed" | null; error?: "question" | "contact" }> {
+  const user = await requireUser();
+  const q = question.trim().slice(0, MAX_MESSAGE);
+  if (!q) return { delivery: null, error: "question" };
+  const db = await createClient();
+  const preview = await previewForInfo(db, id, q);
+  if (!preview) return { delivery: null, error: "contact" };
+  const r = await sendTicketMessage(db, getChannel(), user.profileId, id, preview);
+  refresh(id);
+  return r;
 }
 
 export async function assignAction(id: string, personId: string | null): Promise<void> {

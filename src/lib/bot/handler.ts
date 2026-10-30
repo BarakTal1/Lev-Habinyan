@@ -38,28 +38,28 @@ const outBody = (o: Out) => (o.type === "template" ? `[${o.name}] ${o.params.joi
  */
 export async function sendGuarded(
   deps: Pick<Deps, "db" | "channel">, phone: string, out: Out, opts: { reply: boolean; ticketId?: string },
-): Promise<{ sent: boolean }> {
+): Promise<{ sent: boolean; logId: string | null }> {
   const n = normalizePhone(phone);
-  if (!n) return { sent: false };
+  if (!n) return { sent: false, logId: null };
   const base = { direction: "out" as const, phone: n, body: outBody(out).slice(0, 1000), template_name: out.type === "template" ? out.name : null, ticket_id: opts.ticketId ?? null };
-  const log = (state: "sent" | "failed", extra: { wa_message_id?: string | null; error?: string } = {}) =>
-    deps.db.from("message_log").insert({ ...base, delivery_state: state, wa_message_id: extra.wa_message_id ?? null, error: extra.error ?? null }).then((r) => { if (r.error) logError("message log", r.error); });
+  const log = async (state: "sent" | "failed", extra: { wa_message_id?: string | null; error?: string } = {}): Promise<string | null> => {
+    const r = await deps.db.from("message_log").insert({ ...base, delivery_state: state, wa_message_id: extra.wa_message_id ?? null, error: extra.error ?? null }).select("id").single();
+    if (r.error) { logError("message log", r.error); return null; }
+    return r.data.id as string;
+  };
 
   if (!opts.reply) {
     const person = await findPersonByPhone(deps.db, n);
     const allowed = person ? person.consented : await isConsented(deps.db, n);
     if (!allowed) {
-      await log("failed", { error: "no consent" });
-      return { sent: false };
+      return { sent: false, logId: await log("failed", { error: "no consent" }) };
     }
   }
   try {
     const r = await deps.channel.send(n, out);
-    await log("sent", { wa_message_id: r.waMessageId });
-    return { sent: true };
+    return { sent: true, logId: await log("sent", { wa_message_id: r.waMessageId }) };
   } catch (e) {
-    await log("failed", { error: (e instanceof Error ? e.message : "send failed").slice(0, 200) });
-    return { sent: false };
+    return { sent: false, logId: await log("failed", { error: (e instanceof Error ? e.message : "send failed").slice(0, 200) }) };
   }
 }
 

@@ -8,7 +8,9 @@ import { Timeline } from "@/components/Timeline";
 import { ConfirmForm } from "@/components/ConfirmForm";
 import { EditTicketSheet } from "@/components/EditTicketSheet";
 import { listAssignees, listBuildings } from "@/lib/db/people";
+import { getResident } from "@/lib/bot/send";
 import { getTicket } from "@/lib/db/tickets";
+import { RequestInfoSheet } from "@/components/RequestInfoSheet";
 import { formatDate, isoToIsraelLocal } from "@/lib/israel";
 import { KINDS, t } from "@/lib/labels";
 import { createClient } from "@/lib/supabase/server";
@@ -23,6 +25,7 @@ export default async function TicketPage({ params }: { params: Promise<{ id: str
   const db = await createClient();
   const [ticket, assignees, buildings] = await Promise.all([getTicket(db, id), listAssignees(db), listBuildings(db)]);
   if (!ticket) notFound();
+  const resident = await getResident(db, id);
   const photos = ticket.attachments.filter((a) => a.kind === "photo");
   const invoices = ticket.attachments.filter((a) => a.kind === "invoice");
 
@@ -41,7 +44,8 @@ export default async function TicketPage({ params }: { params: Promise<{ id: str
         <div className="flex flex-wrap items-start gap-3">
           <h1 dir="rtl" className="min-w-0 basis-full text-[28px] font-bold leading-[1.15] lg:basis-0 lg:flex-1 lg:text-[30px]">{ticket.title}</h1>
           <div className="flex flex-wrap items-center gap-2">
-            <EditTicketSheet ticket={{ id: ticket.id, title: ticket.title, category: ticket.category, urgency: ticket.urgency, building_id: ticket.building_id, due_at: ticket.due_at, scheduled_local: ticket.scheduled_at ? isoToIsraelLocal(ticket.scheduled_at) : "", description: ticket.description }} buildings={buildings} />
+            <EditTicketSheet residentName={resident?.consented ? resident.name : null} ticket={{ id: ticket.id, title: ticket.title, category: ticket.category, urgency: ticket.urgency, building_id: ticket.building_id, due_at: ticket.due_at, scheduled_local: ticket.scheduled_at ? isoToIsraelLocal(ticket.scheduled_at) : "", description: ticket.description }} buildings={buildings} />
+            {resident?.consented && <RequestInfoSheet ticketId={ticket.id} number={ticket.number} />}
             <ConfirmForm action={archiveTicketAction.bind(null, ticket.id)} message={t.tickets.archiveConfirm}>
               <button className="flex h-12 items-center gap-1 rounded-xl px-3 font-semibold text-muted"><Icon name="inventory_2" size={20} />{t.tickets.archive}</button>
             </ConfirmForm>
@@ -52,7 +56,7 @@ export default async function TicketPage({ params }: { params: Promise<{ id: str
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
         {/* Side column: what a founder changes most. On phones it comes first. */}
         <aside className="flex flex-col gap-4 lg:sticky lg:top-6 lg:order-2">
-          <section className={card}><StatusControl id={ticket.id} status={ticket.status} /></section>
+          <section className={card}><StatusControl id={ticket.id} status={ticket.status} residentName={resident?.consented ? resident.name : null} /></section>
           <section className={card}>
             <h2 className={h}>{t.tickets.assignee}</h2>
             <AssigneeSelect id={ticket.id} value={ticket.assignee_id} options={assignees} />
