@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Page } from "@/components/PageHeader";
 import { Icon } from "@/components/Icon";
 import { ScrollCue } from "@/components/ScrollCue";
 import { loadPortfolio } from "@/lib/db/maintenance";
@@ -12,9 +13,7 @@ const ICON = { ok: "check_circle", soon: "schedule", overdue: "error", nodata: "
 export default async function PortfolioPage() {
   const rows = await loadPortfolio(await createClient());
   return (
-    <main className="mx-auto max-w-6xl p-4">
-      <h1 className="px-1 pb-1 pt-2 text-[26px] font-bold">{t.maint.title}</h1>
-      <p className="px-1 pb-3 text-muted">{t.maint.portfolio}</p>
+    <Page title={t.maint.title} sub={t.maint.portfolio}>
       <div className="mb-3 flex flex-wrap gap-2 px-1 text-sm">
         {(Object.keys(MAINT_LABEL) as (keyof typeof MAINT_LABEL)[]).map((k) => {
           const b = badge("maint", MAINT_LABEL[k]);
@@ -22,7 +21,7 @@ export default async function PortfolioPage() {
         })}
       </div>
       {rows.length === 0 ? <p className="py-10 text-center text-muted">{t.maint.noBuildings}</p> : (
-        <ScrollCue hint={t.maint.scrollHint} className="overflow-x-auto rounded-2xl bg-white border border-line">
+        <ScrollCue hint={t.maint.scrollHint} className="card overflow-x-auto">
           <table className="w-full border-collapse text-sm">
             <thead>
               <tr>
@@ -32,7 +31,7 @@ export default async function PortfolioPage() {
             </thead>
             <tbody>
               {rows.map((r) => (
-                <tr key={r.id} className="border-t border-[#F3F0EA]">
+                <tr key={r.id} className="border-t border-line">
                   <th className="sticky start-0 bg-white p-3 text-start"><Link href={`/maintenance/${r.id}`} dir="rtl" className="font-semibold text-navy">{r.name}</Link></th>
                   {r.cells.map((c) => {
                     const b = badge("maint", MAINT_LABEL[c.state]);
@@ -50,6 +49,6 @@ export default async function PortfolioPage() {
           </table>
         </ScrollCue>
       )}
-    </main>
+    </Page>
   );
 }

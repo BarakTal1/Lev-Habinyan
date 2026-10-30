@@ -54,11 +54,11 @@ export function CalendarView({ month, today, events, origin, children }: { month
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-line bg-white">
-        <div className="grid grid-cols-7 border-b border-[#F3F0EA] text-center text-[13px] font-semibold text-muted">
+        <div className="grid grid-cols-7 border-b border-line text-center text-[13px] font-semibold text-muted">
           {t.cal.weekdays.map((d) => <div key={d} className="py-2">{d}</div>)}
         </div>
         {weeks.map((week) => (
-          <div key={week[0]} className="grid grid-cols-7 border-b border-[#F3F0EA] last:border-b-0">
+          <div key={week[0]} className="grid grid-cols-7 border-b border-line last:border-b-0">
             {week.map((d) => {
               const list = byDay[d] ?? [];
               const inMonth = d.startsWith(month);
@@ -68,7 +68,7 @@ export function CalendarView({ month, today, events, origin, children }: { month
               return (
                 <button key={d} type="button" onClick={() => setSelected(d)} aria-pressed={isSel}
                   aria-label={`${dayLabel(d)}${list.length ? `, ${list.length} אירועים` : ""}`}
-                  className={`press-row relative flex min-h-[56px] flex-col items-center gap-1 border-s border-[#F3F0EA] p-1 first:border-s-0 lg:min-h-[96px] lg:items-stretch lg:p-1.5 ${inMonth ? "" : "bg-[#FBFAF6] text-[#A9AEB8]"} ${isSel ? "bg-[#EAF1FC]" : ""}`}>
+                  className={`press-row relative flex min-h-[56px] flex-col items-center gap-1 border-s border-line p-1 first:border-s-0 lg:min-h-[96px] lg:items-stretch lg:p-1.5 ${inMonth ? "" : "bg-[#F8FAFC] text-[#A9AEB8]"} ${isSel ? "bg-[#EAF1FC]" : ""}`}>
                   <span className={`flex h-7 w-7 items-center justify-center self-center rounded-full text-[15px] font-semibold lg:self-start ${isToday ? "bg-navy text-white" : ""}`}>{Number(d.slice(8))}</span>
                   <span className="flex items-center gap-0.5 lg:hidden">
                     {kindsHere.map((k) => <span key={k} aria-hidden className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: COLOR[k] }} />)}

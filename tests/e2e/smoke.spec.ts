@@ -31,7 +31,7 @@ test("mobile: open a building and add a resident", async ({ page }) => {
   await signIn(page);
   await page.goto("/buildings");
   await page.getByRole("link", { name: /הירקון 112/ }).click();
-  await page.getByRole("link", { name: "דיירים" }).click();
+  await page.getByRole("navigation", { name: "tabs" }).getByRole("link", { name: "דיירים" }).click();
   await expect(page).toHaveURL(/tab=residents/);
   await page.getByText("הוספת דייר").click();
   const name = `דייר בדיקה ${Date.now()}`;

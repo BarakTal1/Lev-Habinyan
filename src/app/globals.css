@@ -113,3 +113,15 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline: non
   border-radius: 16px;
   box-shadow: var(--card-shadow);
 }
+
+/* The save bar of a form: fixed to the bottom on phones, a plain button below the form on desktop. */
+@media (min-width: 1024px) {
+  .save-bar {
+    position: static;
+    background: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border: 0;
+    padding: 0;
+  }
+}

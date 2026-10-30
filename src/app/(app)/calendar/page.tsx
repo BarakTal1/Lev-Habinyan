@@ -1,4 +1,5 @@
 import { headers } from "next/headers";
+import { Page } from "@/components/PageHeader";
 import { CalendarExport } from "@/components/CalendarExport";
 import { CalendarView } from "@/components/CalendarView";
 import { getFeedToken, loadCalendar } from "@/lib/db/calendar";
@@ -23,11 +24,10 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
   const feedUrl = token ? `${origin}/api/calendar/${token}/feed.ics` : null;
 
   return (
-    <main className="mx-auto max-w-5xl p-4">
-      <h1 className="px-1 pb-3 pt-2 text-[28px] leading-tight">{t.cal.title}</h1>
+    <Page title={t.cal.title} width="wide">
       <CalendarView key={month} month={month} today={today} events={events} origin={origin}>
         <CalendarExport feedUrl={feedUrl} />
       </CalendarView>
-    </main>
+    </Page>
   );
 }

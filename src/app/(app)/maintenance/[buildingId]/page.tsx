@@ -1,6 +1,5 @@
-import Link from "next/link";
+import { Page } from "@/components/PageHeader";
 import { notFound } from "next/navigation";
-import { Icon } from "@/components/Icon";
 import { MaintBuilding } from "@/components/MaintBuilding";
 import { listAssignees } from "@/lib/db/people";
 import { ensureItems, loadBuildingMaintenance } from "@/lib/db/maintenance";
@@ -21,13 +20,8 @@ export default async function BuildingMaintenancePage({ params }: { params: Prom
   const people = await listAssignees(db);
   const suppliers = people.filter((p) => p.role === "supplier");
   return (
-    <main className="mx-auto flex max-w-2xl flex-col gap-4 p-4">
-      <Link href="/maintenance" className="flex h-12 items-center text-navy"><Icon name="arrow_forward" size={22} /></Link>
-      <header>
-        <h1 className="text-2xl font-bold">{t.maint.title}</h1>
-        <p dir="rtl" className="text-muted">{b.data.name}</p>
-      </header>
+    <Page title={t.maint.title} sub={<span dir="rtl">{b.data.name}</span>} back={{ href: "/maintenance", label: t.maint.title }} width="medium">
       <MaintBuilding buildingId={buildingId} rows={rows} suppliers={suppliers} today={todayIL(new Date())} />
-    </main>
+    </Page>
   );
 }

@@ -41,9 +41,9 @@ export function NewTicketForm({ buildings, assignees }: { buildings: BuildingOpt
   }
 
   return (
-    <div className="flex flex-col gap-5 p-4 pb-32">
-      <h1 className="pt-1 text-[28px] font-bold leading-[1.1]">{t.tickets.newTitle}</h1>
-      <div className="relative grid grid-cols-2 gap-1 rounded-[14px] bg-[#EAE6DD] p-1" role="group" aria-label={t.tickets.kind}>
+    <div className="flex max-w-2xl flex-col gap-5 px-4 pb-32 pt-5 lg:px-8 lg:pb-10 lg:pt-8">
+      <h1 className="text-[28px] font-bold leading-[1.15] lg:text-[30px]">{t.tickets.newTitle}</h1>
+      <div className="relative grid grid-cols-2 gap-1 rounded-[14px] bg-[#E8ECF2] p-1" role="group" aria-label={t.tickets.kind}>
         {/* The thumb slides between segments instead of swapping backgrounds. */}
         <span aria-hidden className={`pointer-events-none absolute inset-y-1 start-1 w-[calc(50%-6px)] rounded-[11px] bg-navy shadow-[0_2px_6px_rgba(27,42,74,.28)] transition-transform duration-[320ms] ease-[var(--ease-out)] motion-reduce:transition-none ${kind === "task" ? "translate-x-[calc(100%+4px)] rtl:-translate-x-[calc(100%+4px)]" : ""}`} />
         {(["fault", "task"] as const).map((k) => (
@@ -96,7 +96,7 @@ export function NewTicketForm({ buildings, assignees }: { buildings: BuildingOpt
       )}
 
       {error && <p className="text-[#B3261E]" role="alert">{error}</p>}
-      <div className="material fixed inset-x-0 bottom-0 z-40 border-t border-line p-4 pb-[max(16px,env(safe-area-inset-bottom))]">
+      <div className="material save-bar fixed inset-x-0 bottom-0 z-40 border-t border-line p-4 pb-[max(16px,env(safe-area-inset-bottom))]">
         <div className="mx-auto max-w-xl">
         <button type="button" onClick={save} disabled={!canSave || pending} className="h-14 w-full rounded-2xl bg-navy text-[17px] font-bold text-white disabled:opacity-40">
           {t.common.save}

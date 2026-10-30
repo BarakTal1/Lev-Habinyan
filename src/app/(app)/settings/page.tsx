@@ -1,4 +1,5 @@
 import { getSetting } from "@/lib/db/people";
+import { Page } from "@/components/PageHeader";
 import { t } from "@/lib/labels";
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/app/(auth)/sign-in/actions";
@@ -13,8 +14,7 @@ export default async function SettingsPage() {
   ]);
   const card = "flex flex-col gap-3 card p-4";
   return (
-    <main className="mx-auto flex max-w-xl flex-col gap-4 p-4">
-      <h1 className="px-1 pt-2 text-[26px] font-bold">{t.settings.title}</h1>
+    <Page title={t.settings.title} width="narrow" className="flex flex-col gap-4">
       <section className={card}>
         <h2 className="text-[17px] font-bold">{t.settings.founders}</h2>
         {(profiles.data ?? []).map((p) => (
@@ -33,6 +33,6 @@ export default async function SettingsPage() {
         </form>
       </section>
       {!demoModeEnabled() && <form action={signOut}><button className="h-12 w-full rounded-xl border border-[#D8DEE8] bg-white font-semibold">{t.settings.signOut}</button></form>}
-    </main>
+    </Page>
   );
 }

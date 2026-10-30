@@ -65,7 +65,7 @@ export const t = {
   },
   signIn: { title: "לב הבניין · מערכת ניהול", google: "כניסה עם Google", noAccess: "אין לך הרשאת גישה", noAccessHelp: "החשבון הזה לא ברשימת המורשים. פנו לרועי או לעומר." },
   tickets: {
-    title: "תקלות ומשימות", open: "פתוחות", search: "חיפוש כרטיס", all: "הכל", faults: "תקלות", tasks: "משימות", mine: "שלי", filter: "סינון", apply: "החל",
+    title: "תקלות ומשימות", open: "פתוחות", details: "פרטים", search: "חיפוש כרטיס", all: "הכל", faults: "תקלות", tasks: "משימות", mine: "שלי", filter: "סינון", apply: "החל",
     empty: "אין כרטיסים", newTitle: "כרטיס חדש", kind: "סוג", building: "בניין", noBuilding: "ללא בניין (חברה)", titleField: "כותרת קצרה",
     category: "קטגוריה", urgency: "דחיפות", assignee: "אחראי", unassigned: "לא שויך", more: "פרטים נוספים", dueAt: "תאריך יעד", description: "תיאור",
     originalMessage: "הודעת וואטסאפ מקורית", pasteMessage: "הדביקו כאן הודעה מוואטסאפ", saveMessage: "שמירת ההודעה",
@@ -77,6 +77,7 @@ export const t = {
   buildings: {
     title: "בניינים", add: "הוספת בניין", name: "שם הבניין", city: "עיר", address: "כתובת", units: "דירות", openTickets: "תקלות ומשימות פתוחות",
     noDataSystems: (n: number) => (n === 1 ? "אין נתונים במערכת אחת" : `אין נתונים ב־${n} מערכות`),
+    residentsCount: "דיירים", overdueMaint: "תחזוקה באיחור", nextMaint: "מועדי תחזוקה קרובים", seeAll: "לכל הרשימה", noOpen: "אין תקלות או משימות פתוחות", noMaintDates: "אין מועדים. הגדירו תדירות ביומן התחזוקה.",
     tabs: { overview: "סקירה", residents: "דיירים", suppliers: "ספקים", maintenance: "תחזוקה", documents: "מסמכים" },
     addResident: "הוספת דייר", resName: "שם", phone: "טלפון", unit: "דירה", owner: "בעלים", tenant: "שוכר", committee: "ועד", noResidents: "אין דיירים עדיין",
     noSuppliers: "אין ספקים משויכים. שייכו ספק לפריט תחזוקה.", noDocs: "אין מסמכים", addDoc: "הוספת מסמך", openMaintenance: "ליומן התחזוקה", openList: "לכרטיסים של הבניין",
