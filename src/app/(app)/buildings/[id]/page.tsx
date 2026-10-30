@@ -18,6 +18,7 @@ import { createClient } from "@/lib/supabase/server";
 import { ConfirmForm } from "@/components/ConfirmForm";
 import { EditBuildingSheet } from "@/components/EditBuildingSheet";
 import { ChargeForm, FeeForm, UnitLedgerList } from "@/components/LedgerForms";
+import { PersonEditSheet, UnitEditSheet } from "@/components/TenantSheets";
 import { loadLedger } from "@/lib/db/ledger";
 import { formatILS } from "@/lib/domain/money";
 import { todayIL } from "@/lib/israel";
@@ -152,12 +153,13 @@ export default async function BuildingPage({ params, searchParams }: { params: P
         )}
 
         {tab === "residents" && (
-          <div className="flex max-w-3xl flex-col gap-4">
-            <details className={card}>
+          <div className="flex flex-col gap-4">
+            <details className={`${card} max-w-3xl`}>
               <summary className="flex h-10 cursor-pointer items-center gap-1 font-semibold text-navy"><Icon name="person_add" size={20} />{t.buildings.addResident}</summary>
               <form action={addResidentAction.bind(null, id)} className="mt-3 flex flex-col gap-3">
                 <Field label={t.buildings.resName}><input name="name" required dir="rtl" className={inputCls} /></Field>
                 <Field label={t.buildings.phone}><input name="phone" type="tel" dir="ltr" className={inputCls} /></Field>
+                <Field label={t.tenants.email}><input name="email" type="email" dir="ltr" className={inputCls} /></Field>
                 <Field label={t.buildings.unit}><input name="unit" required dir="ltr" inputMode="numeric" className={inputCls} /></Field>
                 <Field label={t.buildings.owner + " / " + t.buildings.tenant}>
                   <select name="relation" className={inputCls}><option value="owner">{t.buildings.owner}</option><option value="tenant">{t.buildings.tenant}</option></select>
@@ -166,19 +168,43 @@ export default async function BuildingPage({ params, searchParams }: { params: P
                 <button className="h-12 rounded-xl bg-navy font-semibold text-white">{t.common.save}</button>
               </form>
             </details>
-            {b.residents.length === 0 ? <p className="py-10 text-center text-muted">{t.buildings.noResidents}</p> : (
-              <div className={list}>
-                {b.residents.map((r) => (
-                  <div key={r.person_id + r.unit_id} className="flex min-h-[72px] items-center gap-2 bg-white py-2 pe-3 ps-2">
-                    <div className="min-w-0 flex-1 ps-2">
-                      <div dir="rtl" className="text-base font-semibold">{r.name}{r.is_committee && <span className="ms-2 rounded-md bg-[#EAF1FC] px-1.5 text-[13px] text-navy">{t.buildings.committee}</span>}</div>
-                      <div className="text-sm text-muted">{t.buildings.unit} <LtrText>{r.unit}</LtrText> · {r.relation === "tenant" ? t.buildings.tenant : t.buildings.owner}{r.phone && <> · <LtrText>{r.phone}</LtrText></>}</div>
-                    </div>
-                    {telLink(r.phone) && <a href={telLink(r.phone)!} aria-label={t.buildings.call} className={`${iconBtn} bg-[#EAF1FC] text-navy`}><Icon name="call" size={22} filled /></a>}
-                    {waLink(r.phone) && <a href={waLink(r.phone)!} aria-label={t.buildings.chat} className={`${iconBtn} bg-[#E3F4EA] text-[#1E6B45]`}><Icon name="chat" size={22} /></a>}
-                    <ConfirmForm action={archiveResidentAction.bind(null, id, r.person_id)} message={`${t.buildings.archiveConfirm} ${r.name}?`}><button aria-label={t.buildings.archive} className={`${iconBtn} text-muted`}><Icon name="close" size={20} /></button></ConfirmForm>
-                  </div>
-                ))}
+            {b.apartments.length === 0 ? <p className="py-10 text-center text-muted">{t.buildings.noResidents}</p> : (
+              <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+                {b.apartments.map((a) => {
+                  const people = b.residents.filter((r) => r.unit_id === a.id);
+                  return (
+                    <section key={a.id} aria-label={t.tenants.apartment(a.number)} className="card overflow-hidden">
+                      <header className="flex items-center gap-2 border-b border-line bg-[#F8FAFC] py-2 pe-2 ps-4">
+                        <h3 className="font-bold">{t.tenants.apartment(a.number)}</h3>
+                        {a.floor && <span className="text-sm text-muted">· {t.tenants.floorShort(a.floor)}</span>}
+                        {a.payer && <span className="rounded-md bg-brand-soft px-1.5 text-[13px] font-semibold text-brand">{t.tenants.payerShort(t.tenants.roles[a.payer])}</span>}
+                        <span className="flex-1" />
+                        <UnitEditSheet buildingId={id} unit={a} people={people} />
+                      </header>
+                      {people.length === 0 ? <p className="px-4 py-4 text-sm text-muted">{t.tenants.noPeople}</p> : (
+                        <div className="flex flex-col divide-y divide-line">
+                          {people.map((r) => (
+                            <div key={r.person_id} className="flex min-h-[68px] items-center gap-1.5 py-2 pe-2 ps-4">
+                              <div className="min-w-0 flex-1">
+                                <div dir="rtl" className="flex flex-wrap items-center gap-1.5 text-base font-semibold">
+                                  {r.name}
+                                  {a.primary_contact_id === r.person_id && <span title={t.tenants.primary} className="text-[#E0A030]">★<span className="sr-only">{t.tenants.primary}</span></span>}
+                                  <span className="rounded-md bg-[#EEF1F5] px-1.5 text-[13px] font-medium text-muted">{r.relation === "tenant" ? t.buildings.tenant : t.buildings.owner}</span>
+                                  {r.is_committee && <span className="rounded-md bg-[#EAF1FC] px-1.5 text-[13px] text-navy">{t.buildings.committee}</span>}
+                                </div>
+                                <div className="truncate text-sm text-muted">{r.phone && <LtrText>{r.phone}</LtrText>}{r.phone && r.email && " · "}{r.email && <LtrText>{r.email}</LtrText>}</div>
+                              </div>
+                              {telLink(r.phone) && <a href={telLink(r.phone)!} aria-label={t.buildings.call} className={`${iconBtn} bg-[#EAF1FC] text-navy`}><Icon name="call" size={22} filled /></a>}
+                              {waLink(r.phone) && <a href={waLink(r.phone)!} aria-label={t.buildings.chat} className={`${iconBtn} bg-[#E3F4EA] text-[#1E6B45]`}><Icon name="chat" size={22} /></a>}
+                              <PersonEditSheet buildingId={id} person={r} />
+                              <ConfirmForm action={archiveResidentAction.bind(null, id, r.person_id)} message={`${t.buildings.archiveConfirm} ${r.name}?`}><button aria-label={t.buildings.archive} className="press flex h-10 w-10 items-center justify-center rounded-xl text-muted"><Icon name="close" size={20} /></button></ConfirmForm>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </section>
+                  );
+                })}
               </div>
             )}
           </div>

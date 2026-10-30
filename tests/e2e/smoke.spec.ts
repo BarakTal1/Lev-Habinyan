@@ -223,3 +223,30 @@ test("import a payments CSV twice", async ({ page }) => {
   await expect(page.getByText("0 חדשים")).toBeVisible();
   await expect(page.getByText("2 ללא שינוי")).toBeVisible();
 });
+
+test("apartment details: the renter pays, and the payments tab shows the renter", async ({ page }) => {
+  await signIn(page);
+  await buildingWithFee(page);
+  await page.getByRole("navigation", { name: "tabs" }).getByRole("link", { name: "דיירים" }).click();
+  await page.getByText("הוספת דייר").click();
+  const renter = `שוכרת ${Date.now()}`;
+  await page.locator('input[name="name"]').fill(renter);
+  await page.locator('input[name="phone"]').fill("054-0000888");
+  await page.locator('input[name="email"]').fill("renter@example.com");
+  await page.locator('input[name="unit"]').fill("1");
+  await page.locator('select[name="relation"]').selectOption("tenant");
+  await page.getByRole("button", { name: "שמירה" }).click();
+  await expect(page.getByText("renter@example.com")).toBeVisible();
+
+  await page.getByRole("button", { name: "עריכת דירה 1" }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByLabel("קומה").fill("2");
+  await dialog.getByLabel("מי משלם").selectOption("tenant");
+  await dialog.getByRole("button", { name: "שמירה" }).click();
+  const card = page.getByRole("region", { name: "דירה 1" });
+  await expect(card).toContainText("קומה 2");
+  await expect(card).toContainText("משלם: שוכר");
+
+  await page.getByRole("navigation", { name: "tabs" }).getByRole("link", { name: "תשלומים" }).click();
+  await expect(page.getByRole("button", { name: /דירה 1/ })).toContainText(renter);
+});

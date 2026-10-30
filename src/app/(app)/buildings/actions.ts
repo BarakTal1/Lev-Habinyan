@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import * as b from "@/lib/db/buildings";
 import * as ledger from "@/lib/db/ledger";
+import * as tenants from "@/lib/db/tenants";
+import { isPhone } from "@/lib/phone";
 import type { Method } from "@/lib/domain/ledger";
 import { parseAmount } from "@/lib/domain/money";
 import { t } from "@/lib/labels";
@@ -24,7 +26,7 @@ export async function addResidentAction(buildingId: string, formData: FormData):
   const unit = String(formData.get("unit") ?? "").trim();
   if (!name || !unit) return;
   await b.addResident(await createClient(), {
-    building_id: buildingId, unit_number: unit, name, phone: String(formData.get("phone") ?? "").trim(),
+    building_id: buildingId, unit_number: unit, name, phone: String(formData.get("phone") ?? "").trim(), email: String(formData.get("email") ?? "").trim() || null,
     relation: formData.get("relation") === "tenant" ? "tenant" : "owner", is_committee: formData.get("committee") === "on",
   });
   revalidatePath(`/buildings/${buildingId}`);
@@ -129,5 +131,41 @@ export async function recordPaymentAction(buildingId: string, unitId: string, fo
   revalidatePath(`/buildings/${buildingId}`);
   revalidatePath("/payments");
   revalidatePath("/");
+  return {};
+}
+
+// Tenant details. Each action returns an error key from t.tenants.errors, or nothing on success.
+type TenantResult = { error?: keyof typeof t.tenants.errors };
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export async function updateUnitAction(buildingId: string, unitId: string, formData: FormData): Promise<TenantResult> {
+  await requireUser();
+  const payer = String(formData.get("payer") ?? "");
+  const primary = String(formData.get("primary") ?? "");
+  try {
+    await tenants.updateUnitDetails(await createClient(), unitId, {
+      floor: String(formData.get("floor") ?? ""),
+      payer: payer === "owner" || payer === "tenant" ? payer : null,
+      primaryContactId: primary || null,
+    });
+  } catch { return { error: "failed" }; }
+  revalidatePath(`/buildings/${buildingId}`);
+  revalidatePath("/payments");
+  return {};
+}
+
+export async function updatePersonAction(buildingId: string, personId: string, formData: FormData): Promise<TenantResult> {
+  await requireUser();
+  const name = String(formData.get("name") ?? "").trim();
+  const phone = String(formData.get("phone") ?? "").trim();
+  const email = String(formData.get("email") ?? "").trim();
+  if (!name) return { error: "name" };
+  if (phone && !isPhone(phone)) return { error: "phone" };
+  if (email && !EMAIL.test(email)) return { error: "email" };
+  try {
+    await tenants.updatePerson(await createClient(), personId, { name, phone: phone || null, email: email || null });
+  } catch { return { error: "failed" }; }
+  revalidatePath(`/buildings/${buildingId}`);
+  revalidatePath("/payments");
   return {};
 }

@@ -104,6 +104,12 @@ export const t = {
     preview: "תצוגה מקדימה", newBuilding: "בניין חדש", existing: "קיים", problems: "תאים שלא הובנו (לא ייובאו)", confirm: "אישור וייבוא", done: "הייבוא הסתיים",
     result: (b: number, c: number, i: number) => `${b} בניינים (${c} חדשים), ${i} פריטי תחזוקה`, toCalendar: "ליומן התחזוקה", row: "שורה", empty: "לא נמצאו שורות בקובץ",
   },
+  tenants: {
+    apartment: (n: string) => `דירה ${n}`, floor: "קומה", floorShort: (f: string) => `קומה ${f}`, payer: "מי משלם", payerShort: (p: string) => `משלם: ${p}`,
+    roles: { owner: "בעלים", tenant: "שוכר" }, primary: "איש קשר ראשי", none: "ללא", noPeople: "אין דיירים רשומים",
+    editUnit: (n: string) => `עריכת דירה ${n}`, editPerson: (name: string) => `עריכת ${name}`, email: "אימייל",
+    errors: { name: "חסר שם", phone: "טלפון לא תקין", email: "אימייל לא תקין", failed: "השמירה נכשלה. נסו שוב." },
+  },
   ledgerImport: {
     kindNav: "סוג ייבוא", kinds: { maintenance: "בקרת תחזוקה", tariffs: "תעריפים חודשיים", payments: "תשלומים" },
     building: "בניין", pickBuilding: "בחרו בניין", source: "מקור הקובץ", sources: { excel: "קובץ אחר", bllink_import: "קובץ מבלינק" },
