@@ -110,9 +110,15 @@ export const t = {
     sendAndChange: "שלח הודעה ושנה סטטוס", changeOnly: "שנה סטטוס בלי הודעה", send: "שלח הודעה", cancel: "ביטול",
     askInfo: "בקש פרטים", question: "השאלה לדייר", sendQuestion: "שלח שאלה", needQuestion: "כתבו שאלה לדייר.",
     noContact: "אי אפשר לשלוח הודעה לדייר הזה: אין הסכמה או טלפון.", sendFailed: "ההודעה לא נשלחה. הסטטוס עודכן.",
-    noMessage: "ללא הודעה", notApproved: "לא מאושר", pendingBadge: "ממתין לאישור", duplicateOf: (n: number) => `כפילות של פנייה ${n}`, unlinkDuplicate: "ניתוק הקישור", unlinked: "ניתק את הקישור לפנייה כפולה", voiceNote: "הקלטה", fromResident: "דייר", fromWhatsapp: "וואטסאפ",
+    noMessage: "ללא הודעה", proposal: "הצעת המערכת", responsibilityLabel: "אחריות", notApproved: "לא מאושר", pendingBadge: "ממתין לאישור", duplicateOf: (n: number) => `כפילות של פנייה ${n}`, unlinkDuplicate: "ניתוק הקישור", unlinked: "ניתק את הקישור לפנייה כפולה", voiceNote: "הקלטה", fromResident: "דייר", fromWhatsapp: "וואטסאפ",
     delivery: { queued: "בתור", sent: "נשלחה", delivered: "נמסרה", read: "נקראה", failed: "נכשלה" },
     visitWindowHours: 2,
+  },
+  botSettings: {
+    title: "בוט וואטסאפ", help: "שעות הפעילות קובעות מתי הבוט מוסר שהצוות לא זמין. ההתראות על סכנה נשלחות למספרים שמופיעים כאן.",
+    days: "ימי פעילות", dayNames: ["א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳"], noDays: "בלי ימים מסומנים הצוות זמין תמיד.", from: "משעה", to: "עד שעה",
+    emergency: "מספר חירום לדיירים", emergencyHelp: "הבוט נותן אותו לדייר שמדווח על סכנה.", oncall: "טלפונים להתראת סכנה", oncallHelp: "מספר בכל שורה. ריק: הטלפונים של המייסדים.",
+    save: "שמירה", saved: "נשמר", errors: { hours: "שעת הסיום חייבת להיות אחרי שעת ההתחלה", emergency: "מספר החירום אינו תקין", oncall: "אחד הטלפונים אינו תקין", failed: "השמירה נכשלה. נסו שוב." },
   },
   inbox: {
     title: "הודעות מדיירים", sub: "שיחות שבהן הדייר ביקש נציג", empty: "אין שיחות שמחכות לנציג.", reply: "תשובה", send: "שליחה",

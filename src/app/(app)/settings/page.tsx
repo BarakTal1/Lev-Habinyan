@@ -1,3 +1,5 @@
+import { BotSettingsForm } from "@/components/BotSettingsForm";
+import { getSettings } from "@/lib/bot/db";
 import { getSetting } from "@/lib/db/people";
 import { Page } from "@/components/PageHeader";
 import { t } from "@/lib/labels";
@@ -8,8 +10,9 @@ import { setEmailRemindersAction } from "../people-actions";
 
 export default async function SettingsPage() {
   const db = await createClient();
-  const [on, profiles] = await Promise.all([
+  const [on, bot, profiles] = await Promise.all([
     getSetting(db, "email_reminders", false),
+    getSettings(db),
     db.from("profile").select("id, email, person:person_id(name)").order("email"),
   ]);
   const card = "flex flex-col gap-3 card p-4";
@@ -31,6 +34,11 @@ export default async function SettingsPage() {
           <label className="flex h-12 flex-1 items-center gap-2"><input type="checkbox" name="on" defaultChecked={on} className="h-5 w-5" />{t.settings.emailReminders}</label>
           <button className="h-12 rounded-xl border border-navy px-5 font-semibold text-navy">{t.common.save}</button>
         </form>
+      </section>
+      <section className={card}>
+        <h2 className="text-[17px] font-bold">{t.botSettings.title}</h2>
+        <p className="text-sm text-muted">{t.botSettings.help}</p>
+        <BotSettingsForm initial={{ hours: bot.hours, emergencyNumber: bot.emergencyNumber, oncallPhones: bot.oncallPhones }} />
       </section>
       {!demoModeEnabled() && <form action={signOut}><button className="h-12 w-full rounded-xl border border-[#D8DEE8] bg-white font-semibold">{t.settings.signOut}</button></form>}
     </Page>

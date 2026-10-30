@@ -7,11 +7,11 @@ import { previewVisitAction, sendVisitAction, updateTicketAction } from "@/app/(
 import type { Preview } from "@/lib/bot/templates";
 import { MessagePreviewSheet } from "./MessagePreviewSheet";
 import type { BuildingOption } from "@/lib/db/people";
-import { CATEGORIES, URGENCIES, t } from "@/lib/labels";
+import { CATEGORIES, RESPONSIBILITIES, URGENCIES, t } from "@/lib/labels";
 
 export type EditableTicket = {
   id: string; title: string; category: string; urgency: string; building_id: string | null; due_at: string | null;
-  scheduled_local: string; description: string | null;
+  scheduled_local: string; description: string | null; responsibility: string;
 };
 
 export function EditTicketSheet({ ticket, buildings, residentName }: { ticket: EditableTicket; buildings: BuildingOption[]; residentName?: string | null }) {
@@ -39,6 +39,7 @@ export function EditTicketSheet({ ticket, buildings, residentName }: { ticket: E
           <Field label={t.tickets.titleField}><input name="title" required defaultValue={ticket.title} dir="rtl" className={inputCls} /></Field>
           <Field label={t.tickets.category}><select name="category" defaultValue={ticket.category} className={inputCls}>{CATEGORIES.map((c) => <option key={c}>{c}</option>)}</select></Field>
           <Field label={t.tickets.urgency}><select name="urgency" defaultValue={ticket.urgency} className={inputCls}>{URGENCIES.map((u) => <option key={u}>{u}</option>)}</select></Field>
+          <Field label={t.msg.responsibilityLabel}><select name="responsibility" defaultValue={ticket.responsibility} className={inputCls}>{RESPONSIBILITIES.map((r) => <option key={r}>{r}</option>)}</select></Field>
           <Field label={t.tickets.building}>
             <select name="building_id" defaultValue={ticket.building_id ?? ""} className={inputCls}>
               <option value="">{t.tickets.noBuilding}</option>

@@ -10,11 +10,13 @@ const NEXT: Record<string, string> = { "חדש": "בטיפול", "הוקצה": "
 
 /** The status of a ticket. A status with a message to the resident (assigned, done) opens a preview first. */
 export function StatusControl({ id, status, residentName }: { id: string; status: string; residentName?: string | null }) {
-  const [pending, start] = useTransition();
+  // Two transitions: looking for the message must not keep the sheet disabled once the sheet is open.
+  const [checking, startCheck] = useTransition();
+  const [running, startRun] = useTransition();
   const [target, setTarget] = useState<{ status: string; preview: Preview } | null>(null);
   const [notice, setNotice] = useState("");
 
-  const run = (s: string, send?: { text?: string }) => start(async () => {
+  const run = (s: string, send?: { text?: string }) => startRun(async () => {
     setNotice("");
     try {
       const r = await setStatusAction(id, s, send);
@@ -24,7 +26,7 @@ export function StatusControl({ id, status, residentName }: { id: string; status
     }
   });
   // Ask the server whether this status has a message for this resident. No message: change the status at once.
-  const go = (s: string) => start(async () => {
+  const go = (s: string) => startCheck(async () => {
     setNotice("");
     if (residentName && statusPreviewKind(s)) {
       const preview = await previewStatusAction(id, s);
@@ -36,10 +38,10 @@ export function StatusControl({ id, status, residentName }: { id: string; status
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-2"><span className="text-sm font-semibold text-muted">{t.tickets.status}</span><Badge list="status" value={status} /></div>
-      <button type="button" disabled={pending} onClick={() => go(next)} className="press h-14 w-full rounded-2xl bg-navy text-[17px] font-bold text-white disabled:opacity-50">
+      <button type="button" disabled={checking || running} onClick={() => go(next)} className="press h-14 w-full rounded-2xl bg-navy text-[17px] font-bold text-white disabled:opacity-50">
         {t.tickets.nextStatus}: {next}
       </button>
-      <select value={status} disabled={pending} onChange={(e) => go(e.target.value)} aria-label={t.tickets.status} className="h-12 rounded-xl bg-[#F4F6FA] px-3 text-base outline-none transition-shadow duration-150 focus:ring-4 focus:ring-navy/10">
+      <select value={status} disabled={checking || running} onChange={(e) => go(e.target.value)} aria-label={t.tickets.status} className="h-12 rounded-xl bg-[#F4F6FA] px-3 text-base outline-none transition-shadow duration-150 focus:ring-4 focus:ring-navy/10">
         {STATUSES.map((s) => <option key={s}>{s}</option>)}
       </select>
       {notice && <p role="status" className="text-sm text-[#B3261E]">{notice}</p>}
@@ -49,7 +51,7 @@ export function StatusControl({ id, status, residentName }: { id: string; status
         residentName={residentName ?? ""}
         sendLabel={t.msg.sendAndChange}
         skipLabel={t.msg.changeOnly}
-        busy={pending}
+        busy={running}
         onSend={(text) => target && run(target.status, { text })}
         onSkip={() => target && run(target.status)}
         onClose={() => setTarget(null)}

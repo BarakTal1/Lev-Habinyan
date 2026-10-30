@@ -54,7 +54,7 @@ export default async function TicketPage({ params }: { params: Promise<{ id: str
         <div className="flex flex-wrap items-start gap-3">
           <h1 dir="rtl" className="min-w-0 basis-full text-[28px] font-bold leading-[1.15] lg:basis-0 lg:flex-1 lg:text-[30px]">{ticket.title}</h1>
           <div className="flex flex-wrap items-center gap-2">
-            <EditTicketSheet residentName={resident?.consented ? resident.name : null} ticket={{ id: ticket.id, title: ticket.title, category: ticket.category, urgency: ticket.urgency, building_id: ticket.building_id, due_at: ticket.due_at, scheduled_local: ticket.scheduled_at ? isoToIsraelLocal(ticket.scheduled_at) : "", description: ticket.description }} buildings={buildings} />
+            <EditTicketSheet residentName={resident?.consented ? resident.name : null} ticket={{ id: ticket.id, title: ticket.title, category: ticket.category, urgency: ticket.urgency, building_id: ticket.building_id, due_at: ticket.due_at, scheduled_local: ticket.scheduled_at ? isoToIsraelLocal(ticket.scheduled_at) : "", description: ticket.description, responsibility: ticket.responsibility }} buildings={buildings} />
             {resident?.consented && <RequestInfoSheet ticketId={ticket.id} number={ticket.number} />}
             <ConfirmForm action={archiveTicketAction.bind(null, ticket.id)} message={t.tickets.archiveConfirm}>
               <button className="flex h-12 items-center gap-1 rounded-xl px-3 font-semibold text-muted"><Icon name="inventory_2" size={20} />{t.tickets.archive}</button>
@@ -75,6 +75,8 @@ export default async function TicketPage({ params }: { params: Promise<{ id: str
             <h2 className={h}>{t.tickets.details}</h2>
             <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-[15px]">
               <dt className="text-muted">{t.tickets.category}</dt><dd>{ticket.category}</dd>
+              <dt className="text-muted">{t.msg.responsibilityLabel}</dt><dd>{ticket.responsibility}</dd>
+              {ticket.proposal && <><dt className="text-muted">{t.msg.proposal}</dt><dd className="text-sm text-muted">{ticket.proposal.urgency} · {ticket.proposal.responsibility}</dd></>}
               <dt className="text-muted">{t.tickets.building}</dt><dd>{ticket.building_id ? <Link href={`/buildings/${ticket.building_id}`} className="font-semibold text-brand">{ticket.building_name}</Link> : t.tickets.noBuilding}</dd>
               {ticket.due_at && <><dt className="text-muted">{t.tickets.dueAt}</dt><dd><span dir="ltr">{formatDate(ticket.due_at)}</span></dd></>}
               {ticket.scheduled_at && <><dt className="text-muted">{t.tickets.visit}</dt><dd><span dir="ltr">{isoToIsraelLocal(ticket.scheduled_at).replace("T", " ")}</span></dd></>}

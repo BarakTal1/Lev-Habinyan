@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { addUnit } from "@/lib/db/buildings";
-import { CATEGORIES, URGENCIES } from "@/lib/labels";
+import { CATEGORIES, RESPONSIBILITIES, URGENCIES } from "@/lib/labels";
 import { validateUpload } from "@/lib/uploads";
 
 export type TicketKind = "fault" | "task";
@@ -92,11 +92,12 @@ export function validatePatch(patch: TicketPatch): void {
   if ("title" in patch && !String(patch.title ?? "").trim()) throw new Error("title required");
   if (patch.urgency != null && !(URGENCIES as readonly string[]).includes(String(patch.urgency))) throw new Error("bad urgency");
   if (patch.category != null && !(CATEGORIES as readonly string[]).includes(String(patch.category))) throw new Error("bad category");
+  if (patch.responsibility != null && !(RESPONSIBILITIES as readonly string[]).includes(String(patch.responsibility))) throw new Error("bad responsibility");
   if (patch.due_at != null && !(/^\d{4}-\d{2}-\d{2}$/.test(String(patch.due_at)) && !Number.isNaN(Date.parse(String(patch.due_at))))) throw new Error("bad due date");
   if (patch.scheduled_at != null && Number.isNaN(Date.parse(String(patch.scheduled_at)))) throw new Error("bad visit time");
 }
 
-const EDITABLE = ["title", "description", "category", "urgency", "due_at", "scheduled_at", "cost_amount", "building_id", "unit_id", "original_message"] as const;
+const EDITABLE = ["title", "description", "category", "urgency", "responsibility", "due_at", "scheduled_at", "cost_amount", "building_id", "unit_id", "original_message"] as const;
 export type TicketPatch = Partial<Record<(typeof EDITABLE)[number], string | number | null>>;
 
 export async function updateTicket(db: SupabaseClient, profileId: string, id: string, patch: TicketPatch): Promise<void> {
@@ -104,8 +105,29 @@ export async function updateTicket(db: SupabaseClient, profileId: string, id: st
   for (const k of EDITABLE) if (k in patch) clean[k] = patch[k];
   if (Object.keys(clean).length === 0) return;
   validatePatch(clean);
+  // For a ticket the bot made, the fields the rules proposed are logged when a founder changes them.
+  const before = TRACKED.some((k) => k in clean) ? must(await db.from("ticket").select("source, category, urgency, responsibility").eq("id", id).single()) : null;
   must(await db.from("ticket").update(clean).eq("id", id).select("id").single());
+  if (before?.source === "whatsapp") await recordCorrection(db, id, before, clean);
   await event(db, id, "edit", profileId, clean);
+}
+
+const TRACKED = ["category", "urgency", "responsibility"] as const;
+type Correction = Partial<Record<(typeof TRACKED)[number], { from: string; to: string }>>;
+
+/** Keeps, for each tracked field, the value the rules proposed and the value a founder chose. Putting the proposal back removes the entry. */
+async function recordCorrection(db: SupabaseClient, ticketId: string, before: Record<string, string>, patch: TicketPatch): Promise<void> {
+  const changed = TRACKED.filter((k) => k in patch && patch[k] !== before[k]);
+  if (changed.length === 0) return;
+  const rows = must(await db.from("proposal_log").select("id, roy_correction").eq("ticket_id", ticketId).order("created_at", { ascending: false }).limit(1));
+  if (rows.length === 0) return;
+  const next: Correction = { ...((rows[0].roy_correction as Correction | null) ?? {}) };
+  for (const k of changed) {
+    const from = next[k]?.from ?? before[k];
+    const to = String(patch[k]);
+    if (from === to) delete next[k]; else next[k] = { from, to };
+  }
+  must(await db.from("proposal_log").update({ roy_correction: Object.keys(next).length ? next : null }).eq("id", rows[0].id).select("id"));
 }
 
 /** Hides a ticket from every list. The row stays in the database. A repeat call changes nothing. */
@@ -155,17 +177,19 @@ export type TicketDetail = TicketListRow & {
   events: { id: string; type: string; created_at: string; actor_name: string | null; payload: Record<string, unknown> }[];
   attachments: { id: string; kind: string; url: string | null; created_at: string; mime_type: string | null }[];
   source: string; resident_approved: boolean; duplicate_of: { id: string; number: number } | null;
+  responsibility: string; proposal: { urgency: string; responsibility: string; title: string } | null;
 };
 
 export async function getTicket(db: SupabaseClient, id: string): Promise<TicketDetail | null> {
   const r = await db.from("ticket")
-    .select("id, number, kind, title, urgency, status, category, due_at, created_at, first_action_at, building_id, assignee_id, description, original_message, scheduled_at, cost_amount, unit_id, source, resident_approved, duplicate:duplicate_of_id(id, number), building:building_id(name), assignee:assignee_id(name)")
+    .select("id, number, kind, title, urgency, status, category, due_at, created_at, first_action_at, building_id, assignee_id, description, original_message, scheduled_at, cost_amount, unit_id, source, resident_approved, responsibility, duplicate:duplicate_of_id(id, number), building:building_id(name), assignee:assignee_id(name)")
     .eq("id", id).is("archived_at", null).maybeSingle();
   if (r.error) throw new Error(r.error.message);
   if (!r.data) return null;
-  const [ev, att] = await Promise.all([
+  const [ev, att, prop] = await Promise.all([
     db.from("ticket_event").select("id, type, created_at, payload, actor:actor(person:person_id(name))").eq("ticket_id", id).order("created_at", { ascending: true }),
     db.from("attachment").select("id, kind, storage_path, created_at, mime_type").eq("ticket_id", id).is("archived_at", null).order("created_at"),
+    db.from("proposal_log").select("proposed").eq("ticket_id", id).order("created_at", { ascending: false }).limit(1),
   ]);
   const attachments = await Promise.all((att.data ?? []).map(async (a) => {
     const s = await db.storage.from("attachments").createSignedUrl(a.storage_path, 3600);
@@ -192,7 +216,8 @@ export async function getTicket(db: SupabaseClient, id: string): Promise<TicketD
       actor_name: ((e.actor as unknown as { person: { name: string } | null } | null)?.person?.name) ?? null,
     })),
     attachments,
-    source: d.source, resident_approved: d.resident_approved,
+    source: d.source, resident_approved: d.resident_approved, responsibility: d.responsibility,
+    proposal: (prop.data?.[0]?.proposed as { urgency: string; responsibility: string; title: string } | undefined) ?? null,
     duplicate_of: (() => { const x = d.duplicate as unknown as { id: string; number: number | string } | null; return x ? { id: x.id, number: Number(x.number) } : null; })(),
   };
 }

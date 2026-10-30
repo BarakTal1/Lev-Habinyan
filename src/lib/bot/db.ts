@@ -3,13 +3,14 @@ import { getSetting } from "@/lib/db/people";
 import { isoToIsraelLocal } from "@/lib/israel";
 import { normUnit } from "@/lib/import/sheet";
 import { normalizePhone, toLocalPhone } from "./phone";
+import type { WorkingHours } from "./settings";
 import { privacyVersion } from "./texts";
 import type { ChatState, Draft, StepContext } from "./types";
 
 // Queries for the bot. They take a Supabase client: the webhook passes the service-role client, the tests pass the admin client.
 // Every phone goes through normalizePhone, so 052-…, +972 52… and 97252… are one number.
 
-export type WorkingHours = { days: number[]; from: string; to: string };
+export type { WorkingHours };
 export type BotPerson = { id: string; name: string; consented: boolean; optedOut: boolean; unitId: string | null; buildingId: string | null; approved: boolean };
 
 const CHAT_TTL_MS = 24 * 3600_000;
@@ -123,14 +124,20 @@ export async function listOpenTicketsForPerson(db: SupabaseClient, personId: str
   return rows.map((t) => ({ number: Number(t.number), typeLabel: t.title, status: t.status, visit: visitText(t.scheduled_at) }));
 }
 
+async function founderPhones(db: SupabaseClient): Promise<string[]> {
+  const rows = must(await db.from("person").select("phone").eq("role", "founder").is("archived_at", null).not("phone", "is", null).order("created_at"));
+  return rows.map((r) => r.phone as string);
+}
+
 /** Settings the bot reads. Unset hours mean "always open". */
 export async function getSettings(db: SupabaseClient): Promise<{ hours: WorkingHours | null; emergencyNumber: string | null; oncallPhones: string[] }> {
   const [hours, emergencyNumber, oncallPhones] = await Promise.all([
     getSetting<WorkingHours | null>(db, "working_hours", null),
     getSetting<string | null>(db, "emergency_number", null),
-    getSetting<string[]>(db, "oncall_phones", []),
+    getSetting<string[] | null>(db, "oncall_phones", null),
   ]);
-  return { hours, emergencyNumber: emergencyNumber || null, oncallPhones: Array.isArray(oncallPhones) ? oncallPhones : [] };
+  // Not set: the danger alert goes to the founders. An explicit empty list means nobody.
+  return { hours, emergencyNumber: emergencyNumber || null, oncallPhones: Array.isArray(oncallPhones) ? oncallPhones : await founderPhones(db) };
 }
 
 /** When this number last wrote to us. The 24-hour window runs from here. */

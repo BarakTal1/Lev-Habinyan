@@ -7,6 +7,7 @@ import { SimulatorChannel } from "@/lib/bot/channel";
 import { listBuildingsForBot, recordConsent } from "@/lib/bot/db";
 import { normalizePhone } from "@/lib/bot/phone";
 import { proposeFields } from "@/lib/bot/propose";
+import { hoursText } from "@/lib/bot/settings";
 import { bot } from "@/lib/bot/texts";
 import type { Inbound, Out } from "@/lib/bot/types";
 
@@ -227,6 +228,38 @@ describe("stop and the agent", () => {
     await chat.say({ kind: "button", id: "agent" }, `${tag}-agent`);
     const row = (await db.from("message_log").select("needs_agent").eq("wa_message_id", `${tag}-agent`).single()).data!;
     expect(row.needs_agent).toBe(true);
+  });
+});
+
+describe("working hours", () => {
+  const todayIndex = () => {
+    const d = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Jerusalem", weekday: "short" }).format(new Date());
+    return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(d);
+  };
+  const withHours = async (value: unknown, run: () => Promise<void>) => {
+    const saved = (await db.from("setting").select("value").eq("key", "working_hours").maybeSingle()).data?.value;
+    await db.from("setting").upsert({ key: "working_hours", value });
+    try { await run(); } finally {
+      if (saved === undefined) await db.from("setting").delete().eq("key", "working_hours"); else await db.from("setting").upsert({ key: "working_hours", value: saved });
+    }
+  };
+
+  it("outside the hours an agent request gets the closed message with the hours", async () => {
+    const hours = { days: [0, 1, 2, 3, 4, 5, 6].filter((d) => d !== todayIndex()), from: "08:00", to: "18:00" };
+    await withHours(hours, async () => {
+      const { chat } = await knownResident();
+      await chat.text("שלום"); await chat.btn("agent");
+      expect(chat.last()).toBe(bot.agentClosed(hoursText(hours)));
+    });
+  });
+
+  it("inside the hours an agent request gets no closed message", async () => {
+    const hours = { days: [0, 1, 2, 3, 4, 5, 6], from: "00:00", to: "23:59" };
+    await withHours(hours, async () => {
+      const { chat } = await knownResident();
+      await chat.text("שלום"); await chat.btn("agent");
+      expect(chat.sentToMe().map((o) => ("body" in o ? o.body : "")).some((b) => b.includes("הצוות לא זמין"))).toBe(false);
+    });
   });
 });
 

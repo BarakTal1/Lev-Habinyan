@@ -10,6 +10,7 @@ import {
 import { nextStep } from "./flow";
 import { normalizePhone } from "./phone";
 import type { ProposeFn } from "./propose";
+import { hoursText, isWithinHours } from "./settings";
 import { bot } from "./texts";
 import type { Draft, Inbound, InboundMessage, Out, StepContext } from "./types";
 
@@ -171,7 +172,7 @@ export async function handleInbound(deps: Deps, msg: InboundMessage): Promise<vo
     resident: { known: person !== null, consented: person ? person.consented : await isConsented(db, phone), name: person?.name },
     buildings,
     openTickets: person ? await listOpenTicketsForPerson(db, person.id) : [],
-    hours: { open: true, text: "" }, // Task 14 wires the working hours from the settings
+    hours: { open: isWithinHours(settings.hours, now), text: hoursText(settings.hours) },
     emergencyNumber: settings.emergencyNumber,
   };
   const result = nextStep(ctx, msg.content);

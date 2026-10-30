@@ -136,6 +136,7 @@ export async function updateTicketAction(id: string, formData: FormData): Promis
   await tickets.updateTicket(await createClient(), user.profileId, id, {
     title: text("title"), category: text("category"), urgency: text("urgency"), building_id: text("building_id") || null,
     due_at: text("due_at") || null, scheduled_at: visit ? israelLocalToIso(visit) : null, description: text("description") || null,
+    ...(text("responsibility") ? { responsibility: text("responsibility") } : {}),
   });
   refresh(id);
 }

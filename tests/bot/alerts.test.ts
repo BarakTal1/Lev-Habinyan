@@ -3,6 +3,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { adminClient } from "../helpers/db";
 import { runAlertRepeats, sendDangerAlert } from "@/lib/bot/alerts";
+import { getSettings } from "@/lib/bot/db";
 import { SimulatorChannel } from "@/lib/bot/channel";
 import { FakeSms, SmsNotConfigured, makeSmsFromEnv } from "@/lib/bot/sms";
 import { GET } from "@/app/api/cron/alerts/route";
@@ -137,6 +138,22 @@ describe("runAlertRepeats", () => {
     await runAlertRepeats(db, new SimulatorChannel(), new FakeSms(), minutes(15));
     expect((await rows(closed)).filter((x) => x.repeat_of)).toHaveLength(0);
     expect((await rows(archived)).filter((x) => x.repeat_of)).toHaveLength(0);
+  });
+});
+
+describe("on-call phones", () => {
+  // This file owns the oncall_phones setting while it runs, so no other test file changes it at the same time.
+  it("with no setting, fall back to the phones of the founders; an explicit list wins", async () => {
+    await db.from("setting").delete().eq("key", "oncall_phones");
+    const phone = `05297${String(Math.floor(10000 + Math.random() * 89999))}`;
+    const founder = (await db.from("person").insert({ name: `${tag} מייסד`, phone, role: "founder" }).select("id").single()).data!.id;
+    try {
+      expect((await getSettings(db)).oncallPhones).toContain(phone);
+      await db.from("setting").upsert({ key: "oncall_phones", value: ["0501234567"] });
+      expect((await getSettings(db)).oncallPhones).toEqual(["0501234567"]);
+    } finally {
+      await db.from("person").delete().eq("id", founder);
+    }
   });
 });
 
