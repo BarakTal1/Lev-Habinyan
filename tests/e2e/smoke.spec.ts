@@ -193,3 +193,20 @@ test("mobile: set a monthly fee and record a payment", async ({ page }) => {
   await dialog.getByRole("button", { name: "רישום תשלום" }).click();
   await expect(page.getByRole("button", { name: /דירה 1/ })).toContainText("₪0");
 });
+
+test("import a payments CSV twice", async ({ page }) => {
+  await signIn(page);
+  await page.goto("/import");
+  await page.getByRole("navigation", { name: "סוג ייבוא" }).getByRole("link", { name: "תשלומים" }).click();
+  await page.getByLabel("בניין").selectOption({ label: "הירקון 112" });
+  const ref = `R${Date.now()}`;
+  const csv = `﻿דירה,סכום,תאריך תשלום,אסמכתא\n1,350,01/10/2026,${ref}-a\n2,350,01/10/2026,${ref}-b\n`;
+  const file = { name: "payments.csv", mimeType: "text/csv", buffer: Buffer.from(csv, "utf8") };
+  await page.locator('input[type="file"]').setInputFiles(file);
+  await expect(page.getByText("2 חדשים")).toBeVisible();
+  await page.getByRole("button", { name: "אישור וייבוא" }).click();
+  await expect(page.getByText("הייבוא הסתיים")).toBeVisible();
+  await page.locator('input[type="file"]').setInputFiles(file);
+  await expect(page.getByText("0 חדשים")).toBeVisible();
+  await expect(page.getByText("2 ללא שינוי")).toBeVisible();
+});

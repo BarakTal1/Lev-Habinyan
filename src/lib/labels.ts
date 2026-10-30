@@ -104,6 +104,15 @@ export const t = {
     preview: "תצוגה מקדימה", newBuilding: "בניין חדש", existing: "קיים", problems: "תאים שלא הובנו (לא ייובאו)", confirm: "אישור וייבוא", done: "הייבוא הסתיים",
     result: (b: number, c: number, i: number) => `${b} בניינים (${c} חדשים), ${i} פריטי תחזוקה`, toCalendar: "ליומן התחזוקה", row: "שורה", empty: "לא נמצאו שורות בקובץ",
   },
+  ledgerImport: {
+    kindNav: "סוג ייבוא", kinds: { maintenance: "בקרת תחזוקה", tariffs: "תעריפים חודשיים", payments: "תשלומים" },
+    building: "בניין", pickBuilding: "בחרו בניין", source: "מקור הקובץ", sources: { excel: "קובץ אחר", bllink_import: "קובץ מבלינק" },
+    choose: "בחירת קובץ (CSV או Excel)", template: "הורדת תבנית",
+    help: { tariffs: "שורה לכל דירה, עמודה לכל חודש (למשל 01/2026). אפשר להעלות את הקובץ של תעריפים חודשיים מבלינק.", payments: "שורה לכל תשלום: דירה, סכום, תאריך תשלום. אפשר להוסיף חודש, אמצעי תשלום ואסמכתא." },
+    counts: (a: number, c: number, u: number) => `${a} חדשים · ${c} שונו · ${u} ללא שינוי`,
+    unmatched: "דירות שלא נמצאו בבניין", unmatchedHelp: "תשלומים לדירות האלה יישמרו כלא משויכים. אפשר לשייך אותם בעמוד הגבייה.",
+    failed: "הייבוא נכשל. נסו שוב.",
+  },
   ledger: {
     title: "גבייה", debt: "חוב פתוח", paidThisMonth: "שולם החודש", ofDue: (due: string) => `מתוך ${due} לחודש זה`, debtors: "דירות בחוב",
     unit: (n: string) => `דירה ${n}`, noPayer: "ללא משלם", fee: "דמי ועד", credit: "זכות", monthsOwed: (n: number) => (n === 1 ? "חודש אחד בחוב" : `${n} חודשים בחוב`),
