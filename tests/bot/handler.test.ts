@@ -181,6 +181,20 @@ describe("a known resident reports a fault", () => {
   });
 });
 
+describe("the message log keeps what was said", () => {
+  it("stores the structure of each message, so a chat can be shown again with its buttons", async () => {
+    const { phone, chat } = await knownResident({ consent: false });
+    await chat.text("שלום");
+    await chat.btn("consent");
+    const rows = (await db.from("message_log").select("direction, payload").eq("phone", normalizePhone(phone)!).order("created_at")).data!;
+    expect(rows[0]).toMatchObject({ direction: "in", payload: { kind: "text", text: "שלום" } });
+    const firstOut = rows.find((r) => r.direction === "out")!.payload as Extract<Out, { type: "buttons" }>;
+    expect(firstOut.type).toBe("buttons");
+    expect(firstOut.buttons.map((b) => b.id)).toContain("consent");
+    expect(rows.some((r) => r.direction === "in" && (r.payload as { kind?: string }).kind === "button")).toBe(true);
+  });
+});
+
 describe("an unknown number", () => {
   it("identifies itself, waits for approval, and its ticket shows not approved", async () => {
     const phone = newPhone();

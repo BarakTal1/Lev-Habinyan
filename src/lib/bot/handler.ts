@@ -42,7 +42,7 @@ export async function sendGuarded(
 ): Promise<{ sent: boolean; logId: string | null }> {
   const n = normalizePhone(phone);
   if (!n) return { sent: false, logId: null };
-  const base = { direction: "out" as const, phone: n, body: outBody(out).slice(0, 1000), template_name: out.type === "template" ? out.name : null, ticket_id: opts.ticketId ?? null };
+  const base = { direction: "out" as const, phone: n, body: outBody(out).slice(0, 1000), payload: out, template_name: out.type === "template" ? out.name : null, ticket_id: opts.ticketId ?? null };
   const log = async (state: "sent" | "failed", extra: { wa_message_id?: string | null; error?: string } = {}): Promise<string | null> => {
     const r = await deps.db.from("message_log").insert({ ...base, delivery_state: state, wa_message_id: extra.wa_message_id ?? null, error: extra.error ?? null }).select("id").single();
     if (r.error) { logError("message log", r.error); return null; }
@@ -153,7 +153,7 @@ export async function handleInbound(deps: Deps, msg: InboundMessage): Promise<vo
   if (!phone) return;
 
   // The unique wa_message_id makes a retried webhook a no-op.
-  const logged = await db.from("message_log").insert({ direction: "in", phone, wa_message_id: msg.waMessageId, body: inboundBody(msg.content), created_at: msg.at }).select("id").single();
+  const logged = await db.from("message_log").insert({ direction: "in", phone, wa_message_id: msg.waMessageId, body: inboundBody(msg.content), payload: msg.content, created_at: msg.at }).select("id").single();
   if (logged.error) {
     if (logged.error.code === "23505") return;
     throw new Error(logged.error.message);

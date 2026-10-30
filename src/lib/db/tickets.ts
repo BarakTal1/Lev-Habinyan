@@ -38,7 +38,7 @@ export type TicketListRow = {
   id: string; number: number; kind: TicketKind; title: string; urgency: string; status: string; category: string;
   due_at: string | null; created_at: string; first_action_at: string | null;
   building_id: string | null; assignee_id: string | null;
-  building_name: string | null; assignee_name: string | null;
+  building_name: string | null; assignee_name: string | null; resident_approved: boolean;
 };
 
 const must = <T>(r: { data: T; error: { message: string } | null }): NonNullable<T> => {
@@ -151,7 +151,7 @@ export async function uploadAttachment(db: SupabaseClient, profileId: string, ti
 
 export async function listTickets(db: SupabaseClient, f: TicketFilters, myPersonId: string | null): Promise<TicketListRow[]> {
   let q = db.from("ticket")
-    .select("id, number, kind, title, urgency, status, category, due_at, created_at, first_action_at, building_id, assignee_id, building:building_id(name), assignee:assignee_id(name)")
+    .select("id, number, kind, title, urgency, status, category, due_at, created_at, first_action_at, building_id, assignee_id, resident_approved, building:building_id(name), assignee:assignee_id(name)")
     .is("archived_at", null)
     .order("created_at", { ascending: false })
     .limit(300);
@@ -166,7 +166,7 @@ export async function listTickets(db: SupabaseClient, f: TicketFilters, myPerson
   const rows = must(await q);
   return rows.map((r) => ({
     id: r.id, number: Number(r.number), kind: r.kind as TicketKind, title: r.title, urgency: r.urgency, status: r.status, category: r.category,
-    due_at: r.due_at, created_at: r.created_at, first_action_at: r.first_action_at, building_id: r.building_id, assignee_id: r.assignee_id,
+    due_at: r.due_at, created_at: r.created_at, first_action_at: r.first_action_at, building_id: r.building_id, assignee_id: r.assignee_id, resident_approved: r.resident_approved,
     building_name: (r.building as unknown as { name: string } | null)?.name ?? null,
     assignee_name: (r.assignee as unknown as { name: string } | null)?.name ?? null,
   }));

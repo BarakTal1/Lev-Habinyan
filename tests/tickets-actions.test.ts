@@ -212,3 +212,17 @@ describe("uploadAttachment", () => {
     await admin.storage.from("attachments").remove([data![0].storage_path]);
   });
 });
+
+describe("ticket list rows from WhatsApp", () => {
+  it("say whether the resident is approved", async () => {
+    const mk = async (approved: boolean) => {
+      const { data } = await admin.from("ticket").insert({ kind: "fault", category: "חשמל", title: `${tag} אישור ${approved}`, building_id: buildingId, resident_approved: approved }).select("id").single();
+      ticketIds.push(data!.id);
+      return data!.id as string;
+    };
+    const yes = await mk(true), no = await mk(false);
+    const rows = await listTickets(db, { building: buildingId }, null);
+    expect(rows.find((r) => r.id === yes)!.resident_approved).toBe(true);
+    expect(rows.find((r) => r.id === no)!.resident_approved).toBe(false);
+  });
+});
