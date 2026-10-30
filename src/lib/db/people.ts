@@ -89,6 +89,11 @@ export async function getSetting<T>(db: SupabaseClient, key: string, fallback: T
   return r.data ? (r.data.value as T) : fallback;
 }
 
+export async function clearSetting(db: SupabaseClient, key: string): Promise<void> {
+  const r = await db.from("setting").delete().eq("key", key);
+  if (r.error) throw new Error(r.error.message);
+}
+
 export async function setSetting(db: SupabaseClient, key: string, value: unknown): Promise<void> {
   const r = await db.from("setting").upsert({ key, value });
   if (r.error) throw new Error(r.error.message);

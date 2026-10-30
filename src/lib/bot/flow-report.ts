@@ -3,7 +3,7 @@ import { FAULT_TYPES, PLACES, hasDangerWord } from "./catalog";
 import { bot } from "./texts";
 import { dangerPrompt, detailsPrompt, fixPrompt, go, placePrompt, reprompt, summaryPrompt, toMenu, typePrompt, wherePrompt } from "./flow-common";
 import type { Handler } from "./flow-common";
-import type { Draft, StepResult } from "./types";
+import type { Draft, Out, StepResult } from "./types";
 
 const hasContent = (d: Draft) => Boolean(d.text) || d.photoMediaIds.length > 0 || d.audioMediaIds.length > 0;
 
@@ -41,8 +41,11 @@ export const onType: Handler = (state, input, ctx) => {
 
 export const onDanger: Handler = (state, input, ctx) => {
   if (input.kind !== "button" || (input.id !== "danger_yes" && input.id !== "danger_no")) return toMenu();
-  const draft = { ...state.draft, danger: input.id === "danger_yes" };
-  return hasContent(draft) ? go("summary", draft, summaryPrompt(draft)) : go("details", draft, detailsPrompt());
+  const danger = input.id === "danger_yes";
+  const draft = { ...state.draft, danger };
+  // The team is alerted only when the ticket is created, so the resident gets the safety advice now.
+  const advice: Out[] = danger ? [{ type: "text", body: bot.dangerNow(ctx.emergencyNumber) }] : [];
+  return hasContent(draft) ? go("summary", draft, ...advice, summaryPrompt(draft)) : go("details", draft, ...advice, detailsPrompt());
 };
 
 export const onDetails: Handler = (state, input, ctx) => {

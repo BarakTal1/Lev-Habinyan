@@ -1,7 +1,8 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth";
-import { archivePerson, saveEmployee, saveSupplier, setSetting } from "@/lib/db/people";
+import { archivePerson, clearSetting, saveEmployee, saveSupplier, setSetting } from "@/lib/db/people";
+import { parseBotSettings, type BotSettingsError } from "@/lib/bot/settings";
 import { TIERS } from "@/lib/labels";
 import { createClient } from "@/lib/supabase/server";
 
@@ -32,6 +33,27 @@ export async function archivePersonAction(path: "/suppliers" | "/employees", id:
   await requireUser();
   await archivePerson(await createClient(), id);
   revalidatePath(path);
+}
+
+/** Working hours, emergency number and on-call phones. Returns the name of the wrong field, or nothing. An empty value clears the setting. */
+export async function saveBotSettingsAction(formData: FormData): Promise<{ error?: BotSettingsError | "failed" }> {
+  await requireUser();
+  const r = parseBotSettings({
+    days: formData.getAll("days").map(String), from: String(formData.get("from") ?? ""), to: String(formData.get("to") ?? ""),
+    emergency: String(formData.get("emergency") ?? ""), oncall: String(formData.get("oncall") ?? ""),
+  });
+  if (!r.ok) return { error: r.error };
+  try {
+    const db = await createClient();
+    const { hours, emergencyNumber, oncallPhones } = r.value;
+    await (hours ? setSetting(db, "working_hours", hours) : clearSetting(db, "working_hours"));
+    await (emergencyNumber ? setSetting(db, "emergency_number", emergencyNumber) : clearSetting(db, "emergency_number"));
+    await (oncallPhones.length ? setSetting(db, "oncall_phones", oncallPhones) : clearSetting(db, "oncall_phones"));
+  } catch {
+    return { error: "failed" };
+  }
+  revalidatePath("/settings");
+  return {};
 }
 
 export async function setEmailRemindersAction(formData: FormData): Promise<void> {

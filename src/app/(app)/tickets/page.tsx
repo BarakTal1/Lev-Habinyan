@@ -76,7 +76,7 @@ export default async function TicketsPage({ searchParams }: { searchParams: Prom
           {rows.map((r) => {
             const flag = hoursWithoutAction({ kind: r.kind, status: r.status, created_at: r.created_at, first_action_at: r.first_action_at }, now);
             return (
-              <Row key={r.id} kind={r.kind} title={r.title} building={r.building_name} meta={`${ageLabel(r.created_at, now)} · ${r.status}`}
+              <Row key={r.id} kind={r.kind} title={r.title} building={r.building_name} meta={`${ageLabel(r.created_at, now)} · ${r.status}${r.resident_approved ? "" : ` · ${t.msg.notApproved}`}`}
                 flag={flag ? waitLabel(flag) : undefined} badge={{ list: "urgency", value: r.urgency }} href={`/tickets/${r.id}`}
                 extra={{ assignee: r.assignee_name, due: r.due_at ? formatDate(r.due_at) : null }} />
             );

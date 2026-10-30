@@ -6,6 +6,8 @@ import { StatCard } from "@/components/StatCard";
 import { TodaySection, type SectionRow } from "@/components/TodaySection";
 import { Fab } from "@/components/Fab";
 import { requireUser } from "@/lib/auth";
+import { PendingResidentsCard } from "@/components/PendingResidentsCard";
+import { listAgentChats, listPendingResidents, listUnalertedDanger } from "@/lib/db/inbox";
 import { loadLedger } from "@/lib/db/ledger";
 import { loadToday, loadTrend } from "@/lib/db/today";
 import { formatILS } from "@/lib/domain/money";
@@ -33,7 +35,7 @@ export default async function TodayPage() {
   const now = new Date();
   const today = todayIL(now);
   const db = await createClient();
-  const [data, trend, ledger] = await Promise.all([loadToday(db, now), loadTrend(db, now), loadLedger(db, { today })]);
+  const [data, trend, ledger, pendingResidents, agentChats, unalerted] = await Promise.all([loadToday(db, now), loadTrend(db, now), loadLedger(db, { today }), listPendingResidents(db), listAgentChats(db, now), listUnalertedDanger(db)]);
 
   const toRow = (r: TodayRow, section: "overdue" | "soon" | "faults"): SectionRow => {
     const isFault = r.kind === "fault" && section === "faults";
@@ -84,6 +86,28 @@ export default async function TodayPage() {
         <StatCard label={s.soon} value={data.soon.length} icon="event" hint={s.soonHint} href="/calendar" />
         <StatCard label={t.ledger.totalDebt} value={formatILS(ledger.totals.debt)} icon="payments" tone={ledger.totals.debt > 0 ? "danger" : "ok"} hint={`${ledger.totals.debtors} ${t.ledger.debtors}`} href="/payments" />
       </div>
+
+      {(pendingResidents.length > 0 || agentChats.length > 0 || unalerted.length > 0) && (
+        <div className="flex flex-col gap-3 px-4 pb-4 lg:px-8">
+          {unalerted.length > 0 && (
+            <section role="alert" className="card flex flex-col gap-2 border-[#B3261E] bg-[#FDECEA] p-4 text-[#7A1710]">
+              <h2 className="flex items-center gap-2 text-[16px] font-bold"><Icon name="warning" size={22} />{t.inbox.dangerTitle} · {unalerted.length}</h2>
+              <p className="text-sm">{t.inbox.dangerHelp}</p>
+              <ul className="flex flex-col">
+                {unalerted.map((d) => (
+                  <li key={d.id}><Link href={`/tickets/${d.id}`} className="flex h-11 items-center gap-2 font-semibold underline">{d.number} · {d.title}{d.buildingName ? ` · ${d.buildingName}` : ""}</Link></li>
+                ))}
+              </ul>
+            </section>
+          )}
+          {agentChats.length > 0 && (
+            <Link href="/inbox" className="card press-row flex h-14 items-center gap-3 px-4 font-semibold hover:border-[#CED6E2]">
+              <Icon name="chat" size={22} />{t.inbox.chatsCard(agentChats.length)}<span className="flex-1" /><Icon name="chevron_left" size={22} />
+            </Link>
+          )}
+          <PendingResidentsCard residents={pendingResidents} />
+        </div>
+      )}
 
       <div className="grid gap-3 px-4 pb-6 lg:grid-cols-3 lg:gap-4 lg:px-8">
         <div className="lg:col-span-2">

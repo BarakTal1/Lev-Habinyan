@@ -191,6 +191,7 @@ export default async function BuildingPage({ params, searchParams }: { params: P
                                   {a.primary_contact_id === r.person_id && <span title={t.tenants.primary} className="text-[#E0A030]">★<span className="sr-only">{t.tenants.primary}</span></span>}
                                   <span className="rounded-md bg-[#EEF1F5] px-1.5 text-[13px] font-medium text-muted">{r.relation === "tenant" ? t.buildings.tenant : t.buildings.owner}</span>
                                   {r.is_committee && <span className="rounded-md bg-[#EAF1FC] px-1.5 text-[13px] text-navy">{t.buildings.committee}</span>}
+                                  {!r.approved && <span className="rounded-md bg-[#FDF0DC] px-1.5 text-[13px] font-medium text-[#7A4A00]">{t.msg.pendingBadge}</span>}
                                 </div>
                                 <div className="truncate text-sm text-muted">{r.phone && <LtrText>{r.phone}</LtrText>}{r.phone && r.email && " · "}{r.email && <LtrText>{r.email}</LtrText>}</div>
                               </div>

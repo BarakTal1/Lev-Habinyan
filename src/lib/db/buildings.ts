@@ -44,7 +44,7 @@ export async function listBuildingCards(db: SupabaseClient, now: Date = new Date
   }));
 }
 
-export type Resident = { person_id: string; unit_id: string; unit: string; name: string; phone: string | null; email: string | null; relation: string; is_committee: boolean };
+export type Resident = { person_id: string; unit_id: string; unit: string; name: string; phone: string | null; email: string | null; relation: string; is_committee: boolean; approved: boolean };
 export type Apartment = { id: string; number: string; floor: string | null; payer: "owner" | "tenant" | null; primary_contact_id: string | null };
 export type BuildingDetail = {
   id: string; name: string; city: string | null; address: string | null; notes: string | null; units: number;
@@ -64,15 +64,15 @@ export async function getBuilding(db: SupabaseClient, id: string): Promise<Build
   const [ups, items, docs, tickets] = await Promise.all([
     unitIds.length === 0
       ? Promise.resolve({ data: [], error: null })
-      : db.from("unit_person").select("unit_id, relation, is_committee, person:person_id(id, name, phone, email, archived_at), unit:unit_id(number, building_id)").in("unit_id", unitIds),
+      : db.from("unit_person").select("unit_id, relation, approved_at, is_committee, person:person_id(id, name, phone, email, archived_at), unit:unit_id(number, building_id)").in("unit_id", unitIds),
     db.from("maintenance_item").select("supplier:supplier_id(id, name, phone, archived_at, supplier_profile(category))").eq("building_id", id).not("supplier_id", "is", null),
     db.from("attachment").select("id, kind, storage_path, created_at").eq("building_id", id).is("archived_at", null).order("created_at", { ascending: false }),
     db.from("ticket").select("id", { count: "exact", head: true }).eq("building_id", id).is("archived_at", null).not("status", "in", "(בוצע,בוטל)"),
   ]);
-  type UP = { unit_id: string; relation: string; is_committee: boolean; person: { id: string; name: string; phone: string | null; email: string | null; archived_at: string | null } | null; unit: { number: string; building_id: string } | null };
+  type UP = { unit_id: string; relation: string; approved_at: string | null; is_committee: boolean; person: { id: string; name: string; phone: string | null; email: string | null; archived_at: string | null } | null; unit: { number: string; building_id: string } | null };
   const residents: Resident[] = (must(ups) as unknown as UP[])
     .filter((r) => r.unit?.building_id === id && r.person && !r.person.archived_at)
-    .map((r) => ({ person_id: r.person!.id, unit_id: r.unit_id, unit: r.unit!.number, name: r.person!.name, phone: r.person!.phone, email: r.person!.email, relation: r.relation, is_committee: r.is_committee }))
+    .map((r) => ({ person_id: r.person!.id, unit_id: r.unit_id, unit: r.unit!.number, name: r.person!.name, phone: r.person!.phone, email: r.person!.email, relation: r.relation, is_committee: r.is_committee, approved: r.approved_at !== null }))
     .sort((a, c) => a.unit.localeCompare(c.unit, undefined, { numeric: true }));
   const seen = new Set<string>();
   const suppliers: BuildingDetail["suppliers"] = [];

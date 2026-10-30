@@ -72,7 +72,7 @@ export const t = {
     status: "סטטוס", nextStatus: "העברה ל", notes: "הערות", addNote: "הוספת הערה", timeline: "היסטוריה", photos: "תמונות", addPhoto: "הוספת תמונה",
     cost: "עלות (₪)", invoice: "חשבונית", addInvoice: "הוספת חשבונית", saved: "נשמר", number: "מס׳",
     edit: "עריכה", archive: "העברה לארכיון", archiveConfirm: "להעביר את הכרטיס לארכיון? הוא יוסתר מכל הרשימות.", visit: "ביקור", visitTime: "מועד ביקור", closed: "סגורות", unit: "דירה (מספר)",
-    ev: { created: "נוצר", status: "סטטוס", assignment: "שיוך", note: "הערה", edit: "עריכה", photo: "קובץ" },
+    ev: { message: "הודעה", created: "נוצר", status: "סטטוס", assignment: "שיוך", note: "הערה", edit: "עריכה", photo: "קובץ" },
   },
   buildings: {
     title: "בניינים", add: "הוספת בניין", name: "שם הבניין", city: "עיר", address: "כתובת", units: "דירות", openTickets: "תקלות ומשימות פתוחות",
@@ -103,6 +103,34 @@ export const t = {
     title: "ייבוא ראשוני", help: "העלו את גיליון הבקרה כקובץ CSV. שורה לכל בניין, עמודה לכל מערכת. נציג תצוגה מקדימה לפני השמירה.", choose: "בחירת קובץ",
     preview: "תצוגה מקדימה", newBuilding: "בניין חדש", existing: "קיים", problems: "תאים שלא הובנו (לא ייובאו)", confirm: "אישור וייבוא", done: "הייבוא הסתיים",
     result: (b: number, c: number, i: number) => `${b} בניינים (${c} חדשים), ${i} פריטי תחזוקה`, toCalendar: "ליומן התחזוקה", row: "שורה", empty: "לא נמצאו שורות בקובץ",
+  },
+  msg: {
+    previewTitle: "הודעה לדייר", to: "אל", template: "תבנית", yourText: "נוסח ההודעה",
+    locked: "עברו 24 שעות מההודעה האחרונה של הדייר. אפשר לשלוח רק את הנוסח המאושר.",
+    sendAndChange: "שלח הודעה ושנה סטטוס", changeOnly: "שנה סטטוס בלי הודעה", send: "שלח הודעה", cancel: "ביטול",
+    askInfo: "בקש פרטים", question: "השאלה לדייר", sendQuestion: "שלח שאלה", needQuestion: "כתבו שאלה לדייר.",
+    noContact: "אי אפשר לשלוח הודעה לדייר הזה: אין הסכמה או טלפון.", sendFailed: "ההודעה לא נשלחה. הסטטוס עודכן.",
+    noMessage: "ללא הודעה", proposal: "הצעת המערכת", responsibilityLabel: "אחריות", notApproved: "לא מאושר", pendingBadge: "ממתין לאישור", duplicateOf: (n: number) => `כפילות של פנייה ${n}`, unlinkDuplicate: "ניתוק הקישור", unlinked: "ניתק את הקישור לפנייה כפולה", voiceNote: "הקלטה", fromResident: "דייר", fromWhatsapp: "וואטסאפ",
+    delivery: { queued: "בתור", sent: "נשלחה", delivered: "נמסרה", read: "נקראה", failed: "נכשלה" },
+    visitWindowHours: 2,
+  },
+  sim: {
+    title: "סימולטור וואטסאפ", devOnly: "לפיתוח בלבד. הוא כותב לבוט כמו דייר, בלי וואטסאפ אמיתי.", phone: "טלפון", newNumber: "מספר חדש",
+    placeholder: "כתבו הודעה", send: "שליחה", image: "שליחת תמונה", empty: "אין הודעות. כתבו משהו כדי להתחיל.", template: "תבנית", you: "הדייר", bot: "הבוט",
+  },
+  botSettings: {
+    title: "בוט וואטסאפ", help: "שעות הפעילות קובעות מתי הבוט מוסר שהצוות לא זמין. ההתראות על סכנה נשלחות למספרים שמופיעים כאן.",
+    days: "ימי פעילות", dayNames: ["א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳"], noDays: "בלי ימים מסומנים הצוות זמין תמיד.", from: "משעה", to: "עד שעה",
+    emergency: "מספר חירום לדיירים", emergencyHelp: "הבוט נותן אותו לדייר שמדווח על סכנה.", oncall: "טלפונים להתראת סכנה", oncallHelp: "מספר בכל שורה. ריק: הטלפונים של המייסדים.",
+    save: "שמירה", saved: "נשמר", errors: { hours: "שעת הסיום חייבת להיות אחרי שעת ההתחלה", emergency: "מספר החירום אינו תקין", oncall: "אחד הטלפונים אינו תקין", failed: "השמירה נכשלה. נסו שוב." },
+  },
+  inbox: {
+    title: "הודעות מדיירים", sub: "שיחות שבהן הדייר ביקש נציג", empty: "אין שיחות שמחכות לנציג.", reply: "תשובה", send: "שליחה",
+    locked: "עברו 24 שעות. בקשו מהדייר לכתוב שוב.", unknown: "מספר לא מוכר", failed: "השליחה נכשלה. נסו שוב.",
+    pendingTitle: "דיירים לאישור", pendingHelp: "דיירים שהציגו את עצמם בוואטסאפ ומחכים לאישור שלכם.", approve: "אישור", reject: "דחייה",
+    warnOther: "לדירה הזו כבר רשום דייר. לאשר בכל זאת?", rejectConfirm: "לדחות את הדייר? הפניות שלו יישארו.", ticketsOf: (n: string) => `פניות: ${n}`,
+    dangerTitle: "סכנה בלי התראה שנשלחה", dangerHelp: "לא יצאה אף הודעת התראה לצוות. טפלו בפנייה או התקשרו בעצמכם.",
+    chatsCard: (n: number) => (n === 1 ? "שיחה אחת מחכה לנציג" : `${n} שיחות מחכות לנציג`),
   },
   tenants: {
     apartment: (n: string) => `דירה ${n}`, floor: "קומה", floorShort: (f: string) => `קומה ${f}`, payer: "מי משלם", payerShort: (p: string) => `משלם: ${p}`,

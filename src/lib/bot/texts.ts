@@ -46,10 +46,13 @@ export const bot = {
   fixType: "סוג",
   fixText: "תיאור",
   ticketCreated: (n: number) => `קיבלנו. מספר פנייה ${n}. נעדכן אותך כאן בכל שינוי.`,
-  dangerReply: (emergencyNumber: string | null) =>
-    emergencyNumber
-      ? `זה נשמע מסוכן. הצוות קיבל התראה עכשיו. התקשרו מיד למספר ${emergencyNumber}.`
-      : "זה נשמע מסוכן. הצוות קיבל התראה עכשיו.",
+  dangerAlert: (title: string, building: string | null, link: string) => `סכנה: ${title}${building ? ` · ${building}` : ""}. פתחו את הפנייה: ${link}`,
+  dangerReply: (emergencyNumber: string | null, alerted: boolean) =>
+    `${alerted ? "זה נשמע מסוכן. הצוות קיבל התראה עכשיו." : "זה נשמע מסוכן. הפנייה נרשמה ותטופל בדחיפות."}${emergencyNumber ? ` התקשרו מיד למספר ${emergencyNumber}.` : ""}`,
+  dangerNow: (emergencyNumber: string | null) =>
+    `אם יש סכנה מיידית, התרחקו מהמקום${emergencyNumber ? ` והתקשרו מיד למספר ${emergencyNumber}` : " והתקשרו לשירותי החירום"}. נמשיך לרשום את הפנייה.`,
+  doneThanks: "תודה על העדכון! שמחים שהכול תקין.",
+  reopened: "מצטערים. פתחנו את הפנייה מחדש ונחזור אליך בהקדם.",
   alreadyOpen: (n: number, status: string) => `יש כבר פנייה פתוחה על זה (${n}). סטטוס: ${status}.`,
   noOpenTickets: "אין לך פניות פתוחות כרגע.",
   openTicketLine: (n: number, typeLabel: string, status: string, visit: string | null) =>

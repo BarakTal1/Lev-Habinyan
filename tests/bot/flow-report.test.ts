@@ -89,6 +89,20 @@ describe("report-a-fault flow", () => {
     assertLimits(last.out);
   });
 
+  it("danger_yes answers at once with the emergency instruction, and does not claim an alert yet", () => {
+    const { last } = run([...toDetailsUnit.slice(0, 4), btn("danger_yes")]);
+    const said = last.out.map((o) => ("body" in o ? o.body : "")).join("\n");
+    expect(said).toContain("סכנה מיידית");
+    expect(said.includes("קיבל התראה")).toBe(false);
+    expect(last.state?.step).toBe("details");
+  });
+
+  it("danger_yes gives the emergency number when there is one", () => {
+    const first = [...toDetailsUnit.slice(0, 4)].reduce<StepContext["state"]>((state, input) => nextStep(ctx(state), input).state, null);
+    const r = nextStep({ ...ctx(first), emergencyNumber: "100" }, btn("danger_yes"));
+    expect(r.out.map((o) => ("body" in o ? o.body : "")).join("\n")).toContain("100");
+  });
+
   it("danger_yes sets draft.danger true", () => {
     const { last } = run([...toDetailsUnit.slice(0, 4), btn("danger_yes")]);
     expect(last.state?.step).toBe("details");
